@@ -9,7 +9,7 @@ module org.mxnik.forcechess {
     requires org.kordamp.ikonli.javafx;
     requires eu.hansolo.tilesfx;
     requires com.almasb.fxgl.all;
+    requires javafx.graphics;
 
     opens org.mxnik.forcechess to javafx.fxml;
-    exports org.mxnik.forcechess;
 }
