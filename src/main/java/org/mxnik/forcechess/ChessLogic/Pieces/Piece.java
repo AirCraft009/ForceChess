@@ -14,6 +14,11 @@ public final class Piece {
         setHasMoved(hasMoved);
     }
 
+    public Piece(PieceTypes type, short color){
+        this.color = color;
+        this.type = type;
+    }
+
     public PieceTypes getType() {
         return type;
     }
@@ -28,6 +33,16 @@ public final class Piece {
 
     public void setHasMoved(boolean hasMoved) {
         this.hasMoved = hasMoved;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("Piece{");
+        sb.append("type=").append(type);
+        sb.append(", color=").append(color);
+        sb.append(", hasMoved=").append(hasMoved);
+        sb.append('}');
+        return sb.toString();
     }
 }
 

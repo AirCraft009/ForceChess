@@ -12,8 +12,8 @@ public class Board {
         board = new Piece[sideLen*sideLen];
     }
 
-    Board(String fenString){
-        BuildFromFen(fenString);
+    Board(String fenString, int sideLen){
+        BuildFromFen(fenString, sideLen);
     }
 
     /**
@@ -21,9 +21,9 @@ public class Board {
      * @param fenStr Der String im Fen format
      * @throws FenException Exception mit position des Errors
      */
-    public void BuildFromFen(String fenStr) throws FenException {
+    public void BuildFromFen(String fenStr, int sideLen) throws FenException {
         // einfach callen nicht try catch (exception weitergeben)
-        board = FenNotation.readFen(fenStr);
+        board = FenNotation.readFen(fenStr, sideLen);
     }
 
     /**
