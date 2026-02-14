@@ -18,7 +18,7 @@ public final class FenNotation {
      * Reads a fenstr and turns it into a board
      * This isn't a normal Fen string information is in the specification markdown
      * @param fenStr - MxNik FenStr
-     * @param sideLen - length of one side
+     * @param sideLen - maximally 99x99 field
      * @return a board of pieces
      * @throws FenException exception with the position
      */
