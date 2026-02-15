@@ -7,6 +7,7 @@ public enum PieceTypes {
     ROOK(5),
     QUEEN(9),
     KING(Integer.MAX_VALUE),
+    ToPromote(0),
     EMPTY(0),
     ILLEGAL(-1);
 

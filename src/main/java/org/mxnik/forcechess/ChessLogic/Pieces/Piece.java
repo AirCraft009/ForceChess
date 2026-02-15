@@ -1,6 +1,8 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
 public final class Piece {
+    public static final Piece emptyPiece = new Piece(PieceTypes.EMPTY, (short) -1, false);
+
     // Muss eine Klasse sein IF unterstützt nur Konstanten
     private final PieceTypes type;
     // mehr als nur schwarz weiß(wie beim board)

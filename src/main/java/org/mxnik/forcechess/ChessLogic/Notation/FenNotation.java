@@ -28,7 +28,7 @@ public final class FenNotation {
         int boardSize = sideLen * sideLen;
         char[] chars = fenStr.toCharArray();
         Piece[] board = new Piece[boardSize];
-        Arrays.fill(board, new Piece(PieceTypes.EMPTY,  (short) -1, false));
+        Arrays.fill(board, Piece.emptyPiece);
 
         int ptr = boardSize - 1;
         int fieldsinRow = 0;
@@ -84,6 +84,5 @@ public final class FenNotation {
 
     public static void main(String[] args) {
         System.out.println(Arrays.toString(readFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 8)));
-
     }
 }
