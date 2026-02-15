@@ -10,14 +10,14 @@ public class Board {
     public static int sideLen;
 
     Piece[] board;
-    short turn = 0;
-    short playerCount = 2;
+    byte turn = 0;
+    byte playerCount = 2;
     int totalMaterial;
     public int[] teamMaterial;
     public int[] kingIndexes;
 
 
-    Board(int sideLen, short playerCount){
+    Board(int sideLen, byte playerCount){
         this.playerCount = playerCount;
         board = new Piece[sideLen*sideLen];
         this.teamMaterial = new int[playerCount];
@@ -25,7 +25,7 @@ public class Board {
         Board.sideLen = sideLen;
     }
 
-    Board(String fenString,short playerCount,  int sideLen){
+    Board(String fenString,byte playerCount,  int sideLen){
         this.playerCount =  playerCount;
         BuildFromFen(fenString, sideLen);
         this.teamMaterial = new int[playerCount];
@@ -59,7 +59,7 @@ public class Board {
     private void movePieceForced(int fromindex, int toIndex, MoveTypes type){
         switch (type){
             case Promotion:
-                this.board[toIndex] = new Piece(PieceTypes.ToPromote, (short) -1, false);
+                this.board[toIndex] = new Piece(PieceTypes.ToPromote, (byte) -1, false);
                 this.board[fromindex] = Piece.emptyPiece;
                 return;
             case GoodMove:

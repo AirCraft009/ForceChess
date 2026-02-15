@@ -8,31 +8,31 @@ class FenConversion {
     public static Piece FromFen(char c){
         switch (c){
             case 'p':
-                return new Piece(PAWN, (short) 1);
+                return new Piece(PAWN, (byte) 1);
             case 'b':
-                return new Piece(BISHOP, (short) 1);
+                return new Piece(BISHOP, (byte) 1);
             case 'n':
-                return new Piece(KNIGHT, (short) 1);
+                return new Piece(KNIGHT, (byte) 1);
             case 'r':
-                return new Piece(ROOK, (short) 1);
+                return new Piece(ROOK, (byte) 1);
             case 'q':
-                return new Piece(QUEEN, (short) 1);
+                return new Piece(QUEEN, (byte) 1);
             case 'k':
-                return new Piece(KING, (short) 1);
+                return new Piece(KING, (byte) 1);
             case 'P':
-                return new Piece(PAWN, (short) 0);
+                return new Piece(PAWN, (byte) 0);
             case 'B':
-                return new Piece(BISHOP, (short) 0);
+                return new Piece(BISHOP, (byte) 0);
             case 'N':
-                return new Piece(KNIGHT, (short) 0);
+                return new Piece(KNIGHT, (byte) 0);
             case 'R':
-                return new Piece(ROOK, (short) 0);
+                return new Piece(ROOK, (byte) 0);
             case 'Q':
-                return new Piece(QUEEN, (short) 0);
+                return new Piece(QUEEN, (byte) 0);
             case 'K':
-                return new Piece(KING, (short) 0);
+                return new Piece(KING, (byte) 0);
             default:
-                return new Piece(ILLEGAL, (short) -1);
+                return new Piece(ILLEGAL, (byte) -1);
         }
     }
 }

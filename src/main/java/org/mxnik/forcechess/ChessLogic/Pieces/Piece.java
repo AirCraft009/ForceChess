@@ -1,22 +1,22 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
 public final class Piece {
-    public static final Piece emptyPiece = new Piece(PieceTypes.EMPTY, (short) -1, false);
+    public static final Piece emptyPiece = new Piece(PieceTypes.EMPTY, (byte) -1, false);
 
     // Muss eine Klasse sein IF unterstützt nur Konstanten
     private final PieceTypes type;
     // mehr als nur schwarz weiß(wie beim board)
-    private final short color;
+    private final byte color;
     private boolean hasMoved;
 
 
-    public Piece(PieceTypes type, short color, boolean hasMoved){
+    public Piece(PieceTypes type, byte color, boolean hasMoved){
         this.color = color;
         this.type = type;
         setHasMoved(hasMoved);
     }
 
-    public Piece(PieceTypes type, short color){
+    public Piece(PieceTypes type, byte color){
         this.color = color;
         this.type = type;
     }
@@ -25,7 +25,7 @@ public final class Piece {
         return type;
     }
 
-    public short getColor() {
+    public byte getColor() {
         return color;
     }
 
