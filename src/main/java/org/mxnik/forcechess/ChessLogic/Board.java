@@ -16,6 +16,8 @@ public class Board {
         BuildFromFen(fenString, sideLen);
     }
 
+
+
     /**
      * Board per Fen String aufbauen
      * @param fenStr Der String im Fen format

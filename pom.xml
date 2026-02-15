@@ -11,7 +11,17 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-<junit.version>5.12.1</junit.version>  </properties>
+    <junit.version>5.12.1</junit.version>
+  </properties>
+
+  <repositories>
+      <repository>
+          <id>github</id>
+          <name>jstockfish</name>
+          <url>https://github.com/AirCraft009/JStockfish</url>
+      </repository>
+
+  </repositories>
 
   <dependencies>
     <dependency>
@@ -98,7 +108,13 @@
       <artifactId>junit-jupiter-engine</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
-    </dependency>  </dependencies>
+    </dependency>
+      <dependency>
+          <groupId>com.github.aircraft009</groupId>
+          <artifactId>jstockfish</artifactId>
+          <version>1.0.0</version>
+      </dependency>
+  </dependencies>
 
   <build>
     <plugins>

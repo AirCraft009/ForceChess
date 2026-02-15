@@ -11,6 +11,6 @@ module org.mxnik.forcechess {
     requires com.almasb.fxgl.all;
     requires javafx.graphics;
     requires annotations;
+    requires jstockfish;
 
-    opens org.mxnik.forcechess to javafx.fxml;
 }

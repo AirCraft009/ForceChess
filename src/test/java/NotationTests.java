@@ -5,6 +5,7 @@ public class NotationTests {
 
     @Test
     public void testFenConversion(){
-        FenNotation.readFen("k2s/3", 10);
+        //full String rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR  w KQkq - 0 1
+        FenNotation.readFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 8);
     }
 }
