@@ -24,7 +24,7 @@ public class Helper {
      * get the distance to the left border;
      */
     public static int distanceLeftB(int pos){
-        return (distanceRightB(pos) - Board.sideLen) + 1;
+        return ((distanceRightB(pos) - Board.sideLen) + 1) * -1;
     }
 
     /**

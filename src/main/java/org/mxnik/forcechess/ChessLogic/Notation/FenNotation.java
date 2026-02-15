@@ -30,49 +30,46 @@ public final class FenNotation {
         Piece[] board = new Piece[boardSize];
         Arrays.fill(board, Piece.emptyPiece);
 
-        int ptr = boardSize - 1;
+        int ptr = boardSize;
+        int charptr = 0;
         int fieldsinRow = 0;
         int factor = 1;
 
-        for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
-
-            if (c == '/'){
-                if ((fieldsinRow)%sideLen != 0){
-                    throw new FenException("Number of fields in line: " + (boardSize - ptr) +  "don't match the sidelen: " + sideLen, i);
+        for (int i = 0; i < sideLen; i++) {
+            ptr -= sideLen;
+            for (int j = 0; j < sideLen; j++) {
+                char c = chars[charptr];
+                charptr ++;
+                if (c == '/'){
+                    factor = 1;
+                    continue;
                 }
-                factor = 1;
-                fieldsinRow = 0;
-                continue;
-            }
 
-            // skip die nächsten felder
-            if (Character.isDigit(c)){
-                if (factor > 10) {
-                    throw new FenException("Illegal number of skips, MAX=99", i);
+                if (Character.isDigit(c)){
+                    if (factor > 10){
+                        throw new FenException("Skip number bigger than 99", charptr);
+                    }
+                    int skip = (c - '0') * factor;
+                    System.out.println(skip);
+                    i += skip / sideLen;
+                    ptr -= (skip / sideLen) * sideLen - 1;
+                    j += skip % sideLen;
+                    factor *= 10;
+                    continue;
                 }
-                int off = (c - '0') * factor;
-                ptr -= off;
-                fieldsinRow += off;
-                factor *= 10;
-                continue;
+
+                Piece p =  FenConversion.FromFen(c);
+                if (p.getType() == PieceTypes.ILLEGAL){
+                    throw new FenException("Illegal char found in fenStr: " + c, charptr);
+                }
+
+                board[ptr +  j] = p;
             }
-
-            // reset den Faktor
-            factor = 1;
-
-            Piece p = FenConversion.FromFen(c);
-            if (p.getType() == PieceTypes.ILLEGAL){
-                throw new FenException("Illegal Char: " + c + " is not a valid fenStr char", i);
-            }
-
-            board[ptr] = p;
-            ptr --;
         }
 
-        if (ptr != -1){
-            throw new FenException("Fen isn't complete", boardSize);
-        }
+//        if (ptr != -sideLen){
+//            throw new FenException("Fen isn't complete: ", ptr);
+//        }
         return board;
     }
 
