@@ -13,12 +13,15 @@ public class Constants {
     final Color DarkColor = Color.BLACK;
     final Color WhiteColor = Color.WHITE;
     final Rectangle2D bounds;
+    final int heightOffset;
 
 
-    public Constants(int sideLen){
+    public Constants(int sideLen, float borderPercent){
         Screen screen = Screen.getPrimary();
         bounds = screen.getVisualBounds();
-        BoardSize = (int) bounds.getHeight();
+        BoardSize = (int) (bounds.getHeight() * borderPercent / 100);
+        heightOffset = (int) ((bounds.getHeight() - BoardSize) / 2);
+        System.out.println(heightOffset);
         int middle = (int) bounds.getWidth() / 2;
         WidthStart = middle - BoardSize / 2;
         BlockS = BoardSize / sideLen;
