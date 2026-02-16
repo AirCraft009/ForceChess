@@ -1,6 +1,6 @@
 module org.mxnik.forcechess {
     requires javafx.controls;
-    requires javafx.fxml;
+    //requires javafx.fxml;
     requires javafx.web;
 
     requires org.controlsfx.controls;
@@ -11,7 +11,7 @@ module org.mxnik.forcechess {
     requires com.almasb.fxgl.all;
     requires javafx.graphics;
     requires annotations;
-    requires jstockfish;
+    //requires jstockfish;
     requires java.desktop;
 
     exports org.mxnik.forcechess.UI;

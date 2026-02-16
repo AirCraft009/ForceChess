@@ -14,14 +14,15 @@
     <junit.version>5.12.1</junit.version>
   </properties>
 
-  <repositories>
-      <repository>
-          <id>github</id>
-          <name>jstockfish</name>
-          <url>https://github.com/AirCraft009/JStockfish</url>
-      </repository>
+<!-- unused import
+<repositories>-->
+<!--      <repository>-->
+<!--          <id>github</id>-->
+<!--          <name>jstockfish</name>-->
+<!--          <url>https://github.com/AirCraft009/JStockfish</url>-->
+<!--      </repository>-->
 
-  </repositories>
+<!--  </repositories>-->
 
   <dependencies>
     <dependency>
@@ -29,11 +30,12 @@
       <artifactId>javafx-controls</artifactId>
       <version>21.0.6</version>
     </dependency>
-    <dependency>
-      <groupId>org.openjfx</groupId>
-      <artifactId>javafx-fxml</artifactId>
-      <version>21.0.6</version>
-    </dependency>
+<!--      unused dependency-->
+<!--    <dependency>-->
+<!--      <groupId>org.openjfx</groupId>-->
+<!--      <artifactId>javafx-fxml</artifactId>-->
+<!--      <version>21.0.6</version>-->
+<!--    </dependency>-->
 <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-web</artifactId>
@@ -109,11 +111,11 @@
       <version>${junit.version}</version>
       <scope>test</scope>
     </dependency>
-      <dependency>
-          <groupId>com.github.aircraft009</groupId>
-          <artifactId>jstockfish</artifactId>
-          <version>1.0.0</version>
-      </dependency>
+<!--      <dependency>-->
+<!--          <groupId>com.github.aircraft009</groupId>-->
+<!--          <artifactId>jstockfish</artifactId>-->
+<!--          <version>1.0.0</version>-->
+<!--      </dependency>-->
   </dependencies>
 
   <build>

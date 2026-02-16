@@ -54,4 +54,8 @@ public class ChessScene extends Application {
         root.getChildren().addAll(rectangles);
     }
 
+    public static void main(String[] args) {
+        Application.launch(ChessScene.class);
+    }
+
 }
