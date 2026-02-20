@@ -1,6 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
-public final class Piece {
+public class Piece {
     public static final Piece emptyPiece = new Piece(PieceTypes.EMPTY, (byte) -1, false);
 
     // Muss eine Klasse sein IF unterstützt nur Konstanten
@@ -35,6 +35,10 @@ public final class Piece {
 
     public void setHasMoved(boolean hasMoved) {
         this.hasMoved = hasMoved;
+    }
+
+    public byte[] getMoves(){
+        return new byte[0];
     }
 
     @Override

@@ -12,10 +12,10 @@ public class ChessScene extends Application {
 
     @Override
     public void start(Stage primaryStage) {
-        constants = new Constants(8, 90);
+        constants = new Constants(8);
 
         Group root = new Group();
-        Scene scene = new Scene(root, 500, 500, Color.DARKOLIVEGREEN);
+        Scene scene = new Scene(root, 500, 500, Color.GREY);
 
         primaryStage.setX(constants.bounds.getMinX());
         primaryStage.setY(constants.bounds.getMinY());
@@ -33,14 +33,14 @@ public class ChessScene extends Application {
         Rectangle[] rectangles = new Rectangle[sideLen * sideLen];
 
         int currPosX = constants.WidthStart;
-        int startPosY = constants.heightOffset;
         int size = constants.BlockS;
         int point = 0;
+        int sideLengthScreen = constants.BoardSize;
 
         for (int i = 0; i < sideLen; i++) {
             for (int j = 0; j < sideLen; j++) {
                 point = i + j*sideLen;
-                Rectangle r1 = new Rectangle(currPosX + size * j,  startPosY + size * i,  size, size);
+                Rectangle r1 = new Rectangle(currPosX + size * j, size * i,  size, size);
                 if((j + i) % 2 == 0){
                     r1.setFill(Color.BLACK);
                 }else {

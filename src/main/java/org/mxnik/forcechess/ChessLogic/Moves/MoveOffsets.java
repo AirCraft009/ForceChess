@@ -12,13 +12,13 @@ public enum MoveOffsets {
     DOWN_R(-Board.sideLen+1),
     DOWN_L(-Board.sideLen-1);
 
-    int offset;
+    public byte offset;
     MoveOffsets(int offset) {
-        this.offset = offset;
+        this.offset = (byte) offset;
     }
 
-    public static void calculateOffset(int sidelength) {
-        UP.offset = sidelength;
-        DOWN.offset = -sidelength;
+    public static void calculateOffset(int  sidelength) {
+        UP.offset = (byte) sidelength;
+        DOWN.offset = (byte) -sidelength;
     }
 }
