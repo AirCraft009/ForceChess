@@ -1,6 +1,6 @@
 module org.mxnik.forcechess {
     requires javafx.controls;
-    //requires javafx.fxml;
+    requires javafx.fxml;
     requires javafx.web;
 
     requires org.controlsfx.controls;

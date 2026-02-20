@@ -42,6 +42,7 @@ public final class FenNotation {
                 charptr ++;
                 if (c == '/'){
                     factor = 1;
+                    j--;
                     continue;
                 }
 
@@ -51,14 +52,15 @@ public final class FenNotation {
                     }
                     int skip = (c - '0') * factor;
                     System.out.println(skip);
-                    i += skip / sideLen;
-                    ptr -= (skip / sideLen) * sideLen - 1;
-                    j += skip % sideLen;
+                    if(j+skip-1 > sideLen)
+                        throw new FenException("Illegal fenStr, cannot skip more than one row: " + fenStr, charptr);
+                    j += skip-1;
                     factor *= 10;
                     continue;
                 }
 
                 Piece p =  FenConversion.FromFen(c);
+                factor = 1;
                 if (p.getType() == PieceTypes.ILLEGAL){
                     throw new FenException("Illegal char found in fenStr: " + c, charptr);
                 }
@@ -67,9 +69,9 @@ public final class FenNotation {
             }
         }
 
-//        if (ptr != -sideLen){
-//            throw new FenException("Fen isn't complete: ", ptr);
-//        }
+        if (ptr != 0){
+            throw new FenException("Fen isn't complete: ", ptr);
+        }
         return board;
     }
 
