@@ -19,4 +19,9 @@ public class Knight extends Piece{
     }
 
 
+    @Override
+    public byte[] getMoves() {
+        return moveSet;
+    }
+
 }

@@ -4,10 +4,10 @@ public class Piece {
     public static final Piece emptyPiece = new Piece(PieceTypes.EMPTY, (byte) -1, false);
 
     // Muss eine Klasse sein IF unterstützt nur Konstanten
-    private final PieceTypes type;
+    protected final PieceTypes type;
     // mehr als nur schwarz weiß(wie beim board)
-    private final byte color;
-    private boolean hasMoved;
+    protected final byte color;
+    protected boolean hasMoved;
 
 
     public Piece(PieceTypes type, byte color, boolean hasMoved){
