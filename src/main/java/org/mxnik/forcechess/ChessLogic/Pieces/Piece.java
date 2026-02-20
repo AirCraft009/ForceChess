@@ -37,7 +37,7 @@ public class Piece {
         this.hasMoved = hasMoved;
     }
 
-    public byte[] getMoves(){
+    public byte[] getMoves(int pos){
         return new byte[0];
     }
 

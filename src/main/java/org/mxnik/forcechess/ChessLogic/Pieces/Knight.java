@@ -20,8 +20,11 @@ public class Knight extends Piece{
 
 
     @Override
-    public byte[] getMoves() {
-        return moveSet;
+    public byte[] getMoves(int pos) {
+        byte[] finalMoveset = new byte[moveSet.length];
+        for (int i = 0; i < moveSet.length; i++) {
+
+        }
     }
 
 }

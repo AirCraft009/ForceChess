@@ -8,6 +8,7 @@ import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 
 public class Board {
     public static int sideLen;
+    public static int size;
 
     Piece[] board;
     byte turn = 0;
@@ -23,6 +24,7 @@ public class Board {
         this.teamMaterial = new int[playerCount];
         this.kingIndexes = new int[playerCount];
         Board.sideLen = sideLen;
+        Board.size = sideLen * sideLen;
     }
 
     Board(String fenString,byte playerCount,  int sideLen){
