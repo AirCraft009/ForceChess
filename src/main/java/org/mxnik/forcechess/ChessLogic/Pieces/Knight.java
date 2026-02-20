@@ -14,7 +14,7 @@ public class Knight extends Piece{
             (byte) (LEFT.offset * 2+ DOWN.offset),
     };
 
-    public Knight(byte color, boolean hasMoved) {
+    public Knight(boolean color, boolean hasMoved) {
         super(PieceTypes.KNIGHT, color, hasMoved);
     }
 

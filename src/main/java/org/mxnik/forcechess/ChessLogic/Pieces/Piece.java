@@ -6,17 +6,17 @@ public class Piece {
     // Muss eine Klasse sein IF unterstützt nur Konstanten
     protected final PieceTypes type;
     // mehr als nur schwarz weiß(wie beim board)
-    protected final byte color;
+    protected final boolean color;
     protected boolean hasMoved;
 
 
-    public Piece(PieceTypes type, byte color, boolean hasMoved){
+    public Piece(PieceTypes type, boolean color, boolean hasMoved){
         this.color = color;
         this.type = type;
         setHasMoved(hasMoved);
     }
 
-    public Piece(PieceTypes type, byte color){
+    public Piece(PieceTypes type, boolean color){
         this.color = color;
         this.type = type;
     }

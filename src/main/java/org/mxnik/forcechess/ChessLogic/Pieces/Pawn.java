@@ -7,7 +7,7 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Pawn extends Piece{
 
-    public Pawn(byte color, boolean hasMoved) {
+    public Pawn(boolean color, boolean hasMoved) {
         super(PieceTypes.PAWN, color, hasMoved);
     }
 
