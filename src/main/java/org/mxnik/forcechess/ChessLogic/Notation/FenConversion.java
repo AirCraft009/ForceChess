@@ -1,38 +1,42 @@
 package org.mxnik.forcechess.ChessLogic.Notation;
 
+import org.mxnik.forcechess.ChessLogic.Pieces.Knight;
+import org.mxnik.forcechess.ChessLogic.Pieces.Pawn;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.ChessLogic.Pieces.Rook;
+
 import static org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes.*;
 
 class FenConversion {
 
+    //TODO: update to return Pieces not just piece with type added
     public static Piece FromFen(char c){
-        switch (c){
-            case 'p':
-                return new Piece(PAWN, (byte) 1);
-            case 'b':
-                return new Piece(BISHOP, (byte) 1);
-            case 'n':
-                return new Piece(KNIGHT, (byte) 1);
-            case 'r':
-                return new Piece(ROOK, (byte) 1);
-            case 'q':
-                return new Piece(QUEEN, (byte) 1);
-            case 'k':
-                return new Piece(KING, (byte) 1);
-            case 'P':
-                return new Piece(PAWN, (byte) 0);
-            case 'B':
-                return new Piece(BISHOP, (byte) 0);
-            case 'N':
-                return new Piece(KNIGHT, (byte) 0);
-            case 'R':
-                return new Piece(ROOK, (byte) 0);
-            case 'Q':
-                return new Piece(QUEEN, (byte) 0);
-            case 'K':
-                return new Piece(KING, (byte) 0);
-            default:
-                return new Piece(ILLEGAL, (byte) -1);
-        }
+        return switch (c) {
+            case 'p' -> new Pawn(false, false);
+            case 'b' ->
+                //TODO: make Bishop class
+                    new Pawn(false, false);
+            case 'n' -> new Knight(false, false);
+            case 'r' -> new Rook(false, false);
+            case 'q' ->
+                //TODO: make Queen class
+                    new Pawn(false, false);
+            case 'k' ->
+                //TODO: make King class
+                    new Pawn(false, false);
+            case 'P' -> new Pawn(true, false);
+            case 'B' ->
+                //TODO: make Bishop class
+                    new Pawn(true, false);
+            case 'N' -> new Knight(true, false);
+            case 'R' -> new Rook(true, false);
+            case 'Q' ->
+                //TODO: make Queen class
+                    new Pawn(true, false);
+            case 'K' ->
+                //TODO: make King class
+                    new Pawn(true, false);
+            default -> null;
+        };
     }
 }

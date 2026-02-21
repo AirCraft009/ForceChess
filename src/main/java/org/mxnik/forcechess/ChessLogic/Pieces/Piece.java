@@ -1,7 +1,23 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
-public class Piece {
-    public static final Piece emptyPiece = new Piece(PieceTypes.EMPTY, (byte) -1, false);
+import org.mxnik.forcechess.ChessLogic.Moves.Helper;
+
+import static org.mxnik.forcechess.ChessLogic.Moves.Helper.*;
+import static org.mxnik.forcechess.ChessLogic.Moves.Helper.getCol;
+
+public abstract class Piece {
+    //TODO: make EMPTY Piece
+    public static final Piece emptyPiece = new Piece(PieceTypes.EMPTY, true, false) {
+        @Override
+        boolean isValidMove(int from, int to) {
+            return false;
+        }
+
+        @Override
+        byte[] getMoveSet() {
+            return new byte[0];
+        }
+    };
 
     // Muss eine Klasse sein IF unterstützt nur Konstanten
     protected final PieceTypes type;
@@ -20,12 +36,7 @@ public class Piece {
         this.color = color;
         this.type = type;
     }
-
-    public PieceTypes getType() {
-        return type;
-    }
-
-    public byte getColor() {
+    public boolean getColor() {
         return color;
     }
 
@@ -38,7 +49,27 @@ public class Piece {
     }
 
     public byte[] getMoves(int pos){
-        return new byte[0];
+        byte[] mSet = this.getMoveSet();
+        byte[] finalMoves = new byte[mSet.length];
+        // just sets moves == 0 if they're invalid searching for a better sol.
+        for (int i = 0; i < mSet.length; i++) {
+            int offset = mSet[i];
+            finalMoves[i] = (byte) (mSet[i] * ((isValidMove(pos, pos+offset)? 1 : 0)));
+        }
+        return finalMoves;
+    }
+
+
+    abstract boolean isValidMove(int from, int to);
+
+    abstract byte[] getMoveSet();
+
+    public boolean isColor() {
+        return color;
+    }
+
+    public PieceTypes getType() {
+        return type;
     }
 
     @Override

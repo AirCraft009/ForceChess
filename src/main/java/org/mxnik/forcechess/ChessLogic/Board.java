@@ -1,14 +1,16 @@
 package org.mxnik.forcechess.ChessLogic;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveChecking;
-import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
+import org.mxnik.forcechess.ChessLogic.Pieces.Pawn;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 
+import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
+
 public class Board {
-    public static int sideLen;
-    public static int size;
+    public static int sideLen = 8;
+    public static int size = 8;
 
     Piece[] board;
     byte turn = 0;
@@ -58,7 +60,9 @@ public class Board {
     private void movePieceForced(int fromindex, int toIndex, MoveTypes type){
         switch (type){
             case Promotion:
-                this.board[toIndex] = new Piece(PieceTypes.ToPromote, false,  false);
+                //TODO: make real ToPromote class don't just return a non implemented Piece
+                this.board[toIndex] =
+                    new Pawn(true, true);
                 this.board[fromindex] = Piece.emptyPiece;
                 return;
             case GoodMove:

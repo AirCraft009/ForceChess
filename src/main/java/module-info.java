@@ -13,6 +13,7 @@ module org.mxnik.forcechess {
     requires annotations;
     //requires jstockfish;
     requires java.desktop;
+    requires org.mxnik.forcechess;
 
     exports org.mxnik.forcechess.UI;
 }
