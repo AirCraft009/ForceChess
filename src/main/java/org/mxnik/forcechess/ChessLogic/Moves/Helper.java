@@ -38,7 +38,7 @@ public class Helper {
      * get the distance to the top of the board;
      */
     public static int distanceTopB(int pos){
-        return (Board.sideLen - getRow(pos));
+        return (Board.sideLen - getRow(pos)) - 1;
     }
 
 
@@ -46,7 +46,7 @@ public class Helper {
      * get the distance to the bottom of the board;
      */
     public static int distanceBottomB(int pos){
-        return getRow(pos) * Board.sideLen;
+        return getRow(pos);
     }
 
     public static boolean isInside(int pos){

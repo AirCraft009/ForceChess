@@ -12,8 +12,8 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Pawn extends Piece{
     private final byte[] moveSet = {
+            UP.offset,
             (byte) (UP.offset * 2),
-            UP.offset
     };
     public Pawn(boolean color, boolean hasMoved) {
         super(PieceTypes.PAWN, color, hasMoved);
@@ -54,12 +54,15 @@ public class Pawn extends Piece{
         Pawn p = new Pawn(true, false);
         Knight k = new Knight(true, false);
         Rook r = new Rook(true, false);
+        Bishop b = new Bishop(true, false);
         Piece p1 = p;
         Piece p2 = k;
         Piece p3 = r;
+        Piece p4 = b;
         System.out.println(Arrays.toString(p1.getMoves(8)));
         System.out.println(Arrays.toString(p2.getMoves(28)));
         System.out.println(Arrays.toString(p3.getMoves(36)));
+        System.out.println(Arrays.toString(p4.getMoves(36)));
     }
 
 }

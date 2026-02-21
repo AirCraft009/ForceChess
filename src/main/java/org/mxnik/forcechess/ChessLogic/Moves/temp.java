@@ -12,12 +12,4 @@ public class temp {
         return rowDiff(from, to) == colDiff(from, to);
     }
 
-    public static boolean isValidQueenMove(int from, int to){
-        if(!isInside(to)) return false;
-
-        int r = rowDiff(from, to);
-        int c = colDiff(from, to);
-
-        return r == c || r == 0 || c == 0;
-    }
 }
