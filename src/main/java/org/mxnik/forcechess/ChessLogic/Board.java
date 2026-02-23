@@ -2,9 +2,9 @@ package org.mxnik.forcechess.ChessLogic;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveChecking;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
+import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Pawn;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 
 import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
 
@@ -13,13 +13,14 @@ public class Board {
     public static int size = 8;
 
     Piece[] board;
-    byte turn = 0;
-    int totalMaterial;
+    boolean turn = true;
+    int totalMaterial = 0;
+    public int ammountPieces = 32;
     public int[] teamMaterial;
     public int[] kingIndexes;
 
 
-    Board(int sideLen, byte playerCount){
+    public Board(int sideLen, byte playerCount){
         board = new Piece[sideLen*sideLen];
         this.teamMaterial = new int[playerCount];
         this.kingIndexes = new int[playerCount];
@@ -27,7 +28,7 @@ public class Board {
         Board.size = sideLen * sideLen;
     }
 
-    Board(String fenString,byte playerCount,  int sideLen){
+    public Board(String fenString,byte playerCount,  int sideLen){
         BuildFromFen(fenString, sideLen);
         this.teamMaterial = new int[playerCount];
         this.kingIndexes = new int[playerCount];
@@ -40,7 +41,9 @@ public class Board {
      */
     public void BuildFromFen(String fenStr, int sideLen) throws FenException {
         // einfach callen nicht try catch (exception weitergeben)
-        board = FenNotation.readFen(fenStr, sideLen);
+        FenNotation notation = new FenNotation(fenStr);
+        board = notation.readFenBoard();
+        turn = notation.readFenTurn();
     }
 
     /**
@@ -63,11 +66,11 @@ public class Board {
                 //TODO: make real ToPromote class don't just return a non implemented Piece
                 this.board[toIndex] =
                     new Pawn(true, true);
-                this.board[fromindex] = Piece.emptyPiece;
+                this.board[fromindex] = EmptyPiece.EMPTY_PIECE;
                 return;
             case GoodMove:
                 this.board[toIndex] = this.board[fromindex];
-                this.board[fromindex] = Piece.emptyPiece;
+                this.board[fromindex] = EmptyPiece.EMPTY_PIECE;
                 return;
             case KingCastle:
                 //TODO: handle castling
@@ -77,7 +80,16 @@ public class Board {
     }
 
 
+    public Piece[] getBoard() {
+        return board;
+    }
 
+    public void setBoard(Piece[] board) {
+        this.board = board;
+    }
 
-
+    public static void main(String[] args) {
+        Board board1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", (byte) 2, 8);
+        MoveChecking.CheckMove(board1, 0, 3);
+    }
 }
