@@ -42,7 +42,7 @@ public abstract class Piece {
         // just sets moves == 0 if they're invalid searching for a better sol.
         for (int i = 0; i < mSet.length; i++) {
             int offset = mSet[i];
-            finalMoves[i] = (byte) (mSet[i] * ((isValidMove(pos, pos+offset)? 1 : 0)));
+            finalMoves[i] = (byte) (pos + mSet[i] * ((isValidMove(pos, pos+offset)? 1 : 0)));
         }
         return finalMoves;
     }

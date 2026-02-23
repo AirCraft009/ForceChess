@@ -45,42 +45,42 @@ public class Queen extends Piece{
 
 
         for (int i = 1; i <= dLeft; i++) {
-            finalMs[movePtr] = (byte) (i * LEFT.offset);
+            finalMs[movePtr] = (byte) ( pos + i * LEFT.offset);
             movePtr ++;
         }
         for (int i = 1; i <= (Board.sideLen - dLeft) - 1; i++) {
-            finalMs[movePtr] = (byte) (i * RIGHT.offset);
+            finalMs[movePtr] = (byte) ( pos + i * RIGHT.offset);
             movePtr ++;
         }
 
         for (int i = 1; i <= dTop; i++) {
-            finalMs[movePtr] = (byte) (i * UP.offset);
+            finalMs[movePtr] = (byte) ( pos + i * UP.offset);
             movePtr ++;
         }
 
         for (int i = 1; i <= (Board.sideLen - dTop) - 1 ; i++) {
-            finalMs[movePtr] = (byte) (i * DOWN.offset);
+            finalMs[movePtr] = (byte) ( pos + i * DOWN.offset);
             movePtr ++;
         }
 
         // lönge der Diagonale ist das minimum zwischen den seiten
 
         for (int i = 1; i <= Math.min(dLeft, dTop); i++) {
-            finalMs[movePtr] = (byte) (i * UP_L.offset);
+            finalMs[movePtr] = (byte) ( pos + i * UP_L.offset);
             movePtr ++;
         }
         for (int i = 1; i <= (Math.min(dRight, dTop)); i++) {
-            finalMs[movePtr] = (byte) (i * UP_R.offset);
+            finalMs[movePtr] = (byte) ( pos + i * UP_R.offset);
             movePtr ++;
         }
 
         for (int i = 1; i <= Math.min(dBott, dRight); i++) {
-            finalMs[movePtr] = (byte) (i * DOWN_R.offset);
+            finalMs[movePtr] = (byte) ( pos + i * DOWN_R.offset);
             movePtr ++;
         }
 
         for (int i = 1; i <= Math.min(dBott, dLeft); i++) {
-            finalMs[movePtr] = (byte) (i * DOWN_L.offset);
+            finalMs[movePtr] = (byte) ( pos + i * DOWN_L.offset);
             movePtr ++;
         }
         return finalMs;
