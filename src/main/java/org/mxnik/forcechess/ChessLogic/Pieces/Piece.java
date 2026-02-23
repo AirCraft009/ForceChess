@@ -6,18 +6,6 @@ import static org.mxnik.forcechess.ChessLogic.Moves.Helper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.Helper.getCol;
 
 public abstract class Piece {
-    //TODO: make EMPTY Piece
-    public static final Piece emptyPiece = new Piece(PieceTypes.EMPTY, true, false) {
-        @Override
-        boolean isValidMove(int from, int to) {
-            return false;
-        }
-
-        @Override
-        byte[] getMoveSet() {
-            return new byte[0];
-        }
-    };
 
     // Muss eine Klasse sein IF unterstützt nur Konstanten
     protected final PieceTypes type;
