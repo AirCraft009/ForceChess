@@ -1,7 +1,9 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.mxnik.forcechess.Util.Helper;
+
+import static org.mxnik.forcechess.Util.Helper.*;
+import static org.mxnik.forcechess.Util.Helper.getCol;
 
 public abstract class Piece {
 
@@ -34,34 +36,21 @@ public abstract class Piece {
         this.hasMoved = hasMoved;
     }
 
-    public byte[][] getMoves(int pos){
-        byte[][] mSets = this.getMoveSet();
-        List<byte[]> validDirections = new ArrayList<>();
-
-        for (byte[] mSet : mSets) {
-            List<Byte> currentDirection = new ArrayList<>();
-            for (byte offset : mSet) {
-                int target = pos + offset;
-                if (isValidMove(pos, target)) {
-                    currentDirection.add((byte) target);
-                }
-            }
-            if (!currentDirection.isEmpty()) {
-                byte[] directionMoves = new byte[currentDirection.size()];
-                for (int i = 0; i < currentDirection.size(); i++) {
-                    directionMoves[i] = currentDirection.get(i);
-                }
-                validDirections.add(directionMoves);
-            }
+    public byte[] getMoves(int pos){
+        byte[] mSet = this.getMoveSet();
+        byte[] finalMoves = new byte[mSet.length];
+        // just sets moves == 0 if they're invalid searching for a better sol.
+        for (int i = 0; i < mSet.length; i++) {
+            int offset = mSet[i];
+            finalMoves[i] = (byte) (pos + mSet[i] * ((isValidMove(pos, pos+offset)? 1 : 0)));
         }
-
-        return validDirections.toArray(new byte[0][]);
+        return finalMoves;
     }
 
 
     abstract boolean isValidMove(int from, int to);
 
-    abstract byte[][] getMoveSet();
+    abstract byte[] getMoveSet();
 
     public boolean isColor() {
         return color;
@@ -81,3 +70,5 @@ public abstract class Piece {
         return sb.toString();
     }
 }
+
+

@@ -1,17 +1,13 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
-import java.util.ArrayList;
-import java.util.List;
+import org.mxnik.forcechess.ChessLogic.Board;
 
-import static org.mxnik.forcechess.ChessLogic.Moves.Helper.*;
+import static org.mxnik.forcechess.Util.Helper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
+import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.DOWN;
 
 public class Queen extends Piece{
-    private static final byte[] EMPTY_DIRECTION = new byte[0];
-    private final byte[][] moveSet = {
-            EMPTY_DIRECTION, EMPTY_DIRECTION, EMPTY_DIRECTION, EMPTY_DIRECTION,
-            EMPTY_DIRECTION, EMPTY_DIRECTION, EMPTY_DIRECTION, EMPTY_DIRECTION
-    };
+    private final byte[] moveSet = new byte[(Board.sideLen - 1) * 4];
 
     public Queen(boolean color, boolean hasMoved) {
         super(PieceTypes.QUEEN, color, hasMoved);
@@ -30,87 +26,63 @@ public class Queen extends Piece{
 
 
     @Override
-    byte[][] getMoveSet() {
+    byte[] getMoveSet() {
         return moveSet;
     }
 
     @Override
-    public byte[][] getMoves(int pos) {
-        List<byte[]> directions = new ArrayList<>();
+    public byte[] getMoves(int pos) {
+        // code shaut hässlich aus ist aber nicht so uneffizient.
+        // läuft immer noch O(N)
+
+        byte[] finalMs = new byte[moveSet.length];
+        int movePtr = 0;
 
         int dLeft = distanceLeftB(pos);
         int dTop = distanceTopB(pos);
         int dRight = distanceRightB(pos);
         int dBott = distanceBottomB(pos);
 
-        if (dLeft > 0) {
-            byte[] left = new byte[dLeft];
-            for (int i = 1; i <= dLeft; i++) {
-                left[i - 1] = (byte) (pos + i * LEFT.offset);
-            }
-            directions.add(left);
+
+        for (int i = 1; i <= dLeft; i++) {
+            finalMs[movePtr] = (byte) ( pos + i * LEFT.offset);
+            movePtr ++;
+        }
+        for (int i = 1; i <= (Board.sideLen - dLeft) - 1; i++) {
+            finalMs[movePtr] = (byte) ( pos + i * RIGHT.offset);
+            movePtr ++;
         }
 
-        if (dRight > 0) {
-            byte[] right = new byte[dRight];
-            for (int i = 1; i <= dRight; i++) {
-                right[i - 1] = (byte) (pos + i * RIGHT.offset);
-            }
-            directions.add(right);
+        for (int i = 1; i <= dTop; i++) {
+            finalMs[movePtr] = (byte) ( pos + i * UP.offset);
+            movePtr ++;
         }
 
-        if (dTop > 0) {
-            byte[] up = new byte[dTop];
-            for (int i = 1; i <= dTop; i++) {
-                up[i - 1] = (byte) (pos + i * UP.offset);
-            }
-            directions.add(up);
+        for (int i = 1; i <= (Board.sideLen - dTop) - 1 ; i++) {
+            finalMs[movePtr] = (byte) ( pos + i * DOWN.offset);
+            movePtr ++;
         }
 
-        if (dBott > 0) {
-            byte[] down = new byte[dBott];
-            for (int i = 1; i <= dBott; i++) {
-                down[i - 1] = (byte) (pos + i * DOWN.offset);
-            }
-            directions.add(down);
+        // lönge der Diagonale ist das minimum zwischen den seiten
+
+        for (int i = 1; i <= Math.min(dLeft, dTop); i++) {
+            finalMs[movePtr] = (byte) ( pos + i * UP_L.offset);
+            movePtr ++;
+        }
+        for (int i = 1; i <= (Math.min(dRight, dTop)); i++) {
+            finalMs[movePtr] = (byte) ( pos + i * UP_R.offset);
+            movePtr ++;
         }
 
-        int upLeftLen = Math.min(dLeft, dTop);
-        if (upLeftLen > 0) {
-            byte[] upLeft = new byte[upLeftLen];
-            for (int i = 1; i <= upLeftLen; i++) {
-                upLeft[i - 1] = (byte) (pos + i * UP_L.offset);
-            }
-            directions.add(upLeft);
+        for (int i = 1; i <= Math.min(dBott, dRight); i++) {
+            finalMs[movePtr] = (byte) ( pos + i * DOWN_R.offset);
+            movePtr ++;
         }
 
-        int upRightLen = Math.min(dRight, dTop);
-        if (upRightLen > 0) {
-            byte[] upRight = new byte[upRightLen];
-            for (int i = 1; i <= upRightLen; i++) {
-                upRight[i - 1] = (byte) (pos + i * UP_R.offset);
-            }
-            directions.add(upRight);
+        for (int i = 1; i <= Math.min(dBott, dLeft); i++) {
+            finalMs[movePtr] = (byte) ( pos + i * DOWN_L.offset);
+            movePtr ++;
         }
-
-        int downRightLen = Math.min(dBott, dRight);
-        if (downRightLen > 0) {
-            byte[] downRight = new byte[downRightLen];
-            for (int i = 1; i <= downRightLen; i++) {
-                downRight[i - 1] = (byte) (pos + i * DOWN_R.offset);
-            }
-            directions.add(downRight);
-        }
-
-        int downLeftLen = Math.min(dBott, dLeft);
-        if (downLeftLen > 0) {
-            byte[] downLeft = new byte[downLeftLen];
-            for (int i = 1; i <= downLeftLen; i++) {
-                downLeft[i - 1] = (byte) (pos + i * DOWN_L.offset);
-            }
-            directions.add(downLeft);
-        }
-
-        return directions.toArray(new byte[0][]);
+        return finalMs;
     }
 }
