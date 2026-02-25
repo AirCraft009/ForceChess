@@ -1,6 +1,9 @@
 package org.mxnik.forcechess.Util;
 
 import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.Pieces.Bishop;
+import org.mxnik.forcechess.ChessLogic.Pieces.Knight;
+import org.mxnik.forcechess.ChessLogic.Pieces.Pawn;
 
 public class Helper {
 

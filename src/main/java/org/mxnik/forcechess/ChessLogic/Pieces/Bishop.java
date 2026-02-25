@@ -8,11 +8,17 @@ import static org.mxnik.forcechess.Util.Helper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Bishop extends Piece {
+    public final static int dirCount = 4;
     private final byte[] moveSet = new byte[(Board.sideLen - 1) * 2];
     public Bishop( boolean color, boolean hasMoved) {
         super(PieceTypes.BISHOP, color, hasMoved);
     }
 
+
+    @Override
+    public int getMaxDir() {
+        return dirCount;
+    }
 
     @Override
     byte[] getMoveSet() {

@@ -25,7 +25,7 @@ public final class FenNotation {
     public FenNotation(String fenStr){
         String [] fenParts = fenStr.split(" ");
         if (fenParts.length != 6) {
-            throw new FenException("incomplete Fenstring incorrect number of subsections, expected 5 got: " + fenParts.length, 0);
+            throw new FenException("incomplete Fenstring incorrect number of subsections, expected 6 got: " + fenParts.length, 0);
         }
         boardPositions = fenParts[0];
         turn = fenParts[1];
@@ -67,10 +67,9 @@ public final class FenNotation {
      * @throws FenException exception with the position
      */
     public Piece[] readFenBoard() throws FenException {
-        Piece[] board = null;
         int boardSize = boardLenght * boardLenght;
         char[] chars = boardPositions.toCharArray();
-        board = new Piece[boardSize];
+        Piece[] board = new Piece[boardSize];
         Arrays.fill(board, EmptyPiece.EMPTY_PIECE);
 
         int ptr = boardSize;

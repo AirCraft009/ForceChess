@@ -6,7 +6,6 @@ import static org.mxnik.forcechess.Util.Helper.*;
 import static org.mxnik.forcechess.Util.Helper.getCol;
 
 public abstract class Piece {
-
     // Muss eine Klasse sein IF unterstützt nur Konstanten
     protected final PieceTypes type;
     // mehr als nur schwarz weiß(wie beim board)
@@ -51,6 +50,12 @@ public abstract class Piece {
     abstract boolean isValidMove(int from, int to);
 
     abstract byte[] getMoveSet();
+
+    public abstract int getMaxDir();
+
+    public int getMovesetLen(){
+        return getMoveSet().length;
+    }
 
     public boolean isColor() {
         return color;

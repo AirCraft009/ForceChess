@@ -7,6 +7,7 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.DOWN;
 
 public class Queen extends Piece{
+    public final static int dirCount = 8;
     private final byte[] moveSet = new byte[(Board.sideLen - 1) * 4];
 
     public Queen(boolean color, boolean hasMoved) {
@@ -24,6 +25,10 @@ public class Queen extends Piece{
     }
 
 
+    @Override
+    public int getMaxDir() {
+        return dirCount;
+    }
 
     @Override
     byte[] getMoveSet() {

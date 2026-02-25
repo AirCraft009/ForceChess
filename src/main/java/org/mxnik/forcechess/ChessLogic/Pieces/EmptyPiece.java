@@ -16,5 +16,10 @@ public final class EmptyPiece extends Piece{
     byte[] getMoveSet() {
         return new byte[0];
     }
+
+    @Override
+    public int getMaxDir() {
+        return 0;
+    }
 }
 

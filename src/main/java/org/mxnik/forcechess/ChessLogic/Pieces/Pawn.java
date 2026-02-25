@@ -11,12 +11,18 @@ import static org.mxnik.forcechess.Util.Helper.getCol;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Pawn extends Piece{
+    public final static int dirCount = 1;
     private final byte[] moveSet = {
             UP.offset,
             (byte) (UP.offset * 2),
     };
     public Pawn(boolean color, boolean hasMoved) {
         super(PieceTypes.PAWN, color, hasMoved);
+    }
+
+    @Override
+    public int getMaxDir() {
+        return dirCount;
     }
 
     @Override

@@ -18,4 +18,9 @@ public final class IllegalPiece extends Piece {
     byte[] getMoveSet() {
         return new byte[0];
     }
+
+    @Override
+    public int getMaxDir() {
+        return 0;
+    }
 }

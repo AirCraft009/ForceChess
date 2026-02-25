@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.ChessLogic;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveChecking;
+import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
@@ -15,11 +16,14 @@ public class Board {
     Piece[] board;
     boolean turn = true;
     int totalMaterial = 0;
-    public int ammountPieces = 32;
+    int maxDirs = 0;
+    public int amountPieces = 0;
+    MoveList moveList;
     public int[] teamMaterial;
     public int[] kingIndexes;
+    int maxMoves = 0;
 
-
+    
     public Board(int sideLen, byte playerCount){
         board = new Piece[sideLen*sideLen];
         this.teamMaterial = new int[playerCount];
@@ -33,6 +37,7 @@ public class Board {
         this.teamMaterial = new int[playerCount];
         this.kingIndexes = new int[playerCount];
         Board.sideLen = sideLen;
+        amountPieces = 0;
     }
     /**
      * Board per Fen String aufbauen
@@ -44,6 +49,34 @@ public class Board {
         FenNotation notation = new FenNotation(fenStr);
         board = notation.readFenBoard();
         turn = notation.readFenTurn();
+
+        for (int i = 0; i < board.length; i++) {
+            Piece p = board[i];
+            if (p == EmptyPiece.EMPTY_PIECE)
+                continue;
+
+            totalMaterial += p.getType().value;
+            amountPieces ++;
+            maxDirs += p.getMaxDir();
+            maxMoves += p.getMovesetLen();
+        }
+
+        moveList = new MoveList(amountPieces, maxDirs, maxMoves);
+    }
+
+    public void loadMoveFromPosition(){
+        moveList.clear();
+        for (int i = 0; i < board.length; i++) {
+            if (board[i] == EmptyPiece.EMPTY_PIECE){
+                continue;
+            }
+
+            moveList.startPiece();
+            moveList.startDirection();
+            moveList.addMoves(board[i].getMoves(i));
+
+
+        }
     }
 
     /**
@@ -89,7 +122,7 @@ public class Board {
     }
 
     public static void main(String[] args) {
-        Board board1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", (byte) 2, 8);
+        Board board1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2, 8);
         MoveChecking.CheckMove(board1, 0, 3);
     }
 }

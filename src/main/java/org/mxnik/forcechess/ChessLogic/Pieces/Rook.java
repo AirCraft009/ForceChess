@@ -9,6 +9,7 @@ import static org.mxnik.forcechess.Util.Helper.getCol;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Rook extends Piece {
+    public final static int dirCount = 4;
     // 7 (boardlen -1) in each cardinal direction
     private final byte[] moveSet = new byte[(Board.sideLen - 1) * 2];
     public Rook( boolean color, boolean hasMoved) {
@@ -19,6 +20,11 @@ public class Rook extends Piece {
     @Override
     public byte[] getMoveSet() {
         return moveSet;
+    }
+
+    @Override
+    public int getMaxDir() {
+        return dirCount;
     }
 
 
