@@ -1,8 +1,6 @@
-package org.mxnik.forcechess.ChessLogic.Moves;
+package org.mxnik.forcechess.Util;
 
 import org.mxnik.forcechess.ChessLogic.Board;
-import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 
 public class Helper {
 

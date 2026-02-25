@@ -1,7 +1,7 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mxnik.forcechess.ChessLogic.Board;
-import org.mxnik.forcechess.ChessLogic.Moves.Helper;
+import org.mxnik.forcechess.Util.Helper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

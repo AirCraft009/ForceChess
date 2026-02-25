@@ -1,5 +1,5 @@
 package org.mxnik.forcechess.ChessLogic.Moves;
-import static org.mxnik.forcechess.ChessLogic.Moves.Helper.*;
+import static org.mxnik.forcechess.Util.Helper.*;
 
 public class temp {
 

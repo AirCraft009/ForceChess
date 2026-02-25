@@ -4,7 +4,7 @@ import org.mxnik.forcechess.ChessLogic.Board;
 
 import java.lang.Math;
 
-import static org.mxnik.forcechess.ChessLogic.Moves.Helper.*;
+import static org.mxnik.forcechess.Util.Helper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Bishop extends Piece {
@@ -35,21 +35,21 @@ public class Bishop extends Piece {
         // lönge der Diagonale ist das minimum zwischen den seiten
 
         for (int i = 1; i <= Math.min(dLeft, dTop); i++) {
-            finalMs[movePtr] = (byte) (i * UP_L.offset);
+            finalMs[movePtr] = (byte) ( pos + i * UP_L.offset);
             movePtr ++;
         }
         for (int i = 1; i <= (Math.min(dRight, dTop)); i++) {
-            finalMs[movePtr] = (byte) (i * UP_R.offset);
+            finalMs[movePtr] = (byte) ( pos + i * UP_R.offset);
             movePtr ++;
         }
 
         for (int i = 1; i <= Math.min(dBott, dRight); i++) {
-            finalMs[movePtr] = (byte) (i * DOWN_R.offset);
+            finalMs[movePtr] = (byte) ( pos + i * DOWN_R.offset);
             movePtr ++;
         }
 
         for (int i = 1; i <= Math.min(dBott, dLeft); i++) {
-            finalMs[movePtr] = (byte) (i * DOWN_L.offset);
+            finalMs[movePtr] = (byte) ( pos + i * DOWN_L.offset);
             movePtr ++;
         }
         return finalMs;

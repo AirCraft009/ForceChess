@@ -1,9 +1,9 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
-import org.mxnik.forcechess.ChessLogic.Moves.Helper;
+import org.mxnik.forcechess.Util.Helper;
 
-import static org.mxnik.forcechess.ChessLogic.Moves.Helper.*;
-import static org.mxnik.forcechess.ChessLogic.Moves.Helper.getCol;
+import static org.mxnik.forcechess.Util.Helper.*;
+import static org.mxnik.forcechess.Util.Helper.getCol;
 
 public abstract class Piece {
 
@@ -42,7 +42,7 @@ public abstract class Piece {
         // just sets moves == 0 if they're invalid searching for a better sol.
         for (int i = 0; i < mSet.length; i++) {
             int offset = mSet[i];
-            finalMoves[i] = (byte) (mSet[i] * ((isValidMove(pos, pos+offset)? 1 : 0)));
+            finalMoves[i] = (byte) (pos + mSet[i] * ((isValidMove(pos, pos+offset)? 1 : 0)));
         }
         return finalMoves;
     }

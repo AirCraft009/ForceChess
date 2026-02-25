@@ -4,8 +4,8 @@ import org.mxnik.forcechess.ChessLogic.Board;
 
 import java.lang.reflect.Array;
 
-import static org.mxnik.forcechess.ChessLogic.Moves.Helper.*;
-import static org.mxnik.forcechess.ChessLogic.Moves.Helper.getCol;
+import static org.mxnik.forcechess.Util.Helper.*;
+import static org.mxnik.forcechess.Util.Helper.getCol;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Rook extends Piece {
@@ -40,21 +40,21 @@ public class Rook extends Piece {
         int dLeft = distanceLeftB(pos);
         int dTop = distanceTopB(pos);
         for (int i = 1; i <= dLeft; i++) {
-            finalMs[movePtr] = (byte) (i * LEFT.offset);
+            finalMs[movePtr] = (byte) ( pos + i * LEFT.offset);
             movePtr ++;
         }
         for (int i = 1; i <= (Board.sideLen - dLeft) - 1; i++) {
-            finalMs[movePtr] = (byte) (i * RIGHT.offset);
+            finalMs[movePtr] = (byte) ( pos + i * RIGHT.offset);
             movePtr ++;
         }
 
         for (int i = 1; i <= dTop; i++) {
-            finalMs[movePtr] = (byte) (i * UP.offset);
+            finalMs[movePtr] = (byte) ( pos + i * UP.offset);
             movePtr ++;
         }
 
         for (int i = 1; i <= (Board.sideLen - dTop) - 1 ; i++) {
-            finalMs[movePtr] = (byte) (i * DOWN.offset);
+            finalMs[movePtr] = (byte) ( pos + i * DOWN.offset);
             movePtr ++;
         }
         return finalMs;
