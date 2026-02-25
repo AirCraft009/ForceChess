@@ -75,7 +75,6 @@ public class Board {
             moveList.startDirection();
             moveList.addMoves(board[i].getMoves(i));
 
-
         }
     }
 
