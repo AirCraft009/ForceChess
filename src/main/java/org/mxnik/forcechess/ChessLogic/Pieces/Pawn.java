@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
+import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.Util.Helper;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
@@ -61,14 +62,16 @@ public class Pawn extends Piece{
         Knight k = new Knight(true, false);
         Rook r = new Rook(true, false);
         Bishop b = new Bishop(true, false);
-        Piece p1 = p;
-        Piece p2 = k;
-        Piece p3 = r;
-        Piece p4 = b;
-        System.out.println(Arrays.toString(p1.getMoves(8)));
-        System.out.println(Arrays.toString(p2.getMoves(28)));
-        System.out.println(Arrays.toString(p3.getMoves(36)));
-        System.out.println(Arrays.toString(p4.getMoves(36)));
+        Piece[] pieces = new Piece[] {p, k, r, b};
+        int[] positions = new int[] {8, 28, 36, 36};
+
+        MoveList moveList = new MoveList(pieces.length, 24, 64);
+
+        for (int i = 0; i < pieces.length; i++) {
+            pieces[i].getMoves(positions[i], moveList);
+        }
+
+        System.out.println(Arrays.toString(moveList.getMovesArray()));
     }
 
 }
