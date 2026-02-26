@@ -71,9 +71,7 @@ public class Board {
                 continue;
             }
 
-            moveList.startPiece();
-            moveList.startDirection();
-            moveList.addMoves(board[i].getMoves(i));
+            board[i].getMoves(i, moveList);
 
         }
     }

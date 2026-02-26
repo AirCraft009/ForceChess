@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
 import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 
 import static org.mxnik.forcechess.Util.Helper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
@@ -36,12 +37,10 @@ public class Queen extends Piece{
     }
 
     @Override
-    public byte[] getMoves(int pos) {
+    public void getMoves(int pos, MoveList moveList) {
         // code shaut hässlich aus ist aber nicht so uneffizient.
         // läuft immer noch O(N)
-
-        byte[] finalMs = new byte[moveSet.length];
-        int movePtr = 0;
+        moveList.startPiece();
 
         int dLeft = distanceLeftB(pos);
         int dTop = distanceTopB(pos);
@@ -49,45 +48,46 @@ public class Queen extends Piece{
         int dBott = distanceBottomB(pos);
 
 
+        moveList.startDirection();
         for (int i = 1; i <= dLeft; i++) {
-            finalMs[movePtr] = (byte) ( pos + i * LEFT.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * LEFT.offset));
         }
+
+        moveList.startDirection();
         for (int i = 1; i <= (Board.sideLen - dLeft) - 1; i++) {
-            finalMs[movePtr] = (byte) ( pos + i * RIGHT.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * RIGHT.offset));
         }
 
+        moveList.startDirection();
         for (int i = 1; i <= dTop; i++) {
-            finalMs[movePtr] = (byte) ( pos + i * UP.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * UP.offset));
         }
 
+        moveList.startDirection();
         for (int i = 1; i <= (Board.sideLen - dTop) - 1 ; i++) {
-            finalMs[movePtr] = (byte) ( pos + i * DOWN.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * DOWN.offset));
         }
 
         // lönge der Diagonale ist das minimum zwischen den seiten
 
+        moveList.startDirection();
         for (int i = 1; i <= Math.min(dLeft, dTop); i++) {
-            finalMs[movePtr] = (byte) ( pos + i * UP_L.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * UP_L.offset));
         }
+
+        moveList.startDirection();
         for (int i = 1; i <= (Math.min(dRight, dTop)); i++) {
-            finalMs[movePtr] = (byte) ( pos + i * UP_R.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * UP_R.offset));
         }
 
+        moveList.startDirection();
         for (int i = 1; i <= Math.min(dBott, dRight); i++) {
-            finalMs[movePtr] = (byte) ( pos + i * DOWN_R.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * DOWN_R.offset));
         }
 
+        moveList.startDirection();
         for (int i = 1; i <= Math.min(dBott, dLeft); i++) {
-            finalMs[movePtr] = (byte) ( pos + i * DOWN_L.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * DOWN_L.offset));
         }
-        return finalMs;
     }
 }

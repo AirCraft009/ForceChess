@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
+import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.Util.Helper;
 
 import static org.mxnik.forcechess.Util.Helper.*;
@@ -35,15 +36,19 @@ public abstract class Piece {
         this.hasMoved = hasMoved;
     }
 
-    public byte[] getMoves(int pos){
+    public void getMoves(int pos, MoveList moveList){
+        moveList.startPiece();
         byte[] mSet = this.getMoveSet();
-        byte[] finalMoves = new byte[mSet.length];
-        // just sets moves == 0 if they're invalid searching for a better sol.
-        for (int i = 0; i < mSet.length; i++) {
-            int offset = mSet[i];
-            finalMoves[i] = (byte) (pos + mSet[i] * ((isValidMove(pos, pos+offset)? 1 : 0)));
+
+        for (byte moveOffset : mSet) {
+            int target = pos + moveOffset;
+            if (!isValidMove(pos, target)) {
+                continue;
+            }
+
+            moveList.startDirection();
+            moveList.addMove((byte) target);
         }
-        return finalMoves;
     }
 
 
@@ -75,5 +80,4 @@ public abstract class Piece {
         return sb.toString();
     }
 }
-
 

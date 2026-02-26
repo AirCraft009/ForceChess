@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
 import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 
 import java.lang.Math;
 
@@ -26,12 +27,10 @@ public class Bishop extends Piece {
     }
 
     @Override
-    public byte[] getMoves(int pos) {
+    public void getMoves(int pos, MoveList moveList) {
         // code shaut hässlich aus ist aber nicht so uneffizient.
         // läuft immer noch O(N)
-
-        byte[] finalMs = new byte[moveSet.length];
-        int movePtr = 0;
+        moveList.startPiece();
 
         int dLeft = distanceLeftB(pos);
         int dTop = distanceTopB(pos);
@@ -40,25 +39,25 @@ public class Bishop extends Piece {
 
         // lönge der Diagonale ist das minimum zwischen den seiten
 
+        moveList.startDirection();
         for (int i = 1; i <= Math.min(dLeft, dTop); i++) {
-            finalMs[movePtr] = (byte) ( pos + i * UP_L.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * UP_L.offset));
         }
+
+        moveList.startDirection();
         for (int i = 1; i <= (Math.min(dRight, dTop)); i++) {
-            finalMs[movePtr] = (byte) ( pos + i * UP_R.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * UP_R.offset));
         }
 
+        moveList.startDirection();
         for (int i = 1; i <= Math.min(dBott, dRight); i++) {
-            finalMs[movePtr] = (byte) ( pos + i * DOWN_R.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * DOWN_R.offset));
         }
 
+        moveList.startDirection();
         for (int i = 1; i <= Math.min(dBott, dLeft); i++) {
-            finalMs[movePtr] = (byte) ( pos + i * DOWN_L.offset);
-            movePtr ++;
+            moveList.addMove((byte) (pos + i * DOWN_L.offset));
         }
-        return finalMs;
     }
 
     public boolean isValidMove(int from, int to){
