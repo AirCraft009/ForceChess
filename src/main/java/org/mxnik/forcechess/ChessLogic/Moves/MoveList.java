@@ -28,31 +28,33 @@ public final class MoveList {
     // Start a new piece
     public int startPiece() {
         int p = pieceCount;
-        pieceCount++;
         pieceDirOffsets[p] = directionCount;
         pieceDirCounts[p] = 0;
+        pieceCount ++;
         return p;
     }
 
     // Start a new direction for current piece
     public int startDirection() {
         int d = directionCount;
-        directionCount++;
         directionOffsets[d] = moveCount;
         directionLengths[d] = 0;
         pieceDirCounts[pieceCount - 1]++;
+        directionCount++;
         return d;
     }
 
     // Add move to current direction
     public void addMove(byte square) {
-        moves[moveCount++] = square;
+        moves[moveCount] = square;
+        moveCount++;
         directionLengths[directionCount - 1]++;
     }
 
     public void addMoves(byte ... squares) {
         for (byte square: squares) {
-            moves[moveCount++] = square;
+            moves[moveCount] = square;
+            moveCount++;
             directionLengths[directionCount - 1]++;
         }
     }

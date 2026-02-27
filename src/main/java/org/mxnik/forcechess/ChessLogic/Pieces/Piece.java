@@ -41,7 +41,7 @@ public abstract class Piece {
         byte[] mSet = this.getMoveSet();
 
         for (byte moveOffset : mSet) {
-            int target = pos + moveOffset;
+            int target = pos + moveOffset * ((color)? 1 : -1);
             if (!isValidMove(pos, target)) {
                 continue;
             }

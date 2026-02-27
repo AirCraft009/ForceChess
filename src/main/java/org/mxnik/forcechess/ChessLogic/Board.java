@@ -9,6 +9,8 @@ import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 
 import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
 
+import java.util.Arrays;
+
 public class Board {
     public static int sideLen = 8;
     public static int size = 8;
@@ -17,7 +19,7 @@ public class Board {
     boolean turn = true;
     int totalMaterial = 0;
     int maxDirs = 0;
-    public int amountPieces = 0;
+    public int amountPieces;
     MoveList moveList;
     public int[] teamMaterial;
     public int[] kingIndexes;
@@ -37,7 +39,6 @@ public class Board {
         this.teamMaterial = new int[playerCount];
         this.kingIndexes = new int[playerCount];
         Board.sideLen = sideLen;
-        amountPieces = 0;
     }
     /**
      * Board per Fen String aufbauen
@@ -64,8 +65,12 @@ public class Board {
         moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
-    public void loadMoveFromPosition(){
+    public byte[][] getMoveFromPosition(){
         moveList.clear();
+        byte[][] legalMoves = new byte[amountPieces][];
+        byte[] moves = moveList.getMovesArray();
+        int pieceCount = 0;
+
         for (int i = 0; i < board.length; i++) {
             if (board[i] == EmptyPiece.EMPTY_PIECE){
                 continue;
@@ -73,7 +78,41 @@ public class Board {
 
             board[i].getMoves(i, moveList);
 
+            int dirStart = moveList.getDirectionOffset(pieceCount);
+            int dirCount = moveList.getDirectionCount(pieceCount);
+
+            for (int d = 0; d < dirCount; d++) {
+
+                int dirIndex = dirStart + d;
+
+                int moveOffset = moveList.getDirectionMovesOffset(dirIndex);
+                int moveLength = moveList.getDirectionMovesLength(dirIndex);
+
+                for (int j = 0; j < moveLength; j++) {
+
+                    byte square = moves[moveOffset + j];
+                    legalMoves[pieceCount] = new byte[moveLength];
+                    if (board[square] != EmptyPiece.EMPTY_PIECE) {
+                        // blocked → stop this direction
+                        legalMoves[pieceCount] = Arrays.copyOf(legalMoves[pieceCount], j);
+                        break;
+                    }
+
+                    legalMoves[pieceCount][j] = square;
+                    //System.out.printf("legalMove: %d -> %d\n", i, square);
+                    // otherwise square is free → legal move
+                }
+            }
+
+            pieceCount ++;
         }
+
+        for (int p = 0; p < moveList.getPieceCount(); p++) {
+
+
+        }
+
+        return legalMoves;
     }
 
     /**
@@ -120,6 +159,9 @@ public class Board {
 
     public static void main(String[] args) {
         Board board1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2, 8);
-        MoveChecking.CheckMove(board1, 0, 3);
+        byte[][] allMoves = board1.getMoveFromPosition();
+        for (int i = 0; i < allMoves.length; i++) {
+            System.out.printf("%d can move to %s\n", i, Arrays.toString(allMoves[i]));
+        }
     }
 }
