@@ -48,6 +48,10 @@ public final class FenNotation {
         return turn.equals("w");
     }
 
+    public int readSideLen() {
+        return boardLenght;
+    }
+
     public boolean[] readCastleRights(){
         return new boolean[4];
     }

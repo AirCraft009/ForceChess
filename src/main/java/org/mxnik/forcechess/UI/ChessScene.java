@@ -1,70 +1,93 @@
 package org.mxnik.forcechess.UI;
 
 import javafx.application.Application;
+import javafx.event.ActionEvent;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.Util.Constants;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 
-public class ChessScene extends Application {
+public class ChessScene extends Stage {
     private final String pathToImages = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
     Group root;
     Constants constants;
+    private final ChessController controller;
+    private Group backgroundLayer = new Group();
+    private Group pieceLayer = new Group();
+    private Group interactionLayer = new Group();
 
-    @Override
-    public void start(Stage primaryStage) {
+    ChessScene(){
         constants = new Constants(8);
 
         root = new Group();
         Scene scene = new Scene(root, 500, 500, Color.GREY);
 
-        primaryStage.setX(constants.bounds.getMinX());
-        primaryStage.setY(constants.bounds.getMinY());
-        primaryStage.setWidth(constants.bounds.getWidth());
-        primaryStage.setHeight(constants.bounds.getHeight());
+        setX(constants.bounds.getMinX());
+        setY(constants.bounds.getMinY());
+        setWidth(constants.bounds.getWidth());
+        setHeight(constants.bounds.getHeight());
 
-        primaryStage.setTitle("java-buddy.blogspot.com");
-        primaryStage.setScene(scene);
-        primaryStage.show();
+
+        setTitle("java-buddy.blogspot.com");
+        setScene(scene);
+        this.controller = new ChessController(this, "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr . . . . 8");
+        root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
+
+        show();
 
         constants = new Constants(8, scene);
         drawBoard(8);
-
-        //TODO just a test method, needs to be removed.
-        Piece[] arr = new FenNotation("R1BQKBNR/PPPPPPPP/2N5/8/8/8/pppppppp/rnbqkbnr . . . . 8").readFenBoard();
-        drawPieces(arr, 8);
     }
 
-    public void drawBoard(int sideLen){
-        Rectangle[] rectangles = new Rectangle[sideLen * sideLen];
-
-        int currPosX = constants.WidthStart;
+    public void drawBoard(int sideLen) {
         int size = constants.BlockS;
-        int point;
 
         for (int i = 0; i < sideLen; i++) {
             for (int j = 0; j < sideLen; j++) {
-                point = i + j*sideLen;
-                Rectangle r1 = new Rectangle(currPosX + size * j, size * i,  size, size);
-                if((j + i) % 2 == 0){
-                    r1.setFill(constants.WhiteColor);
-                }else {
-                    r1.setFill(constants.DarkColor);
+
+                int index = (sideLen - 1 - i) * sideLen + j;
+
+                // --- Background ---
+                Rectangle square = new Rectangle(size, size);
+
+                if ((i + j) % 2 == 0) {
+                    square.setFill(Color.WHITE);
+                } else {
+                    square.setFill(Color.DARKBLUE);
                 }
-                rectangles[point] = r1;
+
+                square.setLayoutX(constants.WidthStart + j * size);
+                square.setLayoutY(i * size);
+
+                backgroundLayer.getChildren().add(square);
+
+                // --- Click Layer ---
+                ChessButton button = new ChessButton("", index);
+                button.addEventHandler(ActionEvent.ACTION, controller);
+
+                button.setPrefSize(size, size);
+                button.setMinSize(size, size);
+                button.setMaxSize(size, size);
+
+                button.setLayoutX(constants.WidthStart + j * size);
+                button.setLayoutY(i * size);
+
+                // IMPORTANT
+                button.setStyle("-fx-background-color: transparent;");
+
+                interactionLayer.getChildren().add(button);
             }
         }
-
-        root.getChildren().addAll(rectangles);
     }
 
     public void drawPieces(Piece[] pieces, int sideLen){
@@ -97,12 +120,8 @@ public class ChessScene extends Application {
             imageView.setFitHeight(constants.BlockS);
             imageView.setFitWidth(constants.BlockS);
 
-            root.getChildren().add(imageView);
+            pieceLayer.getChildren().add(imageView);
         }
-    }
-
-    public static void main(String[] args) {
-        Application.launch(ChessScene.class);
     }
 
 }

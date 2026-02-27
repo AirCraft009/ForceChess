@@ -15,4 +15,5 @@ module org.mxnik.forcechess {
     requires java.desktop;
 
     exports org.mxnik.forcechess.UI;
+    exports org.mxnik.forcechess.Util;
 }

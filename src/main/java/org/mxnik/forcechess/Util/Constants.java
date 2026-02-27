@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.UI;
+package org.mxnik.forcechess.Util;
 
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
@@ -8,11 +8,11 @@ import javafx.scene.paint.*;
 
 public class Constants {
     final int BoardSize;
-    final int WidthStart;
-    final int BlockS;
-    final Paint DarkColor = Color.DARKBLUE;
-    final Paint WhiteColor = Color.WHITE;
-    final Rectangle2D bounds;
+    public final int WidthStart;
+    public final int BlockS;
+    public final Paint DarkColor = Color.DARKBLUE;
+    public final Paint WhiteColor = Color.WHITE;
+    public final Rectangle2D bounds;
 
 
     public Constants(int sideLen){

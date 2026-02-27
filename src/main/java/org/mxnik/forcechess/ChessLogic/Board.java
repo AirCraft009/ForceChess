@@ -37,22 +37,22 @@ public class Board {
         Board.size = sideLen * sideLen;
     }
 
-    public Board(String fenString,byte playerCount,  int sideLen){
-        BuildFromFen(fenString, sideLen);
+    public Board(String fenString,byte playerCount){
+        BuildFromFen(fenString);
         this.teamMaterial = new int[playerCount];
         this.kingIndexes = new int[playerCount];
-        Board.sideLen = sideLen;
     }
     /**
      * Board per Fen String aufbauen
      * @param fenStr Der String im Fen format
      * @throws FenException Exception mit position des Errors
      */
-    public void BuildFromFen(String fenStr, int sideLen) throws FenException {
+    public void BuildFromFen(String fenStr) throws FenException {
         // einfach callen nicht try catch (exception weitergeben)
         FenNotation notation = new FenNotation(fenStr);
         board = notation.readFenBoard();
         turn = notation.readFenTurn();
+        sideLen = notation.readSideLen();
 
         for (int i = 0; i < board.length; i++) {
             Piece p = board[i];
@@ -165,7 +165,7 @@ public class Board {
     }
 
     public static void main(String[] args) {
-        Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2, 8);
+        Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2);
         long starT = System.nanoTime();
         DiversePair<byte[], Byte>[] allMoves = new DiversePair[0];
         for (int i = 0; i < 1000000; i++) {
