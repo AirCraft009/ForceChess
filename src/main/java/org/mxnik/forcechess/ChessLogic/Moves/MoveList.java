@@ -61,6 +61,10 @@ public final class MoveList {
 
     // Accessors
 
+    public int getMoveCount(){
+        return moveCount;
+    }
+
     public int getPieceCount() {
         return pieceCount;
     }

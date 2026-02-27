@@ -1,9 +1,9 @@
 package org.mxnik.forcechess.Util;
 
 import org.mxnik.forcechess.ChessLogic.Board;
-import org.mxnik.forcechess.ChessLogic.Pieces.Bishop;
-import org.mxnik.forcechess.ChessLogic.Pieces.Knight;
-import org.mxnik.forcechess.ChessLogic.Pieces.Pawn;
+
+import static java.lang.Math.abs;
+import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Helper {
 
@@ -55,11 +55,17 @@ public class Helper {
     }
 
     public static int rowDiff(int from, int to){
-        return Math.abs(getRow(from) - getRow(to));
+        return abs(getRow(from) - getRow(to));
     }
 
     public static int colDiff(int from, int to){
-        return Math.abs(getCol(from) - getCol(to));
+        return abs(getCol(from) - getCol(to));
     }
 
+
+    public static boolean isDiagonalMove(int from, int to){
+        int moveOffset = abs(from - to);
+
+        return (moveOffset == Board.sideLen - 1) || (moveOffset == Board.sideLen + 1);
+    }
 }

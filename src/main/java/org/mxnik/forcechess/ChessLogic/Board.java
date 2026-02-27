@@ -8,6 +8,9 @@ import org.mxnik.forcechess.ChessLogic.Pieces.Pawn;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 
 import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
+import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
+import org.mxnik.forcechess.Util.DiversePair;
+import org.mxnik.forcechess.Util.Helper;
 
 import java.util.Arrays;
 
@@ -65,11 +68,26 @@ public class Board {
         moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
-    public byte[][] getMoveFromPosition(){
+
+    /**
+     * returned alle Moves in einem diversePair
+     * element first ist sind die Moves element second der offset der figur am Schachbrett
+     *
+     * Unoptimiert aber funktionierend
+     * @return
+     */
+    public DiversePair<byte[], Byte>[] getMoveFromPosition(){
         moveList.clear();
-        byte[][] legalMoves = new byte[amountPieces][];
         byte[] moves = moveList.getMovesArray();
+
+
+        // warning weil der Compiler sich nicht sicher sein kann
+        // ist aber type safe während Runtime
+        DiversePair<byte[], Byte>[] legalMoves = new DiversePair[amountPieces];
+
+
         int pieceCount = 0;
+        int prevMovecount = moveList.getMoveCount();
 
         for (int i = 0; i < board.length; i++) {
             if (board[i] == EmptyPiece.EMPTY_PIECE){
@@ -77,9 +95,15 @@ public class Board {
             }
 
             board[i].getMoves(i, moveList);
+            int newMoveCount = moveList.getMoveCount();
 
             int dirStart = moveList.getDirectionOffset(pieceCount);
             int dirCount = moveList.getDirectionCount(pieceCount);
+
+            // keep track of the current position in the final moves arr
+            int ptr = 0;
+            byte[] legalMoveSection = new byte[newMoveCount - prevMovecount];
+            prevMovecount = newMoveCount;
 
             for (int d = 0; d < dirCount; d++) {
 
@@ -88,28 +112,36 @@ public class Board {
                 int moveOffset = moveList.getDirectionMovesOffset(dirIndex);
                 int moveLength = moveList.getDirectionMovesLength(dirIndex);
 
-                for (int j = 0; j < moveLength; j++) {
+                int j;
+
+                for (j = 0; j < moveLength; j++) {
 
                     byte square = moves[moveOffset + j];
-                    legalMoves[pieceCount] = new byte[moveLength];
-                    if (board[square] != EmptyPiece.EMPTY_PIECE) {
-                        // blocked → stop this direction
-                        legalMoves[pieceCount] = Arrays.copyOf(legalMoves[pieceCount], j);
+
+                    // hideous
+                    if (board[i].getType() == PieceTypes.PAWN && Helper.isDiagonalMove(i, square)){
+                        // hideous
+                        if(board[square].getColor() != board[i].getColor() && board[square] != EmptyPiece.EMPTY_PIECE){
+                            legalMoveSection[ptr + j] = square;
+                            ptr ++;
+                        }
                         break;
                     }
 
-                    legalMoves[pieceCount][j] = square;
+                    // hideous
+                    if (board[square] != EmptyPiece.EMPTY_PIECE) {
+                        // blocked → stop this direction
+                        break;
+                    }
+
+                    legalMoveSection[ptr + j] = square;
                     //System.out.printf("legalMove: %d -> %d\n", i, square);
-                    // otherwise square is free → legal move
+                    //otherwise square is free → legal move
                 }
+                ptr += j;
             }
-
+            legalMoves[pieceCount] = new DiversePair<>(Arrays.copyOf(legalMoveSection, ptr), (byte) i);
             pieceCount ++;
-        }
-
-        for (int p = 0; p < moveList.getPieceCount(); p++) {
-
-
         }
 
         return legalMoves;
@@ -123,31 +155,6 @@ public class Board {
         return FenNotation.writeFen(board);
     }
 
-    public MoveTypes movePiece(int fromindex, int toIndex){
-        MoveTypes type = MoveChecking.CheckMove(this, fromindex, toIndex);
-        movePieceForced(fromindex, toIndex, type);
-        return type;
-    }
-
-    private void movePieceForced(int fromindex, int toIndex, MoveTypes type){
-        switch (type){
-            case Promotion:
-                //TODO: make real ToPromote class don't just return a non implemented Piece
-                this.board[toIndex] =
-                    new Pawn(true, true);
-                this.board[fromindex] = EmptyPiece.EMPTY_PIECE;
-                return;
-            case GoodMove:
-                this.board[toIndex] = this.board[fromindex];
-                this.board[fromindex] = EmptyPiece.EMPTY_PIECE;
-                return;
-            case KingCastle:
-                //TODO: handle castling
-            case IllegalMove:
-                return;
-        }
-    }
-
 
     public Piece[] getBoard() {
         return board;
@@ -158,10 +165,10 @@ public class Board {
     }
 
     public static void main(String[] args) {
-        Board board1 = new Board("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2, 8);
-        byte[][] allMoves = board1.getMoveFromPosition();
+        Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2, 8);
+        DiversePair<byte[], Byte>[] allMoves = board1.getMoveFromPosition();
         for (int i = 0; i < allMoves.length; i++) {
-            System.out.printf("%d can move to %s\n", i, Arrays.toString(allMoves[i]));
+            System.out.printf("%d can move to %s\n", allMoves[i].second(), Arrays.toString(allMoves[i].first()));
         }
     }
 }
