@@ -166,7 +166,18 @@ public class Board {
 
     public static void main(String[] args) {
         Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2, 8);
-        DiversePair<byte[], Byte>[] allMoves = board1.getMoveFromPosition();
+        long starT = System.nanoTime();
+        DiversePair<byte[], Byte>[] allMoves = new DiversePair[0];
+        for (int i = 0; i < 1000000; i++) {
+            allMoves = board1.getMoveFromPosition();
+        }
+        long endT = System.nanoTime();
+        long timeT = endT - starT;
+        System.out.println("-----------------------");
+
+        System.out.printf("took time for full 1000000: %dns\navg time per board: %dns\nso on avg %d per sec\n", timeT, timeT / 1000000, 1000000000 / (timeT / 1000000));
+
+        System.out.println("-----------------------");
         for (int i = 0; i < allMoves.length; i++) {
             System.out.printf("%d can move to %s\n", allMoves[i].second(), Arrays.toString(allMoves[i].first()));
         }
