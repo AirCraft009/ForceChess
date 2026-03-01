@@ -16,7 +16,7 @@ import java.util.Arrays;
 
 public class Board {
     public static int sideLen = 8;
-    public static int size = 8;
+    public static int size = 64;
 
     Piece[] board;
     boolean turn = true;

@@ -10,6 +10,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.Util.Constants;
@@ -50,14 +51,17 @@ public class ChessScene extends Stage {
 
     public void drawBoard(int sideLen) {
         int size = constants.BlockS;
+        int index;
+        ChessBackgroundPane[] panes =  new ChessBackgroundPane[Board.size];
+        ChessButton[] buttons =  new ChessButton[Board.size];
+
 
         for (int i = 0; i < sideLen; i++) {
             for (int j = 0; j < sideLen; j++) {
-
-                int index = (sideLen - 1 - i) * sideLen + j;
-
+                int logCol = sideLen - 1 - i;
+                index = logCol * sideLen + j;;
                 // --- Background ---
-                Rectangle square = new Rectangle(size, size);
+                ChessBackgroundPane square = new ChessBackgroundPane(size, size, index);
 
                 if ((i + j) % 2 == 0) {
                     square.setFill(Color.WHITE);
@@ -69,10 +73,10 @@ public class ChessScene extends Stage {
                 square.setLayoutY(i * size);
 
 
-                backgroundLayer.getChildren().add(square);
+                panes[index] = square;
 
                 // --- Click Layer ---
-                ChessButton button = new ChessButton("", index);
+                ChessButton button = new ChessButton(Integer.toString(index), index);
                 button.addEventHandler(ActionEvent.ACTION, controller);
 
                 button.setPrefSize(size, size);
@@ -82,12 +86,14 @@ public class ChessScene extends Stage {
                 button.setLayoutX(constants.WidthStart + j * size);
                 button.setLayoutY(i * size);
 
-                // IMPORTANT
-                button.setStyle("-fx-background-color: transparent;");
+                // IMPORTANT -fx-background-color: transparent;
+                button.setStyle("-fx-background-color: transparent");
 
-                interactionLayer.getChildren().add(button);
+                buttons[index] = button;
             }
         }
+        backgroundLayer.getChildren().addAll(panes);
+        interactionLayer.getChildren().addAll(buttons);
     }
 
     public void drawPieces(Piece[] pieces, int sideLen){

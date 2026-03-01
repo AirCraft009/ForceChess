@@ -3,6 +3,7 @@ package org.mxnik.forcechess.UI;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.Util.DiversePair;
@@ -34,8 +35,11 @@ public class ChessController implements EventHandler<Event> {
             //handle field buttons
             //durchschnittlich 70 micros max 100 micros -> 0.0000999 sec
             for (int i = 0; i < currentMoveState.length; i++) {
-                if (sourceButton.getField() == currentMoveState[i].second()) {
-//                    Rectangle rect = (Rectangle) chessScene.backgroundLayer.getChildren().get(i);
+                int field = currentMoveState[i].second();
+                if (sourceButton.getField() == field) {
+                    System.out.println(field);
+                    Rectangle rect = (Rectangle) chessScene.backgroundLayer.getChildren().get(field);
+                    rect.setFill(Color.YELLOW);
 //                    rect.setStyle("-fx-border-style: solid; -fx-border-width: 5; -fx-border-color: black;");
                     System.out.println(Arrays.toString(currentMoveState[i].first()));
                 }
