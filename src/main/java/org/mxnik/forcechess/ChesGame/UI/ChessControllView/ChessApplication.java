@@ -1,12 +1,8 @@
-package org.mxnik.forcechess.UI;
+package org.mxnik.forcechess.ChesGame.UI.ChessControllView;
 
 import javafx.application.Application;
 import javafx.scene.Group;
-import javafx.scene.Scene;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
-import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
-import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.Util.Constants;
 
 public class ChessApplication extends Application {

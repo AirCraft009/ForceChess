@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.UI;
+package org.mxnik.forcechess.ChesGame.UI.ChessControllView;
 
 import javafx.scene.Node;
 import javafx.scene.control.Button;

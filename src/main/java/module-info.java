@@ -14,6 +14,7 @@ module org.mxnik.forcechess {
     //requires jstockfish;
     requires java.desktop;
 
-    exports org.mxnik.forcechess.UI;
+    exports org.mxnik.forcechess.ChesGame.UI;
     exports org.mxnik.forcechess.Util;
+    exports org.mxnik.forcechess.ChesGame.UI.ChessControllView;
 }

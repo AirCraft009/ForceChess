@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.UI;
+package org.mxnik.forcechess.ChesGame.UI.ChessControllView;
 
 import javafx.event.ActionEvent;
 import javafx.event.Event;
@@ -15,7 +15,7 @@ public class ChessController implements EventHandler<Event> {
 
     final private ChessScene chessScene;
     final private Board board;
-    private DiversePair<byte[], Byte>[] currentMoveState;
+    private final DiversePair<byte[], Byte>[] currentMoveState;
 
     public ChessController(ChessScene chess, String startFen){
         chessScene = chess;
