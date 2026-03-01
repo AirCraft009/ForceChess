@@ -76,7 +76,7 @@ public class ChessScene extends Stage {
                 panes[index] = square;
 
                 // --- Click Layer ---
-                ChessButton button = new ChessButton(Integer.toString(index), index);
+                ChessButton button = new ChessButton("", index);
                 button.addEventHandler(ActionEvent.ACTION, controller);
 
                 button.setPrefSize(size, size);
