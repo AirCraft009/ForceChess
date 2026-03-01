@@ -16,13 +16,14 @@ import org.mxnik.forcechess.Util.Constants;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 
 public class ChessScene extends Stage {
     private final String pathToImages = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
     Group root;
     Constants constants;
     private final ChessController controller;
-    private Group backgroundLayer = new Group();
+    Group backgroundLayer = new Group();
     private Group pieceLayer = new Group();
     private Group interactionLayer = new Group();
 
@@ -38,15 +39,13 @@ public class ChessScene extends Stage {
         setHeight(constants.bounds.getHeight());
 
 
-        setTitle("java-buddy.blogspot.com");
-        setScene(scene);
-        this.controller = new ChessController(this, "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr . . . . 8");
-        root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
-
-        show();
-
         constants = new Constants(8, scene);
+        setTitle("Chess");
+        setScene(scene);
+        this.controller = new ChessController(this, "rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         drawBoard(8);
+        root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
+        show();
     }
 
     public void drawBoard(int sideLen) {
@@ -68,6 +67,7 @@ public class ChessScene extends Stage {
 
                 square.setLayoutX(constants.WidthStart + j * size);
                 square.setLayoutY(i * size);
+
 
                 backgroundLayer.getChildren().add(square);
 
@@ -91,9 +91,12 @@ public class ChessScene extends Stage {
     }
 
     public void drawPieces(Piece[] pieces, int sideLen){
+
         for (int i = 0; i < pieces.length; i++) {
             int x = i % sideLen;
             int y = i / sideLen;
+
+
 
             Piece p = pieces[i];
             String imageP;
@@ -107,6 +110,8 @@ public class ChessScene extends Stage {
                 default -> {continue;}
             }
 
+            //System.out.println(x + " : " + y + "\ni: " + i + "\n piece: " + pieces[i] + "\nimage: " + imageP);
+
             Image image;
             try {
                 image = new Image(new FileInputStream(imageP));
@@ -116,12 +121,15 @@ public class ChessScene extends Stage {
 
             ImageView imageView = new ImageView(image);
             imageView.setX(x * constants.BlockS + constants.WidthStart);
-            imageView.setY(y * constants.BlockS);
-            imageView.setFitHeight(constants.BlockS);
+            imageView.setY((sideLen - 1 - y) * constants.BlockS);
+            imageView.setFitHeight(constants.BlockS );
             imageView.setFitWidth(constants.BlockS);
 
             pieceLayer.getChildren().add(imageView);
         }
     }
 
+    public static void main(String[] args) {
+
+    }
 }
