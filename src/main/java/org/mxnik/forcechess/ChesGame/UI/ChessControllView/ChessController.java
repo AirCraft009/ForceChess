@@ -3,8 +3,6 @@ package org.mxnik.forcechess.ChesGame.UI.ChessControllView;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.Util.DiversePair;
 
@@ -16,6 +14,7 @@ public class ChessController implements EventHandler<Event> {
     final private ChessScene chessScene;
     final private Board board;
     private final DiversePair<byte[], Byte>[] currentMoveState;
+    private int activeSquare = -1;
 
     public ChessController(ChessScene chess, String startFen){
         chessScene = chess;
@@ -34,18 +33,43 @@ public class ChessController implements EventHandler<Event> {
 
             //handle field buttons
             //durchschnittlich 70 micros max 100 micros -> 0.0000999 sec
-            for (int i = 0; i < currentMoveState.length; i++) {
-                int field = currentMoveState[i].second();
-                if (sourceButton.getField() == field) {
-                    System.out.println(field);
-                    Rectangle rect = (Rectangle) chessScene.backgroundLayer.getChildren().get(field);
-                    rect.setFill(Color.YELLOW);
-//                    rect.setStyle("-fx-border-style: solid; -fx-border-width: 5; -fx-border-color: black;");
-                    System.out.println(Arrays.toString(currentMoveState[i].first()));
-                }
-            }
+            int buttonfield = sourceButton.getField();
+            int field = 0;
+            boolean hasPiece = false;
 
+            for (int i = 0; i < currentMoveState.length; i++) {
+                field = currentMoveState[i].second();
+                if (buttonfield == field) {
+                    hasPiece = true;
+                    break;
+                }
+                field = buttonfield;
+            }
+            handleSquareClick(field, hasPiece);
         }
+    }
+
+    public void handleSquareClick(int field, boolean pieceField){
+        if(activeSquare == -1) {
+            activeSquare = field;
+        }
+        ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(activeSquare);
+
+        if (!pieceField) {
+            oldRect.deactivate();
+            return;
+        }
+
+        ChessBackgroundPane newRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(field);
+        if (activeSquare == field) {
+            newRect.toggle();
+            activeSquare = (newRect.isActive())? field: -1;
+            return;
+        }
+
+        oldRect.deactivate();
+        newRect.setActive();
+        activeSquare = field;
     }
 
     @Override

@@ -6,12 +6,14 @@ import javafx.scene.shape.Rectangle;
 
 public class ChessBackgroundPane extends Rectangle {
     private int index;
-    private Color primaryColor;
-    private Color secondaryColor;
+    private Color primaryColor = Color.DARKBLUE;
+    private Color secondaryColor = Color.YELLOW;
     private boolean active;
 
-    public ChessBackgroundPane(double v, double v1, Paint paint, int index) {
-        super(v, v1, paint);
+    public ChessBackgroundPane(double v, double v1, Color primary, Color secondary, int index) {
+        super(v, v1, primary);
+        primaryColor = primary;
+        secondaryColor = secondary;
         this.index = index;
         active = false;
     }
@@ -19,6 +21,7 @@ public class ChessBackgroundPane extends Rectangle {
     public ChessBackgroundPane(double v, double v1, int index) {
         super(v, v1);
         this.index = index;
+
     }
 
     public ChessBackgroundPane(int index) {
@@ -38,5 +41,19 @@ public class ChessBackgroundPane extends Rectangle {
         }
         active = false;
         this.setFill(primaryColor);
+    }
+
+    public void setActive(){
+        active = true;
+        this.setFill(secondaryColor);
+    }
+
+    public void deactivate(){
+        active = false;
+        this.setFill(primaryColor);
+    }
+
+    public boolean isActive(){
+        return active;
     }
 }

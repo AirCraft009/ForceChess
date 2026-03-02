@@ -12,21 +12,10 @@ public class Constants {
     public final int BlockS;
     public final Paint DarkColor = Color.DARKBLUE;
     public final Paint WhiteColor = Color.WHITE;
-    public final Rectangle2D bounds;
-
-
-    public Constants(int sideLen){
-        Screen screen = Screen.getPrimary();
-        bounds = screen.getVisualBounds();
-        BoardSize = (int) bounds.getHeight();
-        int middle = (int) bounds.getWidth() / 2;
-        WidthStart = middle - BoardSize / 2;
-        BlockS = BoardSize / sideLen;
-    }
+    private static final Screen screen = Screen.getPrimary();
+    public static final Rectangle2D bounds = screen.getVisualBounds();
 
     public Constants(int sideLen, Scene scene){
-        Screen screen = Screen.getPrimary();
-        bounds = screen.getVisualBounds();
         BoardSize = (int) scene.getHeight();
         int middle = (int) scene.getWidth() / 2;
         WidthStart = middle - BoardSize / 2;

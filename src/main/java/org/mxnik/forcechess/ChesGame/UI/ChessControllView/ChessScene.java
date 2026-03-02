@@ -24,18 +24,15 @@ public class ChessScene extends Stage {
     private Group interactionLayer = new Group();
 
     ChessScene(){
-        constants = new Constants(8);
+        setX(Constants.bounds.getMinX());
+        setY(Constants.bounds.getMinY());
+        setWidth(Constants.bounds.getWidth());
+        setHeight(Constants.bounds.getHeight());
 
         root = new Group();
         Scene scene = new Scene(root, 500, 500, Color.GREY);
-
-        setX(constants.bounds.getMinX());
-        setY(constants.bounds.getMinY());
-        setWidth(constants.bounds.getWidth());
-        setHeight(constants.bounds.getHeight());
-
-
         constants = new Constants(8, scene);
+
         setTitle("Chess");
         setScene(scene);
         this.controller = new ChessController(this, "rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
@@ -56,12 +53,13 @@ public class ChessScene extends Stage {
                 int logCol = sideLen - 1 - i;
                 index = logCol * sideLen + j;;
                 // --- Background ---
-                ChessBackgroundPane square = new ChessBackgroundPane(size, size, index);
+                ChessBackgroundPane square;
 
                 if ((i + j) % 2 == 0) {
-                    square.setFill(Color.WHITE);
+                    square = new ChessBackgroundPane(size, size, Color.WHITE, Color.WHEAT, index);
+
                 } else {
-                    square.setFill(Color.DARKBLUE);
+                    square = new ChessBackgroundPane(size, size, Color.DARKBLUE, Color.LIGHTBLUE, index);
                 }
 
                 square.setLayoutX(constants.WidthStart + j * size);
