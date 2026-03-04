@@ -68,7 +68,6 @@ public class Board {
         moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
-
     /**
      * returned alle Moves in einem diversePair
      * element first ist sind die Moves element second der offset der figur am Schachbrett
@@ -130,7 +129,11 @@ public class Board {
 
                     // hideous
                     if (board[square] != EmptyPiece.EMPTY_PIECE) {
-                        // blocked → stop this direction
+                        if(board[square].getColor() != board[i].getColor()) {
+                            // blocked → stop this direction
+                            legalMoveSection[ptr + j] = square;
+                            ptr++;
+                        }
                         break;
                     }
 
@@ -146,6 +149,7 @@ public class Board {
 
         return legalMoves;
     }
+
 
     /**
      * Gibt das board als Fen String aus
@@ -168,19 +172,19 @@ public class Board {
         Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2);
         long starT = System.nanoTime();
         DiversePair<byte[], Byte>[] allMoves = new DiversePair[0];
-        for (int i = 0; i < 10000000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             allMoves = board1.getMoveFromPosition();
         }
         long endT = System.nanoTime();
         long timeT = endT - starT;
         System.out.println("-----------------------");
 
-        System.out.printf("took time for full 10000000: %dns\n" +
+        System.out.printf("took time for full 1000000: %dns\n" +
                 "avg time per board: %dns\n" +
                 "so on avg %d per sec\n",
                 timeT,
-                timeT / 10000000,
-                1000000000 / (timeT / 10000000));
+                timeT / 1000000,
+                100000000 / (timeT / 1000000));
 
         System.out.println("-----------------------");
         for (int i = 0; i < allMoves.length; i++) {

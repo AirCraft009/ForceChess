@@ -41,11 +41,20 @@ public class ChessController implements EventHandler<Event> {
                 field = currentMoveState[i].second();
                 if (buttonfield == field) {
                     hasPiece = true;
+                    highlightSquares(currentMoveState[i].first());
+                    System.out.println(Arrays.toString(currentMoveState[i].first()));
                     break;
                 }
                 field = buttonfield;
             }
             handleSquareClick(field, hasPiece);
+        }
+    }
+
+    public void highlightSquares(byte[] moves){
+        for (byte move : moves){
+            ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(move);
+            oldRect.toggle();
         }
     }
 
