@@ -14,8 +14,10 @@ public class Constants {
     public final Paint WhiteColor = Color.WHITE;
     private static final Screen screen = Screen.getPrimary();
     public static final Rectangle2D bounds = screen.getVisualBounds();
+    public final int sideLen;
 
     public Constants(int sideLen, Scene scene){
+        this.sideLen = sideLen;
         BoardSize = (int) scene.getHeight();
         int middle = (int) scene.getWidth() / 2;
         WidthStart = middle - BoardSize / 2;

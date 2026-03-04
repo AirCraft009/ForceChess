@@ -13,12 +13,14 @@ import org.mxnik.forcechess.Util.Constants;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.HashMap;
 
 public class ChessScene extends Stage {
     private final String pathToImages = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
     Group root;
     Constants constants;
     private final ChessController controller;
+    private HashMap<Integer, ImageView> pieceImages = new HashMap<>();
     Group backgroundLayer = new Group();
     private Group pieceLayer = new Group();
     private Group interactionLayer = new Group();
@@ -31,17 +33,18 @@ public class ChessScene extends Stage {
 
         root = new Group();
         Scene scene = new Scene(root, 500, 500, Color.GREY);
-        constants = new Constants(8, scene);
-
         setTitle("Chess");
         setScene(scene);
-        this.controller = new ChessController(this, "rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-        drawBoard(8);
-        root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
         show();
+        constants = new Constants(8, scene);
+
+        this.controller = new ChessController(this, "rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
+        drawBoard();
+        root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
     }
 
-    public void drawBoard(int sideLen) {
+    public void drawBoard() {
+        int sideLen = constants.sideLen;
         int size = constants.BlockS;
         int index;
         ChessBackgroundPane[] panes =  new ChessBackgroundPane[Board.size];
@@ -89,7 +92,8 @@ public class ChessScene extends Stage {
         interactionLayer.getChildren().addAll(buttons);
     }
 
-    public void drawPieces(Piece[] pieces, int sideLen){
+    public void drawPieces(Piece[] pieces){
+        int sideLen = constants.sideLen;
 
         for (int i = 0; i < pieces.length; i++) {
             int x = i % sideLen;
@@ -124,8 +128,20 @@ public class ChessScene extends Stage {
             imageView.setFitHeight(constants.BlockS );
             imageView.setFitWidth(constants.BlockS);
 
+            pieceImages.put(i, imageView);
             pieceLayer.getChildren().add(imageView);
         }
+    }
+
+    public void movePiece(int from, int to){
+        int sideLen = constants.sideLen;
+        int size = constants.BlockS;
+
+        ImageView i = pieceImages.get(from);
+        int x = (to % sideLen)* size + constants.WidthStart;
+        int y = to / sideLen * size;
+        i.setX(x);
+        i.setY(y);
     }
 
     public static void main(String[] args) {
