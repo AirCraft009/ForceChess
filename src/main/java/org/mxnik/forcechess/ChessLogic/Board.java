@@ -89,9 +89,11 @@ public class Board {
         int prevMovecount = moveList.getMoveCount();
 
         for (int i = 0; i < board.length; i++) {
-            if (board[i] == EmptyPiece.EMPTY_PIECE){
+            if (board[i].getType() == PieceTypes.EMPTY){
                 continue;
             }
+
+            System.out.println("i: " + pieceCount +" piece: " +board[i]);
 
             board[i].getMoves(i, moveList);
             int newMoveCount = moveList.getMoveCount();
@@ -148,6 +150,19 @@ public class Board {
         }
 
         return legalMoves;
+    }
+
+    //TODO: move will have to check the legality of the move
+    public void move(int from , int to) throws CloneNotSupportedException {
+        if(board[from] == EmptyPiece.EMPTY_PIECE){
+            return;
+        }
+        if(board[to] != EmptyPiece.EMPTY_PIECE){
+            amountPieces -= 1;
+        }
+        Piece p = board[from].clone();
+        board[from] = EmptyPiece.EMPTY_PIECE;
+        board[to] = p;
     }
 
 

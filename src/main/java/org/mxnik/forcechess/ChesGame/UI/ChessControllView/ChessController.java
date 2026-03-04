@@ -13,7 +13,7 @@ public class ChessController implements EventHandler<Event> {
 
     final private ChessScene chessScene;
     final private Board board;
-    private final DiversePair<byte[], Byte>[] currentMoveState;
+    private DiversePair<byte[], Byte>[] currentMoveState;
     private int activeSquare = -1;
 
     public ChessController(ChessScene chess, String startFen){
@@ -23,7 +23,7 @@ public class ChessController implements EventHandler<Event> {
         currentMoveState = board.getMoveFromPosition();
     }
 
-    public void handleActionEvent(ActionEvent event) {
+    public void handleActionEvent(ActionEvent event) throws CloneNotSupportedException {
         Object source = event.getSource();
 
         // all Buttons
@@ -42,7 +42,7 @@ public class ChessController implements EventHandler<Event> {
                 if (buttonfield == field) {
                     hasPiece = true;
                     highlightSquares(currentMoveState[i].first());
-                    System.out.println(Arrays.toString(currentMoveState[i].first()));
+                    //System.out.println(Arrays.toString(currentMoveState[i].first()));
                     break;
                 }
                 field = buttonfield;
@@ -58,13 +58,17 @@ public class ChessController implements EventHandler<Event> {
         }
     }
 
-    public void handleSquareClick(int field, boolean pieceField){
+    public void handleSquareClick(int field, boolean pieceField) throws CloneNotSupportedException {
         if(activeSquare == -1) {
             activeSquare = field;
         }
         ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(activeSquare);
 
         if (!pieceField) {
+            board.move(activeSquare, field);
+            currentMoveState = board.getMoveFromPosition();
+            chessScene.clearPieces();
+            chessScene.drawPieces(board.getBoard());
             oldRect.deactivate();
             return;
         }
@@ -78,13 +82,23 @@ public class ChessController implements EventHandler<Event> {
 
         oldRect.deactivate();
         newRect.setActive();
+
+
+        board.move(activeSquare, field);
+        currentMoveState = board.getMoveFromPosition();
+        chessScene.clearPieces();
+        chessScene.drawPieces(board.getBoard());
         activeSquare = field;
     }
 
     @Override
     public void handle(Event event) {
         if (event instanceof ActionEvent){
-            handleActionEvent((ActionEvent) event);
+            try {
+                handleActionEvent((ActionEvent) event);
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

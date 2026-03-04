@@ -6,7 +6,7 @@ import org.mxnik.forcechess.Util.Helper;
 import static org.mxnik.forcechess.Util.Helper.*;
 import static org.mxnik.forcechess.Util.Helper.getCol;
 
-public abstract class Piece {
+public abstract class Piece implements Cloneable {
     // Muss eine Klasse sein IF unterstützt nur Konstanten
     protected final PieceTypes type;
     // mehr als nur schwarz weiß(wie beim board)
@@ -49,6 +49,11 @@ public abstract class Piece {
             moveList.startDirection();
             moveList.addMove((byte) target);
         }
+    }
+
+    @Override
+    public Piece clone() throws CloneNotSupportedException {
+        return (Piece) super.clone();
     }
 
 

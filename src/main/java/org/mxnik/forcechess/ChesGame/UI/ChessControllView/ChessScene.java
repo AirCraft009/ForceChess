@@ -92,6 +92,10 @@ public class ChessScene extends Stage {
         interactionLayer.getChildren().addAll(buttons);
     }
 
+    public void clearPieces(){
+        pieceLayer.getChildren().clear();
+    }
+
     public void drawPieces(Piece[] pieces){
         int sideLen = constants.sideLen;
 
@@ -137,11 +141,16 @@ public class ChessScene extends Stage {
         int sideLen = constants.sideLen;
         int size = constants.BlockS;
 
-        ImageView i = pieceImages.get(from);
+        ImageView i = pieceImages.remove(from);
+        pieceImages.remove(to);
+        if(i == null){
+            return;
+        }
         int x = (to % sideLen)* size + constants.WidthStart;
-        int y = to / sideLen * size;
+        int y = (sideLen - to / sideLen - 1) * size ;
         i.setX(x);
         i.setY(y);
+        pieceImages.put(to, i);
     }
 
     public static void main(String[] args) {
