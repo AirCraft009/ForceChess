@@ -15,6 +15,7 @@ public class ChessController implements EventHandler<Event> {
     final private Board board;
     private DiversePair<byte[], Byte>[] currentMoveState;
     private int activeSquare = -1;
+    private int lastClicked = 0;
 
     public ChessController(ChessScene chess, String startFen){
         chessScene = chess;
@@ -40,6 +41,7 @@ public class ChessController implements EventHandler<Event> {
             for (int i = 0; i < currentMoveState.length; i++) {
                 field = currentMoveState[i].second();
                 if (buttonfield == field) {
+                    lastClicked = i;
                     hasPiece = true;
                     highlightSquares(currentMoveState[i].first());
                     //System.out.println(Arrays.toString(currentMoveState[i].first()));
@@ -47,7 +49,7 @@ public class ChessController implements EventHandler<Event> {
                 }
                 field = buttonfield;
             }
-            handleSquareClick(field, hasPiece);
+            handleSquareClick(field, hasPiece, lastClicked);
         }
     }
 
@@ -58,17 +60,21 @@ public class ChessController implements EventHandler<Event> {
         }
     }
 
-    public void handleSquareClick(int field, boolean pieceField) throws CloneNotSupportedException {
+    public void handleSquareClick(int field, boolean pieceField, int clicked) throws CloneNotSupportedException {
         if(activeSquare == -1) {
             activeSquare = field;
         }
         ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(activeSquare);
 
         if (!pieceField) {
-            board.move(activeSquare, field);
-            currentMoveState = board.getMoveFromPosition();
-            chessScene.clearPieces();
-            chessScene.drawPieces(board.getBoard());
+            for (byte moveField : currentMoveState[clicked].first()){
+                if (field == moveField){
+                    board.move(activeSquare, field);
+                    currentMoveState = board.getMoveFromPosition();
+                    chessScene.resetBoard();
+                    chessScene.drawPieces(board.getBoard());
+                }
+            }
             oldRect.deactivate();
             return;
         }
@@ -83,11 +89,14 @@ public class ChessController implements EventHandler<Event> {
         oldRect.deactivate();
         newRect.setActive();
 
-
-        board.move(activeSquare, field);
-        currentMoveState = board.getMoveFromPosition();
-        chessScene.clearPieces();
-        chessScene.drawPieces(board.getBoard());
+        for (byte moveField : currentMoveState[clicked].first()){
+            if (field == moveField){
+                board.move(activeSquare, field);
+                currentMoveState = board.getMoveFromPosition();
+                chessScene.resetBoard();
+                chessScene.drawPieces(board.getBoard());
+            }
+        }
         activeSquare = field;
     }
 

@@ -93,7 +93,7 @@ public class Board {
                 continue;
             }
 
-            System.out.println("i: " + pieceCount +" piece: " +board[i]);
+            //System.out.println("i: " + pieceCount +" piece: " +board[i]);
 
             board[i].getMoves(i, moveList);
             int newMoveCount = moveList.getMoveCount();

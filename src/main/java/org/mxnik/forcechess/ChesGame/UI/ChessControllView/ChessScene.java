@@ -92,6 +92,19 @@ public class ChessScene extends Stage {
         interactionLayer.getChildren().addAll(buttons);
     }
 
+    public void resetBoard(){
+        clearPieces();
+        clearHighlights();
+    }
+
+
+    public void clearHighlights(){
+        for (int i = 0; i < backgroundLayer.getChildren().size(); i++) {
+            ChessBackgroundPane bp = (ChessBackgroundPane) backgroundLayer.getChildren().get(i);
+            bp.deactivate();
+        }
+    }
+
     public void clearPieces(){
         pieceLayer.getChildren().clear();
     }
