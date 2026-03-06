@@ -75,14 +75,14 @@ public class Board {
      * Unoptimiert aber funktionierend
      * @return
      */
-    public DiversePair<byte[], Byte>[] getMoveFromPosition(){
+    public byte[][] getMoveFromPosition(){
         moveList.clear();
         byte[] moves = moveList.getMovesArray();
 
 
         // warning weil der Compiler sich nicht sicher sein kann
         // ist aber type safe während Runtime
-        DiversePair<byte[], Byte>[] legalMoves = new DiversePair[amountPieces];
+        byte[][] legalMoves = new byte[size][];
 
 
         int pieceCount = 0;
@@ -90,6 +90,7 @@ public class Board {
 
         for (int i = 0; i < board.length; i++) {
             if (board[i].getType() == PieceTypes.EMPTY){
+                legalMoves[i] = new byte[0];
                 continue;
             }
 
@@ -120,13 +121,19 @@ public class Board {
                     byte square = moves[moveOffset + j];
 
                     // hideous
-                    if (board[i].getType() == PieceTypes.PAWN && Helper.isDiagonalMove(i, square)){
+                    if (board[i].getType() == PieceTypes.PAWN){
                         // hideous
-                        if(board[square].getColor() != board[i].getColor() && board[square] != EmptyPiece.EMPTY_PIECE){
-                            legalMoveSection[ptr + j] = square;
-                            ptr ++;
+                        if(Helper.isDiagonalMove(i, square)) {
+                            if (board[square].getColor() != board[i].getColor() && board[square] != EmptyPiece.EMPTY_PIECE) {
+                                legalMoveSection[ptr + j] = square;
+                                ptr++;
+                            }
+                            break;
+                        }else{
+                            if (board[square] != EmptyPiece.EMPTY_PIECE) {
+                                break;
+                            }
                         }
-                        break;
                     }
 
                     // hideous
@@ -145,7 +152,7 @@ public class Board {
                 }
                 ptr += j;
             }
-            legalMoves[pieceCount] = new DiversePair<>(Arrays.copyOf(legalMoveSection, ptr), (byte) i);
+            legalMoves[i] = Arrays.copyOf(legalMoveSection, ptr);
             pieceCount ++;
         }
 
@@ -187,7 +194,7 @@ public class Board {
     public static void main(String[] args) {
         Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2);
         long starT = System.nanoTime();
-        DiversePair<byte[], Byte>[] allMoves = new DiversePair[0];
+        byte[][] allMoves = null;
         for (int i = 0; i < 1000000; i++) {
             allMoves = board1.getMoveFromPosition();
         }
@@ -204,7 +211,7 @@ public class Board {
 
         System.out.println("-----------------------");
         for (int i = 0; i < allMoves.length; i++) {
-            System.out.printf("%d can move to %s\n", allMoves[i].second(), Arrays.toString(allMoves[i].first()));
+            System.out.printf("%d can move to %s\n", i, Arrays.toString(allMoves[i]));
         }
     }
 }
