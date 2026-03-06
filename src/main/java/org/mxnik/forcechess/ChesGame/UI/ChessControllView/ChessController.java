@@ -4,23 +4,34 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.Util.DiversePair;
+import org.mxnik.forcechess.Util.Helper;
+
+import java.util.Arrays;
 
 
 public class ChessController implements EventHandler<Event> {
 
     final private ChessScene chessScene;
     final private Board board;
-    private DiversePair<byte[], Byte>[] currentMoveState;
+    private byte[][] currentMoveState;
+    private boolean turn = true;
+    private int firstClick = -1;
+    private int secondClick = -1;
+    private boolean pieceSelected = false;
+    private byte[] currPieceMoves;
+
     private int activeSquare = -1;
     private int lastClicked = 0;
-    private boolean clicked = false;
+    private boolean selected = false;
 
     public ChessController(ChessScene chess, String startFen){
         chessScene = chess;
         board = new Board(startFen, (byte) 2);
         chessScene.drawPieces(board.getBoard());
         currentMoveState = board.getMoveFromPosition();
+        currPieceMoves = new byte[0];
     }
 
     public void handleActionEvent(ActionEvent event) throws CloneNotSupportedException {
@@ -34,25 +45,37 @@ public class ChessController implements EventHandler<Event> {
             //handle field buttons
             //durchschnittlich 70 micros max 100 micros -> 0.0000999 sec
             int buttonField = sourceButton.getField();
-            int field = 0;
-            boolean hasPiece = false;
-            System.out.println(clicked);
 
-            for (int i = 0; i < currentMoveState.length; i++) {
-                field = currentMoveState[i].second();
-                if (buttonField == field) {
-                    if(!clicked) {
-                        lastClicked = i;
-                        clicked = true;
-                    }
-                    hasPiece = true;
-                    highlightSquares(currentMoveState[i].first());
-                    //System.out.println(Arrays.toString(currentMoveState[i].first()));
-                    break;
-                }
-                field = buttonField;
+            if(board.getBoard()[buttonField].getColor() != turn) {
+                return;
             }
-            handleSquareClick(field, hasPiece, lastClicked);
+
+            chessScene.resetBoard();
+            byte[] moves = currentMoveState[buttonField];
+
+            boolean hasPiece = board.getBoard()[buttonField] != EmptyPiece.EMPTY_PIECE;
+
+
+            if(!pieceSelected) {
+                firstClick = buttonField;
+                highlightSquares(moves);
+            }else {
+                secondClick = buttonField;
+            }
+
+
+            handleSquare(hasPiece);
+
+            ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(buttonField);
+            if(!pieceSelected){
+                oldRect.deactivate();
+            }else {
+                oldRect.setActive();
+            }
+            currPieceMoves = moves;
+            //System.out.println(pieceSelected);
+            chessScene.drawPieces(board.getBoard());
+            turn = !turn;
         }
     }
 
@@ -63,47 +86,19 @@ public class ChessController implements EventHandler<Event> {
         }
     }
 
-    public void handleSquareClick(int field, boolean pieceField, int clickedSquare) throws CloneNotSupportedException {
-        if(activeSquare == -1) {
-            activeSquare = field;
-        }
-        ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(activeSquare);
-
-        if (!pieceField) {
-            for (byte moveField : currentMoveState[clickedSquare].first()){
-                if (field == moveField){
-                    board.move(activeSquare, field);
-                    currentMoveState = board.getMoveFromPosition();
-                    chessScene.resetBoard();
-                    chessScene.drawPieces(board.getBoard());
-                }
-            }
-            oldRect.deactivate();
-            clicked = false;
-            return;
-        }
-
-        ChessBackgroundPane newRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(field);
-        if (activeSquare == field) {
-            newRect.toggle();
-            activeSquare = (newRect.isActive())? field: -1;
-            clicked = false;
-            return;
-        }
-
-        oldRect.deactivate();
-        newRect.setActive();
-
-        for (byte moveField : currentMoveState[clickedSquare].first()){
-            if (field == moveField){
-                board.move(activeSquare, field);
+    public void handleSquare(boolean hasPiece) throws CloneNotSupportedException {
+        if (pieceSelected) {
+            //condition: -> firstCLick != -1;
+            pieceSelected = false;
+            if (Helper.contains(currPieceMoves, secondClick)) {
+                board.move(firstClick, secondClick);
                 currentMoveState = board.getMoveFromPosition();
-                chessScene.resetBoard();
-                chessScene.drawPieces(board.getBoard());
             }
+            return;
         }
-        clicked = true;
-        activeSquare = field;
+        if (hasPiece) {
+            pieceSelected = true;
+        }
     }
 
     @Override

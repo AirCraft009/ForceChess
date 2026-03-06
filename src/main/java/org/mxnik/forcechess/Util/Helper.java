@@ -3,7 +3,6 @@ package org.mxnik.forcechess.Util;
 import org.mxnik.forcechess.ChessLogic.Board;
 
 import static java.lang.Math.abs;
-import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Helper {
 
@@ -67,5 +66,15 @@ public class Helper {
         int moveOffset = abs(from - to);
 
         return (moveOffset == Board.sideLen - 1) || (moveOffset == Board.sideLen + 1);
+    }
+
+    public static boolean contains(byte[] arr, int moveField){
+        for (byte val : arr){
+            if(moveField == val){
+                return true;
+            }
+        }
+
+        return false;
     }
 }
