@@ -161,6 +161,7 @@ public class Board {
             amountPieces -= 1;
         }
         Piece p = board[from].clone();
+        p.setHasMoved(true);
         board[from] = EmptyPiece.EMPTY_PIECE;
         board[to] = p;
     }

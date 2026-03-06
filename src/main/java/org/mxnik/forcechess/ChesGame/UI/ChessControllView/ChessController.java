@@ -6,8 +6,6 @@ import javafx.event.EventHandler;
 import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.Util.DiversePair;
 
-import java.util.Arrays;
-
 
 public class ChessController implements EventHandler<Event> {
 
@@ -16,6 +14,7 @@ public class ChessController implements EventHandler<Event> {
     private DiversePair<byte[], Byte>[] currentMoveState;
     private int activeSquare = -1;
     private int lastClicked = 0;
+    private boolean clicked = false;
 
     public ChessController(ChessScene chess, String startFen){
         chessScene = chess;
@@ -34,20 +33,24 @@ public class ChessController implements EventHandler<Event> {
 
             //handle field buttons
             //durchschnittlich 70 micros max 100 micros -> 0.0000999 sec
-            int buttonfield = sourceButton.getField();
+            int buttonField = sourceButton.getField();
             int field = 0;
             boolean hasPiece = false;
+            System.out.println(clicked);
 
             for (int i = 0; i < currentMoveState.length; i++) {
                 field = currentMoveState[i].second();
-                if (buttonfield == field) {
-                    lastClicked = i;
+                if (buttonField == field) {
+                    if(!clicked) {
+                        lastClicked = i;
+                        clicked = true;
+                    }
                     hasPiece = true;
                     highlightSquares(currentMoveState[i].first());
                     //System.out.println(Arrays.toString(currentMoveState[i].first()));
                     break;
                 }
-                field = buttonfield;
+                field = buttonField;
             }
             handleSquareClick(field, hasPiece, lastClicked);
         }
@@ -60,14 +63,14 @@ public class ChessController implements EventHandler<Event> {
         }
     }
 
-    public void handleSquareClick(int field, boolean pieceField, int clicked) throws CloneNotSupportedException {
+    public void handleSquareClick(int field, boolean pieceField, int clickedSquare) throws CloneNotSupportedException {
         if(activeSquare == -1) {
             activeSquare = field;
         }
         ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(activeSquare);
 
         if (!pieceField) {
-            for (byte moveField : currentMoveState[clicked].first()){
+            for (byte moveField : currentMoveState[clickedSquare].first()){
                 if (field == moveField){
                     board.move(activeSquare, field);
                     currentMoveState = board.getMoveFromPosition();
@@ -76,6 +79,7 @@ public class ChessController implements EventHandler<Event> {
                 }
             }
             oldRect.deactivate();
+            clicked = false;
             return;
         }
 
@@ -83,13 +87,14 @@ public class ChessController implements EventHandler<Event> {
         if (activeSquare == field) {
             newRect.toggle();
             activeSquare = (newRect.isActive())? field: -1;
+            clicked = false;
             return;
         }
 
         oldRect.deactivate();
         newRect.setActive();
 
-        for (byte moveField : currentMoveState[clicked].first()){
+        for (byte moveField : currentMoveState[clickedSquare].first()){
             if (field == moveField){
                 board.move(activeSquare, field);
                 currentMoveState = board.getMoveFromPosition();
@@ -97,6 +102,7 @@ public class ChessController implements EventHandler<Event> {
                 chessScene.drawPieces(board.getBoard());
             }
         }
+        clicked = true;
         activeSquare = field;
     }
 

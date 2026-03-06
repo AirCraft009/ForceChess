@@ -13,12 +13,8 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Pawn extends Piece{
     public final static int dirCount = 3;
-
-    // to group both up moves in the same dir
-    private static final byte[] upMoves = {
-            UP.offset,
-            (byte) (UP.offset * 2),
-    };
+    public static final byte baseMove = UP.offset;
+    public static final byte doubleMove = (byte) (UP.offset * 2);
 
     // to group all other moves in different directions
     private static final byte[] otherMoves = {
@@ -72,17 +68,20 @@ public class Pawn extends Piece{
         moveList.startPiece();
 
         moveList.startDirection();
-        for (byte moveOffset : upMoves){
-            int target = pos + moveOffset * ((color)? 1 : -1);
-            if (!isValidMove(pos, target)) {
-                continue;
-            }
-            moveList.addMove((byte) target);
+        int target = pos + baseMove * ((color)? 1 : -1);
+        if (isValidMove(pos, target)) {
+            moveList.addMoves((byte) target);
+        }
+
+        target = pos + doubleMove * ((color)? 1 : -1);
+        if (!hasMoved && isValidMove(pos, target)) {
+            moveList.addMoves((byte) target);
         }
 
 
+
         for (byte moveOffset : otherMoves) {
-            int target = pos + moveOffset * ((color)? 1 : -1);
+            target = pos + moveOffset * ((color)? 1 : -1);
             if (!isValidMove(pos, target)) {
                 continue;
             }
