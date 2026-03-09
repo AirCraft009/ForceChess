@@ -38,7 +38,7 @@ public class ChessScene extends Stage {
         show();
         constants = new Constants(8, scene);
 
-        this.controller = new ChessController(this, "rnbqkbnr/ppp1pppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
+        this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         drawBoard();
         root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
     }

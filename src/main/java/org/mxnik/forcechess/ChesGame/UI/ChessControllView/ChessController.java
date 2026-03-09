@@ -28,7 +28,7 @@ public class ChessController implements EventHandler<Event> {
 
     public ChessController(ChessScene chess, String startFen){
         chessScene = chess;
-        board = new Board(startFen, (byte) 2);
+        board = new Board(startFen);
         chessScene.drawPieces(board.getBoard());
         currentMoveState = board.getMoveFromPosition();
         currPieceMoves = new byte[0];

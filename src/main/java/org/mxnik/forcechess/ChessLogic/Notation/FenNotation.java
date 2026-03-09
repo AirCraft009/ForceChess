@@ -5,8 +5,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
+import org.mxnik.forcechess.ChessLogic.Pieces.King;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
+import org.mxnik.forcechess.Util.DiversePair;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -21,6 +23,8 @@ public final class FenNotation {
     private final String enPassent;
     private final String moveNumber;
     private final int boardLenght;
+    private DiversePair<King, Integer> kingWPos;
+    private DiversePair<King, Integer> kingBPos;
 
     public FenNotation(String fenStr){
         String [] fenParts = fenStr.split(" ");
@@ -35,8 +39,12 @@ public final class FenNotation {
         try {
             boardLenght = Integer.parseInt(fenParts[5]);
         } catch (NumberFormatException e) {
-            throw new FenException("last FenString component wasn't a number(boardlenght), expected num got: " + fenParts[5], 0);
+            throw new FenException("last FenString component wasn't a number(board-length), expected num got: " + fenParts[5], 0);
         }
+    }
+
+    public DiversePair<DiversePair<King, Integer>, DiversePair<King, Integer>> readKingPos(){
+        return new DiversePair<>(kingWPos, kingBPos);
     }
 
     public int getBoardLenght(){
@@ -109,6 +117,12 @@ public final class FenNotation {
                 factor = 1;
                 if (p.getType() == PieceTypes.ILLEGAL) {
                     throw new FenException("Illegal char found in fenStr: " + c, charptr);
+                } else if (p.getType() == PieceTypes.KING){
+                    if (p.getColor()){
+                        kingWPos = new DiversePair<>((King) p, ptr + j);
+                    }else {
+                        kingBPos = new DiversePair<>((King) p, ptr + j);
+                    }
                 }
 
                 board[ptr + j] = p;

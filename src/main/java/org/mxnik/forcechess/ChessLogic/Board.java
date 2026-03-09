@@ -3,12 +3,9 @@ import org.mxnik.forcechess.ChessLogic.Moves.MoveChecking;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
-import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
-import org.mxnik.forcechess.ChessLogic.Pieces.Pawn;
-import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.ChessLogic.Pieces.*;
 
 import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.Util.DiversePair;
 import org.mxnik.forcechess.Util.Helper;
 
@@ -24,23 +21,21 @@ public class Board {
     int maxDirs = 0;
     public int amountPieces;
     MoveList moveList;
-    public int[] teamMaterial;
-    public int[] kingIndexes;
+    public int teamWMaterial;
+    public int teamBMaterial;
+    private DiversePair<King, Integer> kingWPos;
+    private DiversePair<King, Integer> kingBPos;
     int maxMoves = 0;
 
     
-    public Board(int sideLen, byte playerCount){
+    public Board(int sideLen){
         board = new Piece[sideLen*sideLen];
-        this.teamMaterial = new int[playerCount];
-        this.kingIndexes = new int[playerCount];
         Board.sideLen = sideLen;
         Board.size = sideLen * sideLen;
     }
 
-    public Board(String fenString,byte playerCount){
+    public Board(String fenString){
         BuildFromFen(fenString);
-        this.teamMaterial = new int[playerCount];
-        this.kingIndexes = new int[playerCount];
     }
     /**
      * Board per Fen String aufbauen
@@ -51,6 +46,9 @@ public class Board {
         // einfach callen nicht try catch (exception weitergeben)
         FenNotation notation = new FenNotation(fenStr);
         board = notation.readFenBoard();
+        DiversePair<DiversePair<King, Integer>, DiversePair<King, Integer>> KingPositions = notation.readKingPos();
+        kingWPos = KingPositions.first();
+        kingBPos = KingPositions.second();
         turn = notation.readFenTurn();
         sideLen = notation.readSideLen();
 
@@ -64,7 +62,6 @@ public class Board {
             maxDirs += p.getMaxDir();
             maxMoves += p.getMovesetLen();
         }
-
         moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
@@ -192,7 +189,7 @@ public class Board {
     }
 
     public static void main(String[] args) {
-        Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", (byte) 2);
+        Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         long starT = System.nanoTime();
         byte[][] allMoves = null;
         for (int i = 0; i < 1000000; i++) {
@@ -200,6 +197,9 @@ public class Board {
         }
         long endT = System.nanoTime();
         long timeT = endT - starT;
+
+        System.out.println(board1.kingWPos);
+        System.out.println(board1.kingBPos);
         System.out.println("-----------------------");
 
         System.out.printf("took time for full 1000000: %dns\n" +
@@ -210,8 +210,8 @@ public class Board {
                 100000000 / (timeT / 1000000));
 
         System.out.println("-----------------------");
-        for (int i = 0; i < allMoves.length; i++) {
-            System.out.printf("%d can move to %s\n", i, Arrays.toString(allMoves[i]));
-        }
+//        for (int i = 0; i < allMoves.length; i++) {
+//            System.out.printf("%d can move to %s\n", i, Arrays.toString(allMoves[i]));
+//        }
     }
 }
