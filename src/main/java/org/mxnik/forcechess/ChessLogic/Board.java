@@ -1,11 +1,9 @@
 package org.mxnik.forcechess.ChessLogic;
-import org.mxnik.forcechess.ChessLogic.Moves.MoveChecking;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
 
-import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
 import org.mxnik.forcechess.Util.DiversePair;
 import org.mxnik.forcechess.Util.Helper;
 
@@ -72,7 +70,7 @@ public class Board {
      * Unoptimiert aber funktionierend
      * @return
      */
-    public byte[][] getMoveFromPosition(){
+    public byte[][] getMovesFromPosition(){
         moveList.clear();
         byte[] moves = moveList.getMovesArray();
 
@@ -104,6 +102,7 @@ public class Board {
             byte[] legalMoveSection = new byte[newMoveCount - prevMovecount];
             prevMovecount = newMoveCount;
 
+            directionLoop:
             for (int d = 0; d < dirCount; d++) {
 
                 int dirIndex = dirStart + d;
@@ -143,10 +142,12 @@ public class Board {
                                 System.out.println("Not casteling");
                                 break;
                             }
-                            for(int k = i; k != square; k+=dir){
+
+                            // can't be out of bounds because the move won't be registered
+                            for(int k = i+dir; k != square; k+=dir){
                                 if(board[k] != EmptyPiece.EMPTY_PIECE){
                                     System.out.println("Empty Pieces");
-                                    break;
+                                    break directionLoop;
                                 }
                             }
                             legalMoveSection[ptr + j] = square;
@@ -177,7 +178,6 @@ public class Board {
         return legalMoves;
     }
 
-    //TODO: move will have to check the legality of the move
     public void move(int from , int to) throws CloneNotSupportedException {
         if(board[from] == EmptyPiece.EMPTY_PIECE){
             return;
@@ -214,7 +214,7 @@ public class Board {
         long starT = System.nanoTime();
         byte[][] allMoves = null;
         for (int i = 0; i < 1000000; i++) {
-            allMoves = board1.getMoveFromPosition();
+            allMoves = board1.getMovesFromPosition();
         }
         long endT = System.nanoTime();
         long timeT = endT - starT;

@@ -5,10 +5,7 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
-import org.mxnik.forcechess.Util.DiversePair;
 import org.mxnik.forcechess.Util.Helper;
-
-import java.util.Arrays;
 
 
 public class ChessController implements EventHandler<Event> {
@@ -30,7 +27,7 @@ public class ChessController implements EventHandler<Event> {
         chessScene = chess;
         board = new Board(startFen);
         chessScene.drawPieces(board.getBoard());
-        currentMoveState = board.getMoveFromPosition();
+        currentMoveState = board.getMovesFromPosition();
         currPieceMoves = new byte[0];
     }
 
@@ -96,7 +93,7 @@ public class ChessController implements EventHandler<Event> {
             pieceSelected = false;
             if (Helper.contains(currPieceMoves, secondClick)) {
                 board.move(firstClick, secondClick);
-                currentMoveState = board.getMoveFromPosition();
+                currentMoveState = board.getMovesFromPosition();
                 turn = !turn;
             }
             return;
