@@ -50,7 +50,8 @@ public class ChessController implements EventHandler<Event> {
             byte[] moves = currentMoveState[buttonField];
 
             boolean hasPiece = board.getBoard()[buttonField] != EmptyPiece.EMPTY_PIECE;
-            if(board.getBoard()[buttonField].getColor() != turn && hasPiece && !pieceSelected) {
+            boolean pieceColor = board.getBoard()[buttonField].getColor();
+            if(pieceColor != turn && hasPiece && !pieceSelected) {
                 return;
             }
 
@@ -59,7 +60,13 @@ public class ChessController implements EventHandler<Event> {
                 firstClick = buttonField;
                 highlightSquares(moves);
             }else {
-                secondClick = buttonField;
+                if(pieceColor == turn && hasPiece && buttonField != firstClick) {
+                    firstClick = buttonField;
+                    highlightSquares(moves);
+                    pieceSelected = false;
+                }else {
+                    secondClick = buttonField;
+                }
             }
 
 
@@ -72,7 +79,6 @@ public class ChessController implements EventHandler<Event> {
                 oldRect.setActive();
             }
             currPieceMoves = moves;
-            //System.out.println(pieceSelected);
             chessScene.drawPieces(board.getBoard());
         }
     }

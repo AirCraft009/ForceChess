@@ -105,7 +105,6 @@ public final class FenNotation {
                         throw new FenException("Skip number bigger than 99", charptr);
                     }
                     int skip = (c - '0') * factor;
-                    System.out.println(skip);
                     if (j + skip - 1 > boardLenght)
                         throw new FenException("Illegal fenStr, cannot skip more than one row: " + boardPositions, charptr);
                     j += skip - 1;
