@@ -126,14 +126,35 @@ public class Board {
                                 ptr++;
                             }
                             break;
-                        }else{
+                        } else{
                             if (board[square] != EmptyPiece.EMPTY_PIECE) {
                                 break;
                             }
                         }
                     }
+                    else if (board[i].getType() == PieceTypes.KING){
+                        System.out.println("King move recognized");
+                        int dir = Integer.compare(square, i);
+                        Piece corner = (dir < 0)?board[i - Helper.distanceLeftB(i)]:board[i + Helper.distanceRightB(i)];
+                        // hideous
+                        if(Helper.colDiff(i, square) > 1) {
+                            System.out.println("Test casteling");
+                            if (board[i].isHasMoved() || corner.isHasMoved() || corner.getType()!=PieceTypes.ROOK) {
+                                System.out.println("Not casteling");
+                                break;
+                            }
+                            for(int k = i; k != square; k+=dir){
+                                if(board[k] != EmptyPiece.EMPTY_PIECE){
+                                    System.out.println("Empty Pieces");
+                                    break;
+                                }
+                            }
+                            legalMoveSection[ptr + j] = square;
+                            ptr++;
+                            break;
+                        }
+                    }
 
-                    // hideous
                     if (board[square] != EmptyPiece.EMPTY_PIECE) {
                         if(board[square].getColor() != board[i].getColor()) {
                             // blocked → stop this direction
