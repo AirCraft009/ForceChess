@@ -27,7 +27,8 @@ public class BotGamestate {
     private Bitboard WQueenCastle = new Bitboard();
     private Bitboard BQueenCastle = new Bitboard();
 
-    public BotGamestate (Board buildBoard){
+
+    private void buildFromBoard(Board buildBoard){
         Piece[] b = buildBoard.getBoard();
         for(int i = 0; i < Board.size; i++){
             Piece p = b[i];
@@ -76,5 +77,19 @@ public class BotGamestate {
                 }
             }
         }
+    }
+
+    public BotGamestate (Board buildBoard){
+        buildFromBoard(buildBoard);
+    }
+
+    public BotGamestate (String fenStr){
+        Board bb = new Board(fenStr);
+        buildFromBoard(bb);
+    }
+
+    public static void main(String[] args) {
+        BotGamestate bg = new BotGamestate("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
+        System.out.println(bg.WPawns.board);
     }
 }
