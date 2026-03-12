@@ -24,8 +24,6 @@ public class Board {
     public int teamBMaterial;
     private DiversePair<King, Integer> kingWPos;
     private DiversePair<King, Integer> kingBPos;
-    private FastBitmap whiteAttackSquares;
-    private FastBitmap blackAttackSquares;
     int maxMoves = 0;
 
     
@@ -33,14 +31,10 @@ public class Board {
         board = new Piece[sideLen*sideLen];
         Board.sideLen = sideLen;
         Board.size = sideLen * sideLen;
-        whiteAttackSquares = new FastBitmap(size);
-        blackAttackSquares = new FastBitmap(size);
     }
 
     public Board(String fenString){
         BuildFromFen(fenString);
-        whiteAttackSquares = new FastBitmap(size);
-        blackAttackSquares = new FastBitmap(size);
     }
     /**
      * Board per Fen String aufbauen
@@ -102,17 +96,21 @@ public class Board {
                 legalMoves[i] = new byte[0];
                 continue;
             }
-//            } else if (board[i].getColor() && board[i].getType() == PieceTypes.KING){
-//                whiteKingPieceCount = pieceCount;
-//                continue;
-//            } else if (board[i].getType() == PieceTypes.KING) {
-//                blackKingPieceCount = pieceCount;
-//                continue;
-//            }
-
-            //System.out.println("i: " + pieceCount +" piece: " +board[i]);
 
             board[i].getMoves(i, moveList);
+            if (board[i].getColor() && board[i].getType() == PieceTypes.KING){
+                whiteKingPieceCount = pieceCount;
+                legalMoves[i] = new byte[0];
+                pieceCount ++;
+                continue;
+            } else if (board[i].getType() == PieceTypes.KING) {
+                blackKingPieceCount = pieceCount;
+                legalMoves[i] = new byte[0];
+                pieceCount ++;
+                continue;
+            }
+
+            //System.out.println("i: " + pieceCount +" piece: " +board[i]);
             int newMoveCount = moveList.getMoveCount();
 
             int dirStart = moveList.getDirectionOffset(pieceCount);
@@ -197,10 +195,73 @@ public class Board {
         }
 
         // handle whiteKing
-
-
-
+        addKingMove(legalMoves, moves, true, whiteKingPieceCount, kingWPos.second());
+        //addKingMove(legalMoves, moves,  false, blackKingPieceCount, kingBPos.second());
         return legalMoves;
+    }
+
+    public void addKingMove(byte[][] legalMoves, byte[] moves, boolean color, int kingPieceCount, int kingPos){
+        // keine moves in ein Schachfeld
+
+        int dirStart = moveList.getDirectionOffset(kingPieceCount);
+        int dirCount = moveList.getDirectionCount(kingPieceCount);
+        byte[] legalMoveSection = new byte[King.dirCount];
+        int movePtr = 0;
+        int dirIndex;
+
+        for (int i = 0; i < dirCount; i++) {
+            dirIndex = dirStart+i;
+
+            int moveOffset = moveList.getDirectionMovesOffset(dirIndex);
+            int moveLength = moveList.getDirectionMovesLength(dirIndex);
+
+            int j;
+            //alle moves durchgehen
+            moveLoop:
+            for (j = 0; j < moveLength; j++) {
+                byte square = moves[moveOffset + j];
+                System.out.println(square);
+
+                // alle anderen moves um für mögliches Schach zu checken
+
+                int dir = Integer.compare(square, kingPos);
+                Piece corner = (dir < 0)?board[kingPos - Helper.distanceLeftB(kingPos)]:board[kingPos + Helper.distanceRightB(kingPos)];
+
+                // hideous
+                if(Helper.colDiff(kingPos, square) > 1) {
+
+                    if (board[kingPos].isHasMoved() || corner.isHasMoved() || corner.getType() != PieceTypes.ROOK) {
+                        System.out.println("Not casteling");
+                        break;
+                    }
+
+                    // can't be out of bounds because the move won't be registered
+                    for (int k = kingPos + dir; k != square; k += dir) {
+                        if (board[k] != EmptyPiece.EMPTY_PIECE) {
+                            System.out.println("Empty Pieces");
+                            break moveLoop;
+                        }
+                    }
+                }else if(board[square].getColor() == color && board[square] != EmptyPiece.EMPTY_PIECE) {
+                    break;
+                }
+
+                for (int k = 0; k <legalMoves.length; k++) {
+                    if(board[k].getColor() == color) {
+                        continue;
+                    }
+                    byte[] posMoves = legalMoves[k];
+                    for (byte endSquare : posMoves){
+                        if (endSquare == square){
+                            continue moveLoop;
+                        }
+                    }
+                }
+                legalMoveSection[movePtr] = square;
+                movePtr++;
+            }
+        }
+        legalMoves[kingPos] = Arrays.copyOf(legalMoveSection, movePtr);
     }
 
     /**
