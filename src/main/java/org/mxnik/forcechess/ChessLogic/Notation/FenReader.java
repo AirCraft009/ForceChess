@@ -131,12 +131,6 @@ public final class FenReader {
         return board;
     }
 
-    @NotNull
-    @Contract(pure = true)
-    public static String writeFen(Piece[] board){
-        return "null";
-    }
-
     public static void main(String[] args) {
         //System.out.println(Arrays.toString(("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR", 8)));
     }

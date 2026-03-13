@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.Test;
+import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
+import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
@@ -54,13 +56,11 @@ public class NotationTests {
         assertTrue(ex.getMessage().contains("don't match the sidelen"));
     }
 
-    @Test
-    public void testWriteFenCurrentBehaviorReturnsNullLiteral() {
-        Piece[] board = new Piece[64];
-        for (int i = 0; i < board.length; i++) {
-            board[i] = EmptyPiece.EMPTY_PIECE;
-        }
 
-        assertEquals("null", FenReader.writeFen(board));
+    @Test
+    public void testWriteFenStartingPos(){
+        Board b = new Board();
+        String fenStr = FenWriter.WriteFen(b);
+        assertEquals("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", fenStr);
     }
 }

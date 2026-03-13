@@ -9,22 +9,63 @@ public class FenWriter {
     public static String WriteFen(Board board){
         StringBuilder fenBuilder = new StringBuilder();
         String sideLen =  Integer.toString(Board.sideLen);
-        String turn = (board.getTurn())? "w" : "b";
+        char turn = (board.getTurn())? 'w' : 'b';
         Piece[] pieceBoard = board.getBoard();
-        int i = 1;
+        int skip = 0;
+        int ptr = 0;
 
-        for (Piece piece : pieceBoard){
-            if(piece.getType() == PieceTypes.EMPTY){
-                continue;
+        rowloop:
+        for (int i = Board.sideLen - 1; i > 0 ; i--) {
+            for (int j = 0; j < Board.sideLen; j++) {
+                ptr = i * Board.sideLen + j;
+                System.out.println(ptr);
+
+                if(pieceBoard[ptr].getType() == PieceTypes.EMPTY){
+                    while (pieceBoard[ptr].getType() == PieceTypes.EMPTY){
+                        skip ++;
+                        j ++;
+                        ptr ++;
+                        if ((ptr) % Board.sideLen == 0){
+                            fenBuilder.append(skip);
+                            fenBuilder.append('\\');
+                            skip = 0;
+                            continue rowloop;
+                        }
+                    }
+                    continue;
+                }
+
+                Piece piece = pieceBoard[ptr];
+                if(skip != 0) {
+                    fenBuilder.append(skip);
+                    skip = 0;
+                }
+                char s = FenConversion.FromPiece(piece.getType(), piece.getColor());
+                fenBuilder.append(s);
+
+                if ((ptr + 1) % Board.sideLen == 0){
+                    fenBuilder.append('\\');
+                }
+
             }
-            char s = FenConversion.FromPiece(piece.getType(), piece.getColor());
-            fenBuilder.append(s);
-
-            if (Board.sideLen % i == 0){
-
-            }
-            i++;
         }
+
+        //remove the last slash
+        fenBuilder.deleteCharAt(fenBuilder.length()-1);
+        fenBuilder.append(' ');
+        fenBuilder.append(turn);
+        fenBuilder.append(' ');
+        // temporary 0's
+        fenBuilder.append("0 0 0");
+        fenBuilder.append(' ');
+        fenBuilder.append(sideLen);
+
         return fenBuilder.toString();
+    }
+
+    public static void main(String[] args) {
+        Board b = new Board();
+        System.out.println(b.toStringBoard());
+        System.out.println(WriteFen(b));
     }
 }

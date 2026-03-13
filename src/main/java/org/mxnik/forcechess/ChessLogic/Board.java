@@ -2,12 +2,15 @@ package org.mxnik.forcechess.ChessLogic;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
+import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
 
 import org.mxnik.forcechess.Util.DiversePair;
 import org.mxnik.forcechess.Util.Helper;
 
 import java.util.Arrays;
+
+import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 
 public class Board {
     public static int sideLen = 8;
@@ -26,10 +29,9 @@ public class Board {
     int maxMoves = 0;
 
     
-    public Board(int sideLen){
+    public Board(){
         board = new Piece[sideLen*sideLen];
-        Board.sideLen = sideLen;
-        Board.size = sideLen * sideLen;
+        BuildFromFen("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
     }
 
     public Board(String fenString){
@@ -272,13 +274,76 @@ public class Board {
         }
     }
 
+    public String toStringBoard() {
+        StringBuilder sb = new StringBuilder();
+        int cellWidth = 3;
+        String horizontalLine = "+" + ("---+").repeat(sideLen) + "\n";
+
+        for (int rank = sideLen - 1; rank >= 0; rank--) {
+            sb.append(horizontalLine);
+            sb.append("|");
+            for (int file = 0; file < sideLen; file++) {
+                int index = rank * sideLen + file;
+                Piece piece = board[index];
+
+                char symbol;
+                if (piece == null || piece.getType() == PieceTypes.EMPTY) {
+                    symbol = ' ';
+                } else {
+                    try {
+                        symbol = FromPiece(piece.getType(), piece.getColor());
+                    } catch (FenException e) {
+                        symbol = '?';
+                    }
+                }
+                sb.append(" ").append(symbol).append(" |");
+            }
+            sb.append(" ").append(rank + 1).append("\n");
+        }
+
+        sb.append(horizontalLine);
+        sb.append(" ");
+        for (int file = 0; file < sideLen; file++) {
+            sb.append(" ").append((char) ('a' + file)).append("  ");
+        }
+        sb.append("\n");
+
+        return sb.toString();
+
+        /*
+
+    This will render like:
+            ```
+            +---+---+---+---+---+---+---+---+
+            | r | n | b | q | k | b | n | r | 8
+            +---+---+---+---+---+---+---+---+
+            | p | p | p | p | p | p | p | p | 7
+            +---+---+---+---+---+---+---+---+
+            |   |   |   |   |   |   |   |   | 6
+            +---+---+---+---+---+---+---+---+
+            |   |   |   |   |   |   |   |   | 5
+            +---+---+---+---+---+---+---+---+
+            |   |   |   |   |   |   |   |   | 4
+            +---+---+---+---+---+---+---+---+
+            |   |   |   |   |   |   |   |   | 3
+            +---+---+---+---+---+---+---+---+
+            | P | P | P | P | P | P | P | P | 2
+            +---+---+---+---+---+---+---+---+
+            | R | N | B | Q | K | B | N | R | 1
+            +---+---+---+---+---+---+---+---+
+    a   b   c   d   e   f   g   h
+
+ */
+    }
+
+
 
     /**
      * Gibt das board als Fen String aus
      * @return fenString
      */
     public String WriteAsFen(){
-        return FenReader.writeFen(board);
+        return FenWriter.WriteFen(this);
     }
 
 

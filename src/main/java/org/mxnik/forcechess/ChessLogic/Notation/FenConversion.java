@@ -4,7 +4,7 @@ import org.mxnik.forcechess.ChessLogic.Pieces.*;
 
 import static org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes.*;
 
-class FenConversion {
+public class FenConversion {
 
     public static Piece FromFen(char c){
         return switch (c) {
@@ -40,7 +40,7 @@ class FenConversion {
             }case PAWN -> {
                 return (char) ('p' - ((color)? 32 : 0));
             }default -> {
-                throw new FenException("got Illegal or Empty piece while trying to convert", -1);
+                throw new FenException("got Illegal or Empty piece while trying to convert", p.value);
             }
         }
     }
