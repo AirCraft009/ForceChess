@@ -19,9 +19,6 @@ public class ChessController implements EventHandler<Event> {
     private boolean pieceSelected = false;
     private byte[] currPieceMoves;
 
-    private int activeSquare = -1;
-    private int lastClicked = 0;
-    private boolean selected = false;
 
     public ChessController(ChessScene chess, String startFen){
         chessScene = chess;
@@ -80,13 +77,23 @@ public class ChessController implements EventHandler<Event> {
         }
     }
 
+    /**
+     * set all squares held in the move array to active
+     * This also sets the color to the secondary
+     * @param moves arr of fields (max Board.size -1)
+     */
     public void highlightSquares(byte[] moves){
         for (byte move : moves){
             ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(move);
-            oldRect.toggle();
+            oldRect.setActive();
         }
     }
 
+    /**
+     * handle the logic behind highlighting and moving Pieces
+     * @param hasPiece does the square contain a piece
+     * @throws CloneNotSupportedException
+     */
     public void handleSquare(boolean hasPiece) throws CloneNotSupportedException {
         if (pieceSelected) {
             //condition: -> firstCLick != -1;
