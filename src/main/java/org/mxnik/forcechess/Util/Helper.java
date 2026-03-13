@@ -50,7 +50,7 @@ public class Helper {
     }
 
     public static boolean isInside(int pos){
-        return pos >= 0 && pos < Board.sideLen * Board.sideLen;
+        return pos >= 0 && pos < Board.size;
     }
 
     public static int rowDiff(int from, int to){
