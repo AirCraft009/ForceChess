@@ -23,8 +23,8 @@ public final class FenNotation {
     private final String enPassent;
     private final String moveNumber;
     private final int boardLenght;
-    private DiversePair<King, Integer> kingWPos;
-    private DiversePair<King, Integer> kingBPos;
+    private int kingWPos;
+    private int kingBPos;
 
     public FenNotation(String fenStr){
         String [] fenParts = fenStr.split(" ");
@@ -43,7 +43,7 @@ public final class FenNotation {
         }
     }
 
-    public DiversePair<DiversePair<King, Integer>, DiversePair<King, Integer>> readKingPos(){
+    public DiversePair<Integer, Integer> readKingPos(){
         return new DiversePair<>(kingWPos, kingBPos);
     }
 
@@ -118,9 +118,9 @@ public final class FenNotation {
                     throw new FenException("Illegal char found in fenStr: " + c, charptr);
                 } else if (p.getType() == PieceTypes.KING){
                     if (p.getColor()){
-                        kingWPos = new DiversePair<>((King) p, ptr + j);
+                        kingWPos = ptr + j;
                     }else {
-                        kingBPos = new DiversePair<>((King) p, ptr + j);
+                        kingBPos = ptr + j;
                     }
                 }
 

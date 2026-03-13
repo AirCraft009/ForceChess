@@ -5,7 +5,6 @@ import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
 
 import org.mxnik.forcechess.Util.DiversePair;
-import org.mxnik.forcechess.Util.FastBitmap;
 import org.mxnik.forcechess.Util.Helper;
 
 import java.util.Arrays;
@@ -15,15 +14,15 @@ public class Board {
     public static int size = 64;
 
     Piece[] board;
-    boolean turn = true;
+    private boolean turn = true;
     int totalMaterial = 0;
     int maxDirs = 0;
     public int amountPieces;
     MoveList moveList;
     public int teamWMaterial;
     public int teamBMaterial;
-    private DiversePair<King, Integer> kingWPos;
-    private DiversePair<King, Integer> kingBPos;
+    private int kingWPos;
+    private int kingBPos;
     int maxMoves = 0;
 
     
@@ -45,7 +44,7 @@ public class Board {
         // einfach callen nicht try catch (exception weitergeben)
         FenNotation notation = new FenNotation(fenStr);
         board = notation.readFenBoard();
-        DiversePair<DiversePair<King, Integer>, DiversePair<King, Integer>> KingPositions = notation.readKingPos();
+        DiversePair<Integer, Integer> KingPositions = notation.readKingPos();
         kingWPos = KingPositions.first();
         kingBPos = KingPositions.second();
         turn = notation.readFenTurn();
@@ -150,29 +149,6 @@ public class Board {
                                 break;
                             }
                         }
-                    }else if(board[i].getType() == PieceTypes.KING){
-                        System.out.println("King move recognized");
-                        int dir = Integer.compare(square, i);
-                        Piece corner = (dir < 0)?board[i - Helper.distanceLeftB(i)]:board[i + Helper.distanceRightB(i)];
-                        // hideous
-                        if(Helper.colDiff(i, square) > 1) {
-                            System.out.println("Test casteling");
-                            if (board[i].isHasMoved() || corner.isHasMoved() || corner.getType()!=PieceTypes.ROOK) {
-                                System.out.println("Not casteling");
-                                break;
-                            }
-
-                            // can't be out of bounds because the move won't be registered
-                            for(int k = i+dir; k != square; k+=dir){
-                                if(board[k] != EmptyPiece.EMPTY_PIECE){
-                                    System.out.println("Empty Pieces");
-                                    break directionLoop;
-                                }
-                            }
-                            legalMoveSection[ptr + j] = square;
-                            ptr++;
-                            break;
-                        }
                     }
 
                     if (board[square] != EmptyPiece.EMPTY_PIECE) {
@@ -195,8 +171,11 @@ public class Board {
         }
 
         // handle whiteKing
-        addKingMove(legalMoves, moves, true, whiteKingPieceCount, kingWPos.second());
-        //addKingMove(legalMoves, moves,  false, blackKingPieceCount, kingBPos.second());
+        addKingMove(legalMoves, moves, true, whiteKingPieceCount, kingWPos);
+        addKingMove(legalMoves, moves,  false, blackKingPieceCount, kingBPos);
+
+        System.out.println("white: " + kingWPos);
+        System.out.println("black: " + kingBPos);
         return legalMoves;
     }
 
@@ -220,7 +199,6 @@ public class Board {
             moveLoop:
             for (j = 0; j < moveLength; j++) {
                 byte square = moves[moveOffset + j];
-                System.out.println(square);
 
                 // alle anderen moves um für mögliches Schach zu checken
 
@@ -231,18 +209,16 @@ public class Board {
                 if(Helper.colDiff(kingPos, square) > 1) {
 
                     if (board[kingPos].isHasMoved() || corner.isHasMoved() || corner.getType() != PieceTypes.ROOK) {
-                        System.out.println("Not casteling");
                         break;
                     }
 
                     // can't be out of bounds because the move won't be registered
                     for (int k = kingPos + dir; k != square; k += dir) {
                         if (board[k] != EmptyPiece.EMPTY_PIECE) {
-                            System.out.println("Empty Pieces");
-                            break moveLoop;
+                            continue moveLoop;
                         }
                     }
-                }else if(board[square].getColor() == color && board[square] != EmptyPiece.EMPTY_PIECE) {
+                }else if(board[square] != EmptyPiece.EMPTY_PIECE && board[square].getColor() == color) {
                     break;
                 }
 
@@ -253,6 +229,7 @@ public class Board {
                     byte[] posMoves = legalMoves[k];
                     for (byte endSquare : posMoves){
                         if (endSquare == square){
+                            System.out.printf("attacked square: from %d to %d\n", kingPos, square);
                             continue moveLoop;
                         }
                     }
@@ -263,33 +240,6 @@ public class Board {
         }
         legalMoves[kingPos] = Arrays.copyOf(legalMoveSection, movePtr);
     }
-
-    /**
-    public kingM(){
-        System.out.println("King move recognized");
-        int dir = Integer.compare(square, i);
-        Piece corner = (dir < 0)?board[i - Helper.distanceLeftB(i)]:board[i + Helper.distanceRightB(i)];
-        // hideous
-        if(Helper.colDiff(i, square) > 1) {
-            System.out.println("Test casteling");
-            if (board[i].isHasMoved() || corner.isHasMoved() || corner.getType()!=PieceTypes.ROOK) {
-                System.out.println("Not casteling");
-                break;
-            }
-
-            // can't be out of bounds because the move won't be registered
-            for(int k = i+dir; k != square; k+=dir){
-                if(board[k] != EmptyPiece.EMPTY_PIECE){
-                    System.out.println("Empty Pieces");
-                    break directionLoop;
-                }
-            }
-            legalMoveSection[ptr + j] = square;
-            ptr++;
-            break;
-        }
-    }
-     */
 
     public void move(int from , int to) throws CloneNotSupportedException {
         if(board[from] == EmptyPiece.EMPTY_PIECE){
@@ -302,15 +252,26 @@ public class Board {
         p.setHasMoved(true);
         board[from] = EmptyPiece.EMPTY_PIECE;
         board[to] = p;
+        // switch turn
+        turn = !turn;
 
         if (p.getType() != PieceTypes.KING){
             return;
+        }
+
+        // turns alr. switched
+        if(!turn){
+            kingWPos = to;
+        }else {
+            kingBPos = to;
         }
 
         if(Helper.colDiff(from, to) > 1){
             int dir = Integer.compare(to, from);
             int rookPos = (dir < 0)?from - Helper.distanceLeftB(from):from + Helper.distanceRightB(from);
             move(rookPos, to - dir);
+            // wurde im zweiten Move call wieder geswitched nochmal switchen
+            turn = !turn;
         }
     }
 
