@@ -1,7 +1,7 @@
 package org.mxnik.forcechess.ChessLogic;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
-import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
+import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
 
 import org.mxnik.forcechess.Util.DiversePair;
@@ -42,7 +42,7 @@ public class Board {
      */
     public void BuildFromFen(String fenStr) throws FenException {
         // einfach callen nicht try catch (exception weitergeben)
-        FenNotation notation = new FenNotation(fenStr);
+        FenReader notation = new FenReader(fenStr);
         board = notation.readFenBoard();
         DiversePair<Integer, Integer> KingPositions = notation.readKingPos();
         kingWPos = KingPositions.first();
@@ -278,7 +278,7 @@ public class Board {
      * @return fenString
      */
     public String WriteAsFen(){
-        return FenNotation.writeFen(board);
+        return FenReader.writeFen(board);
     }
 
 
@@ -288,6 +288,10 @@ public class Board {
 
     public void setBoard(Piece[] board) {
         this.board = board;
+    }
+
+    public boolean getTurn(){
+        return turn;
     }
 
     public static void main(String[] args) {
