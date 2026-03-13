@@ -18,7 +18,6 @@ public class FenWriter {
         for (int i = Board.sideLen - 1; i > 0 ; i--) {
             for (int j = 0; j < Board.sideLen; j++) {
                 ptr = i * Board.sideLen + j;
-                System.out.println(ptr);
 
                 if(pieceBoard[ptr].getType() == PieceTypes.EMPTY){
                     while (pieceBoard[ptr].getType() == PieceTypes.EMPTY){
