@@ -2,8 +2,6 @@ package org.mxnik.forcechess.ChessLogic.Notation;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.King;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
@@ -11,10 +9,9 @@ import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.Util.DiversePair;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 
-public final class FenNotation {
+public final class FenReader {
     // sollte hidden sein
     // Board API sollte readFenBoard and writeFen exposen
     private final String boardPositions;
@@ -26,7 +23,7 @@ public final class FenNotation {
     private int kingWPos;
     private int kingBPos;
 
-    public FenNotation(String fenStr){
+    public FenReader(String fenStr){
         String [] fenParts = fenStr.split(" ");
         if (fenParts.length != 6) {
             throw new FenException("incomplete Fenstring incorrect number of subsections, expected 6 got: " + fenParts.length, 0);

@@ -23,4 +23,25 @@ class FenConversion {
             default -> IllegalPiece.ILLEGAL_PIECE;
         };
     }
+
+
+    public static char FromPiece(PieceTypes p, boolean color) throws FenException{
+        switch (p){
+            case KING -> {
+                return (char) ('k' - ((color)? 32 : 0));
+            }case BISHOP -> {
+                return (char) ('b' - ((color)? 32 : 0));
+            }case KNIGHT -> {
+                return (char) ('n' - ((color)? 32 : 0));
+            }case ROOK -> {
+                return (char) ('r' - ((color)? 32 : 0));
+            }case QUEEN -> {
+                return (char) ('q' - ((color)? 32 : 0));
+            }case PAWN -> {
+                return (char) ('p' - ((color)? 32 : 0));
+            }default -> {
+                throw new FenException("got Illegal or Empty piece while trying to convert", -1);
+            }
+        }
+    }
 }
