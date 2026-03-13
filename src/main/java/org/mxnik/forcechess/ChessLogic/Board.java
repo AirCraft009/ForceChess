@@ -173,9 +173,6 @@ public class Board {
         // handle whiteKing
         addKingMove(legalMoves, moves, true, whiteKingPieceCount, kingWPos);
         addKingMove(legalMoves, moves,  false, blackKingPieceCount, kingBPos);
-
-        System.out.println("white: " + kingWPos);
-        System.out.println("black: " + kingBPos);
         return legalMoves;
     }
 
@@ -315,8 +312,15 @@ public class Board {
                 100000000 / (timeT / 1000000));
 
         System.out.println("-----------------------");
-//        for (int i = 0; i < allMoves.length; i++) {
-//            System.out.printf("%d can move to %s\n", i, Arrays.toString(allMoves[i]));
-//        }
+//
+        /*
+        stand 13.03.2026
+        -----------------------
+        took time for full 1000000: 1687212500ns
+        avg time per board: 1687ns
+        so on avg 59276 per sec
+        -----------------------
+
+         */
     }
 }
