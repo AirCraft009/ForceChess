@@ -1,6 +1,6 @@
 import org.junit.jupiter.api.Test;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
-import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
+import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
@@ -11,7 +11,7 @@ public class NotationTests {
 
     @Test
     public void testReadFenParsesStartingPosition() {
-        FenNotation fenNotation = new FenNotation("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w q - 1 8");
+        FenReader fenNotation = new FenReader("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w q - 1 8");
         Piece[] board = fenNotation.readFenBoard();
 
 
@@ -38,19 +38,19 @@ public class NotationTests {
 
     @Test
     public void testReadFenRejectsIllegalCharacter() {
-        FenException ex = assertThrows(FenException.class, () -> new FenNotation("7x/8/8/8/8/8/8/8 w q - 1 8"));
+        FenException ex = assertThrows(FenException.class, () -> new FenReader("7x/8/8/8/8/8/8/8 w q - 1 8"));
         assertTrue(ex.getMessage().contains("Illegal Char"));
     }
 
     @Test
     public void testReadFenRejectsIncompleteFen() {
-        FenException ex = assertThrows(FenException.class, () -> new FenNotation("8/8/8/8/8/8/8"));
+        FenException ex = assertThrows(FenException.class, () -> new FenReader("8/8/8/8/8/8/8"));
         assertTrue(ex.getMessage().contains("Fen isn't complete"));
     }
 
     @Test
     public void testReadFenRejectsInvalidRowWidth() {
-        FenException ex = assertThrows(FenException.class, () -> new FenNotation("7/8/8/8/8/8/8/8"));
+        FenException ex = assertThrows(FenException.class, () -> new FenReader("7/8/8/8/8/8/8/8"));
         assertTrue(ex.getMessage().contains("don't match the sidelen"));
     }
 
@@ -61,6 +61,6 @@ public class NotationTests {
             board[i] = EmptyPiece.EMPTY_PIECE;
         }
 
-        assertEquals("null", FenNotation.writeFen(board));
+        assertEquals("null", FenReader.writeFen(board));
     }
 }
