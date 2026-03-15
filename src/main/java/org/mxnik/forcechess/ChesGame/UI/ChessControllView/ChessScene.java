@@ -16,6 +16,7 @@ import java.io.FileNotFoundException;
 import java.util.HashMap;
 
 public class ChessScene extends Stage {
+    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
     Group root;
     Constants constants;
@@ -24,6 +25,7 @@ public class ChessScene extends Stage {
     Group backgroundLayer = new Group();
     private Group pieceLayer = new Group();
     private Group interactionLayer = new Group();
+    ImageView winView;
 
     ChessScene() throws CloneNotSupportedException {
         setX(Constants.bounds.getMinX());
@@ -40,7 +42,7 @@ public class ChessScene extends Stage {
 
 //        this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         try {
-            this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w 0 0 0 8");
+            this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");
         }
@@ -153,6 +155,20 @@ public class ChessScene extends Stage {
             pieceImages.put(i, imageView);
             pieceLayer.getChildren().add(imageView);
         }
+    }
+
+    public void showWinImage(){
+        String imageP = sourcedir + "img.png";
+        Image image;
+        try {
+            image = new Image(new FileInputStream(imageP));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        winView = new ImageView(image);
+        winView.setFitHeight(constants.bounds.getHeight());
+        winView.setFitWidth(constants.bounds.getWidth());
+        pieceLayer.getChildren().add(winView);
     }
 
     public void movePiece(int from, int to){

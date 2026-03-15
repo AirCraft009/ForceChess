@@ -3,6 +3,7 @@ package org.mxnik.forcechess.ChesGame.UI.ChessControllView;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.scene.image.ImageView;
 import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.GameState;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
@@ -105,6 +106,7 @@ public class ChessController implements EventHandler<Event> {
                 currentMoveState = board.getMovesFromPosition();
                 if (currentMoveState.second() != GameState.Continue){
                     System.out.println("Game end detected");
+                    chessScene.showWinImage();
                 }
                 turn = !turn;
             }
