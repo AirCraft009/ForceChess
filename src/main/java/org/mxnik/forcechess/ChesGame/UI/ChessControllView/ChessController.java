@@ -4,7 +4,9 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.GameState;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
+import org.mxnik.forcechess.Util.DiversePair;
 import org.mxnik.forcechess.Util.Helper;
 
 
@@ -12,7 +14,7 @@ public class ChessController implements EventHandler<Event> {
 
     final private ChessScene chessScene;
     final private Board board;
-    private byte[][] currentMoveState;
+    private DiversePair<byte[][], GameState> currentMoveState;
     private boolean turn = true;
     private int firstClick = -1;
     private int secondClick = -1;
@@ -20,7 +22,7 @@ public class ChessController implements EventHandler<Event> {
     private byte[] currPieceMoves;
 
 
-    public ChessController(ChessScene chess, String startFen){
+    public ChessController(ChessScene chess, String startFen) throws CloneNotSupportedException {
         chessScene = chess;
         board = new Board(startFen);
         chessScene.drawPieces(board.getBoard());
@@ -41,7 +43,7 @@ public class ChessController implements EventHandler<Event> {
             int buttonField = sourceButton.getField();
 
 
-            byte[] moves = currentMoveState[buttonField];
+            byte[] moves = currentMoveState.first()[buttonField];
 
             boolean hasPiece = board.getBoard()[buttonField] != EmptyPiece.EMPTY_PIECE;
             boolean pieceColor = board.getBoard()[buttonField].getColor();
@@ -101,6 +103,9 @@ public class ChessController implements EventHandler<Event> {
             if (Helper.contains(currPieceMoves, secondClick)) {
                 board.move(firstClick, secondClick);
                 currentMoveState = board.getMovesFromPosition();
+                if (currentMoveState.second() != GameState.Continue){
+                    System.out.println("Game end detected");
+                }
                 turn = !turn;
             }
             return;

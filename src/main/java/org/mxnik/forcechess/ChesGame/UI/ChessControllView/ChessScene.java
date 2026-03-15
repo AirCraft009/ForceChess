@@ -25,7 +25,7 @@ public class ChessScene extends Stage {
     private Group pieceLayer = new Group();
     private Group interactionLayer = new Group();
 
-    ChessScene(){
+    ChessScene() throws CloneNotSupportedException {
         setX(Constants.bounds.getMinX());
         setY(Constants.bounds.getMinY());
         setWidth(Constants.bounds.getWidth());
@@ -39,7 +39,11 @@ public class ChessScene extends Stage {
         constants = new Constants(8, scene);
 
 //        this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-        this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w 0 0 0 8");
+        try {
+            this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQK2R w 0 0 0 8");
+        }catch (CloneNotSupportedException e){
+            throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");
+        }
         drawBoard();
         root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
     }
