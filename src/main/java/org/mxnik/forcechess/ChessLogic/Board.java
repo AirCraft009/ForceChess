@@ -129,7 +129,7 @@ public class Board {
                 pseudelegalMoves[i][movePtr + 1] = move;
                 movePtr ++;
             }
-            pseudelegalMoves[i][0] = (byte) movePtr;
+            pseudelegalMoves[i][0] = (byte) (movePtr);
         }
 
         return checkCheckmate(hasMoves);
@@ -168,7 +168,6 @@ public class Board {
                 }
             }
         }
-
         return check;
     }
 
@@ -280,7 +279,7 @@ public class Board {
                 }
                 ptr += j;
             }
-            globalLegalMoves[i][0] = (byte) ptr;
+            globalLegalMoves[i][0] = (byte) (ptr + 1);
             pieceCount ++;
         }
 
@@ -437,7 +436,6 @@ public class Board {
 
 
         System.out.println("-----------------------");
-
         System.out.printf("""
                         took time for full 1000000: %d s
                         avg time per board: %d Us
@@ -446,8 +444,8 @@ public class Board {
                 timeT / 100000000,
                 (timeT / 1000000) / 1000,
                 100000000 / (timeT / 1000000));
-
         System.out.println("-----------------------");
+
         /*
         stand 13.03.2026 - kein Schach check
         -----------------------
@@ -458,7 +456,6 @@ public class Board {
 
 
         stand 15.03.2026 - kein Schach check
-
         -----------------------
         took time for full 1000000: 82226015600 ns
         avg time per board: 82226 ns

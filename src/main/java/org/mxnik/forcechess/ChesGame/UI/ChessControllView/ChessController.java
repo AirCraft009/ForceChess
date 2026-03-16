@@ -86,8 +86,9 @@ public class ChessController implements EventHandler<Event> {
      * @param moves arr of fields (max Board.size -1)
      */
     public void highlightSquares(byte[] moves){
-        for (byte move : moves){
-            ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(move);
+        //
+        for (int i = 1; i < moves[0]; i++) {
+            ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(moves[i]);
             oldRect.setActive();
         }
     }
