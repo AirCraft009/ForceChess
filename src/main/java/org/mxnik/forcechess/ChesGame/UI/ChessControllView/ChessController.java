@@ -105,7 +105,6 @@ public class ChessController implements EventHandler<Event> {
                 board.move(firstClick, secondClick);
                 currentMoveState = board.getMovesFromPosition();
                 if (currentMoveState.second() != GameState.Continue){
-                    System.out.println("Game end detected");
                     chessScene.showWinImage();
                 }
                 turn = !turn;

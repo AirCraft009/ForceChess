@@ -28,8 +28,8 @@ public class Board {
     public int teamBMaterial;
     private int kingWPos;
     private int kingBPos;
-    private FastBitmap whiteAttackSquares;
-    private FastBitmap blackAttackSquares;
+    //globalIlegalMoves[x][0] ist die anzahl der Moves an dieser Stelle
+    private static byte[][] globalLegalMoves;
 
     int maxMoves = 0;
 
@@ -37,10 +37,14 @@ public class Board {
     public Board(){
         board = new Piece[sideLen*sideLen];
         BuildFromFen("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
+        //muss nicht immer ein neues Array allocaten
+        globalLegalMoves = new byte[Board.size][11];
     }
 
     public Board(String fenString){
         BuildFromFen(fenString);
+        //muss nicht immer ein neues Array allocaten
+        globalLegalMoves = new byte[Board.size][11];
     }
     /**
      * Board per Fen String aufbauen
@@ -96,10 +100,9 @@ public class Board {
         boolean hasMoves = false;
 
         for (int i = 0; i < pseudelegalMoves.length; i++) {
-            byte[] moves = pseudelegalMoves[i];
             movePtr = 0;
-            for (int j = 0; j < moves.length; j++) {
-                byte move = moves[j];
+            for (int j = 1; j < pseudelegalMoves[i][0]; j++) {
+                byte move = pseudelegalMoves[i][j];
 
 
                 //make move
@@ -123,10 +126,10 @@ public class Board {
                     hasMoves = true;
                 }
                 // move with no check for own king
-                moves[movePtr] = move;
+                pseudelegalMoves[i][movePtr + 1] = move;
                 movePtr ++;
             }
-            pseudelegalMoves[i] = Arrays.copyOf(moves, movePtr);
+            pseudelegalMoves[i][0] = (byte) movePtr;
         }
 
         return checkCheckmate(hasMoves);
@@ -170,9 +173,9 @@ public class Board {
     }
 
     public DiversePair<byte[][], GameState> getMovesFromPosition () throws CloneNotSupportedException{
-        byte [][] legalMoves = getPseudoMovesFromPosition();
+        getPseudoMovesFromPosition();
         // modifies values in place
-        return new DiversePair<>(legalMoves, checkChess(legalMoves));
+        return new DiversePair<>(globalLegalMoves, checkChess(globalLegalMoves));
     }
 
     /**
@@ -183,13 +186,10 @@ public class Board {
      * @return byte[][] finalMoves
      */
     private byte[][] getPseudoMovesFromPosition() throws CloneNotSupportedException {
+
+
         moveList.clear();
         byte[] moves = moveList.getMovesArray();
-
-
-        // warning weil der Compiler sich nicht sicher sein kann
-        // ist aber type safe während Runtime
-        byte[][] legalMoves = new byte[size][];
 
         int pieceCount = 0;
         int prevMovecount = moveList.getMoveCount();
@@ -199,7 +199,7 @@ public class Board {
             // könige Skippen ->
             // dannach berechnen um Schach moves zu verhindern
             if (board[i].getType() == PieceTypes.EMPTY) {
-                legalMoves[i] = new byte[0];
+                globalLegalMoves[i][0] = 0;
                 continue;
             }
 
@@ -213,7 +213,6 @@ public class Board {
 
             // keep track of the current position in the final moves arr
             int ptr = 0;
-            byte[] legalMoveSection = new byte[newMoveCount - prevMovecount];
             prevMovecount = newMoveCount;
 
 
@@ -236,7 +235,7 @@ public class Board {
                         // hideous
                         if(Helper.isDiagonalMove(i, square)) {
                             if (board[square].getColor() != board[i].getColor() && board[square] != EmptyPiece.EMPTY_PIECE) {
-                                legalMoveSection[ptr + j] = square;
+                                Board.globalLegalMoves[i][ptr + j + 1] = square;
                                 ptr++;
                             }
                             break;
@@ -260,33 +259,33 @@ public class Board {
                                     break directionLoop;
                                 }
                             }
-                            legalMoveSection[ptr + j] = square;
+                            Board.globalLegalMoves[i][ptr + j + 1] = square;
                             ptr++;
                             break;
                         }
                     }
-
+                    // blocked → stop this direction
                     if (board[square] != EmptyPiece.EMPTY_PIECE) {
+                        // different color -> take piece: else don't
                         if(board[square].getColor() != board[i].getColor()) {
-                            // blocked → stop this direction
-                            legalMoveSection[ptr + j] = square;
+                            Board.globalLegalMoves[i][ptr + j + 1] = square;
                             ptr++;
                         }
                         break;
                     }
 
-                    legalMoveSection[ptr + j] = square;
+                    Board.globalLegalMoves[i][ptr + j + 1] = square;
                     //System.out.printf("legalMove: %d -> %d\n", i, square);
                     //otherwise square is free → legal move
                 }
                 ptr += j;
             }
-            legalMoves[i] = Arrays.copyOf(legalMoveSection, ptr);
+            globalLegalMoves[i][0] = (byte) ptr;
             pieceCount ++;
         }
 
 
-        return legalMoves;
+        return globalLegalMoves;
     }
 
     private MoveTypes castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
@@ -439,21 +438,33 @@ public class Board {
 
         System.out.println("-----------------------");
 
-        System.out.printf("took time for full 1000000: %d ns\n" +
-                "avg time per board: %d ns\n" +
-                "so on avg %d per sec\n",
-                timeT,
-                timeT / 1000000,
+        System.out.printf("""
+                        took time for full 1000000: %d s
+                        avg time per board: %d Us
+                        so on avg %d per sec
+                        """,
+                timeT / 100000000,
+                (timeT / 1000000) / 1000,
                 100000000 / (timeT / 1000000));
 
         System.out.println("-----------------------");
         /*
-        stand 13.03.2026
+        stand 13.03.2026 - kein Schach check
         -----------------------
         took time for full 1000000: 1687212500ns
         avg time per board: 1687ns
         so on avg 59276 per sec
         -----------------------
+
+
+        stand 15.03.2026 - kein Schach check
+
+        -----------------------
+        took time for full 1000000: 82226015600 ns
+        avg time per board: 82226 ns
+        so on avg 1216 per sec
+        -----------------------
          */
+
     }
 }
