@@ -18,6 +18,10 @@ public class Board {
     public static int sideLen = 8;
     public static int size = 64;
 
+    // 1 length byte + 27 max moves (queen on open board)
+    // increase if you ever support fairy pieces with longer rays
+    static final int MOVE_STRIDE = 28;
+
     Piece[] board;
     private boolean turn = true;
     int totalMaterial = 0;
@@ -28,31 +32,31 @@ public class Board {
     public int teamBMaterial;
     private int kingWPos;
     private int kingBPos;
-    //globalIlegalMoves[x][0] ist die anzahl der Moves an dieser Stelle
-    private static byte[][] globalLegalMoves;
+
+    // flat stride array: square i -> base = i * MOVE_STRIDE
+    //   [base]        = number of legal moves for that square
+    //   [base + 1..n] = the move targets
+    private static byte[] globalLegalMoves;
 
     int maxMoves = 0;
 
-    
-    public Board(){
-        board = new Piece[sideLen*sideLen];
+    public Board() {
+        board = new Piece[sideLen * sideLen];
         BuildFromFen("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-        //muss nicht immer ein neues Array allocaten
-        globalLegalMoves = new byte[Board.size][11];
+        globalLegalMoves = new byte[Board.size * MOVE_STRIDE];
     }
 
-    public Board(String fenString){
+    public Board(String fenString) {
         BuildFromFen(fenString);
-        //muss nicht immer ein neues Array allocaten
-        globalLegalMoves = new byte[Board.size][11];
+        globalLegalMoves = new byte[Board.size * MOVE_STRIDE];
     }
+
     /**
      * Board per Fen String aufbauen
      * @param fenStr Der String im Fen format
      * @throws FenException Exception mit position des Errors
      */
     public void BuildFromFen(String fenStr) throws FenException {
-        // einfach callen nicht try catch (exception weitergeben)
         FenReader notation = new FenReader(fenStr);
         board = notation.readFenBoard();
         DiversePair<Integer, Integer> KingPositions = notation.readKingPos();
@@ -67,7 +71,7 @@ public class Board {
                 continue;
 
             totalMaterial += p.getType().value;
-            amountPieces ++;
+            amountPieces++;
             maxDirs += p.getMaxDir();
             maxMoves += p.getMovesetLen();
         }
@@ -75,223 +79,200 @@ public class Board {
         moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
-    private  void resetCastle(int from, int to) throws CloneNotSupportedException {
-        if(board[from].getType() != PieceTypes.KING){
+    private void resetCastle(int from, int to) throws CloneNotSupportedException {
+        if (board[from].getType() != PieceTypes.KING) {
             return;
         }
 
-        if(Helper.colDiff(from, to) > 1){
-
-            // turm von original position immer noch in d
+        if (Helper.colDiff(from, to) > 1) {
             int dir = Integer.compare(to, from);
-
-            int rookPos = (dir < 0)?from - Helper.distanceLeftB(from):from + Helper.distanceRightB(from);
-            rawMove(to - dir , rookPos, false);
+            int rookPos = (dir < 0) ? from - Helper.distanceLeftB(from) : from + Helper.distanceRightB(from);
+            rawMove(to - dir, rookPos, false);
         }
     }
 
-    public GameState checkChess(byte[][] pseudelegalMoves) throws CloneNotSupportedException {
+    public GameState checkChess(byte[] pseudoLegalMoves) throws CloneNotSupportedException {
         boolean illegalMove = false;
-        int movePtr;
-        //TODO: find better way than copying entire arr
         Piece[] baseState = board.clone();
         int kB = kingBPos;
         int kW = kingWPos;
         boolean hasMoves = false;
 
-        for (int i = 0; i < pseudelegalMoves.length; i++) {
-            movePtr = 0;
-            for (int j = 1; j < pseudelegalMoves[i][0]; j++) {
-                byte move = pseudelegalMoves[i][j];
+        for (int i = 0; i < Board.size; i++) {
+            int base = i * MOVE_STRIDE;
+            int len = pseudoLegalMoves[base] & 0xFF;
+            int writePtr = 0;
 
+            for (int j = 0; j < len; j++) {
+                byte move = pseudoLegalMoves[base + 1 + j];
+                //System.out.printf("move: %d -> %d\n", i, move);
 
-                //make move
                 rawMove(i, move, false);
 
-                if(turn){
+                if (turn) {
                     illegalMove = isChecked(kingWPos);
-                }else {
+                } else {
                     illegalMove = isChecked(kingBPos);
                 }
 
                 kingBPos = kB;
                 kingWPos = kW;
-                // TODO: find way to avoid copying entire array
                 board = baseState.clone();
 
-                if(illegalMove){
-                   continue;
+                if (illegalMove) {
+                    continue;
                 }
-                if(board[i].getColor() == turn){
+                if (board[i].getColor() == turn) {
                     hasMoves = true;
                 }
-                // move with no check for own king
-                pseudelegalMoves[i][movePtr + 1] = move;
-                movePtr ++;
+
+                // compact: keep only legal moves
+                pseudoLegalMoves[base + 1 + writePtr] = move;
+                writePtr++;
             }
-            pseudelegalMoves[i][0] = (byte) (movePtr);
+            pseudoLegalMoves[base] = (byte) writePtr;
         }
 
         return checkCheckmate(hasMoves);
     }
 
     private GameState checkCheckmate(boolean hasMove) throws CloneNotSupportedException {
-        boolean illegalMove;
-        if(turn){
-            illegalMove = isChecked(kingWPos);
-        }else {
-            illegalMove = isChecked(kingBPos);
-        }
-
-        if(hasMove){
+        if (hasMove) {
             return GameState.Continue;
         }
-        
-        if(illegalMove){
-            return GameState.CheckMate;
+
+        boolean inCheck;
+        if (turn) {
+            inCheck = isChecked(kingWPos);
+        } else {
+            inCheck = isChecked(kingBPos);
         }
 
+        if (inCheck) {
+            return GameState.CheckMate;
+        }
 
         return GameState.StaleMate;
     }
 
     public boolean isChecked(int kingPos) throws CloneNotSupportedException {
-        byte[][] moveFields = getPseudoMovesFromPosition();
-        boolean check = false;
+        byte[] moveFields = new byte[Board.size * MOVE_STRIDE];
+        getPseudoMovesFromPosition(moveFields);
 
-        fieldLoop:
-        for (byte[] moves : moveFields){
-            for (byte move : moves){
-                if(move == kingPos){
-                    check = true;
-                    break fieldLoop;
+        for (int i = 0; i < Board.size; i++) {
+            int base = i * MOVE_STRIDE;
+            int len = moveFields[base] & 0xFF;
+            for (int j = 0; j < len; j++) {
+                if ((moveFields[base + 1 + j] & 0xFF) == kingPos) {
+                    return true;
                 }
             }
         }
-        return check;
+        return false;
     }
 
-    public DiversePair<byte[][], GameState> getMovesFromPosition () throws CloneNotSupportedException{
-        getPseudoMovesFromPosition();
-        // modifies values in place
+    public DiversePair<byte[], GameState> getMovesFromPosition() throws CloneNotSupportedException {
+        getPseudoMovesFromPosition(globalLegalMoves);
         return new DiversePair<>(globalLegalMoves, checkChess(globalLegalMoves));
     }
 
     /**
-     * returned ein byte[Board.size][] array
-     * Alle Moves werden mit position -> Moves gespeichert
-     *
-     * Unoptimiert aber funktionierend
-     * @return byte[][] finalMoves
+     * Fills the flat stride array with pseudo-legal moves.
+     * For square i:
+     *   base = i * MOVE_STRIDE
+     *   moves[base]          = count of moves
+     *   moves[base + 1 .. n] = target squares
      */
-    private byte[][] getPseudoMovesFromPosition() throws CloneNotSupportedException {
-
-
+    private void getPseudoMovesFromPosition(byte[] pseudoLegals) throws CloneNotSupportedException {
         moveList.clear();
         byte[] moves = moveList.getMovesArray();
 
         int pieceCount = 0;
-        int prevMovecount = moveList.getMoveCount();
 
         for (int i = 0; i < board.length; i++) {
-            // leere Felder skippen
-            // könige Skippen ->
-            // dannach berechnen um Schach moves zu verhindern
+            int base = i * MOVE_STRIDE;
+
             if (board[i].getType() == PieceTypes.EMPTY) {
-                globalLegalMoves[i][0] = 0;
+                pseudoLegals[base] = 0;
                 continue;
             }
 
             board[i].getMoves(i, moveList);
 
-            //System.out.println("i: " + pieceCount +" piece: " +board[i]);
-            int newMoveCount = moveList.getMoveCount();
-
             int dirStart = moveList.getDirectionOffset(pieceCount);
             int dirCount = moveList.getDirectionCount(pieceCount);
 
-            // keep track of the current position in the final moves arr
             int ptr = 0;
-            prevMovecount = newMoveCount;
-
 
             directionLoop:
             for (int d = 0; d < dirCount; d++) {
-
                 int dirIndex = dirStart + d;
-
                 int moveOffset = moveList.getDirectionMovesOffset(dirIndex);
                 int moveLength = moveList.getDirectionMovesLength(dirIndex);
 
-                int j;
-
-                for (j = 0; j < moveLength; j++) {
-
+                for (int j = 0; j < moveLength; j++) {
                     byte square = moves[moveOffset + j];
 
-                    // hideous
-                    if (board[i].getType() == PieceTypes.PAWN){
-                        // hideous
-                        if(Helper.isDiagonalMove(i, square)) {
-                            if (board[square].getColor() != board[i].getColor() && board[square] != EmptyPiece.EMPTY_PIECE) {
-                                Board.globalLegalMoves[i][ptr + j + 1] = square;
+                    if (board[i].getType() == PieceTypes.PAWN) {
+                        if (Helper.isDiagonalMove(i, square)) {
+                            if (board[square].getColor() != board[i].getColor()
+                                    && board[square] != EmptyPiece.EMPTY_PIECE) {
+                                pseudoLegals[base + 1 + ptr] = square;
                                 ptr++;
                             }
                             break;
-                        } else{
+                        } else {
                             if (board[square] != EmptyPiece.EMPTY_PIECE) {
                                 break;
                             }
                         }
-                    }else if(board[i].getType() == PieceTypes.KING){
+                    } else if (board[i].getType() == PieceTypes.KING) {
                         int dir = Integer.compare(square, i);
-                        Piece corner = (dir < 0)?board[i - Helper.distanceLeftB(i)]:board[i + Helper.distanceRightB(i)];
-                        // hideous
-                        if(Helper.colDiff(i, square) > 1) {
-                            if (board[i].isHasMoved() || corner.isHasMoved() || corner.getType()!=PieceTypes.ROOK) {
+                        Piece corner = (dir < 0)
+                                ? board[i - Helper.distanceLeftB(i)]
+                                : board[i + Helper.distanceRightB(i)];
+
+                        if (Helper.colDiff(i, square) > 1) {
+                            if (board[i].isHasMoved()
+                                    || corner.isHasMoved()
+                                    || corner.getType() != PieceTypes.ROOK) {
                                 break;
                             }
-
-                            // can't be out of bounds because the move won't be registered
-                            for(int k = i+dir; k != square; k+=dir){
-                                if(board[k] != EmptyPiece.EMPTY_PIECE){
+                            for (int k = i + dir; k != square; k += dir) {
+                                if (board[k] != EmptyPiece.EMPTY_PIECE) {
                                     break directionLoop;
                                 }
                             }
-                            Board.globalLegalMoves[i][ptr + j + 1] = square;
+                            pseudoLegals[base + 1 + ptr] = square;
                             ptr++;
                             break;
                         }
                     }
+
                     // blocked → stop this direction
                     if (board[square] != EmptyPiece.EMPTY_PIECE) {
-                        // different color -> take piece: else don't
-                        if(board[square].getColor() != board[i].getColor()) {
-                            Board.globalLegalMoves[i][ptr + j + 1] = square;
+                        if (board[square].getColor() != board[i].getColor()) {
+                            pseudoLegals[base + 1 + ptr] = square;
                             ptr++;
                         }
                         break;
                     }
 
-                    Board.globalLegalMoves[i][ptr + j + 1] = square;
-                    //System.out.printf("legalMove: %d -> %d\n", i, square);
-                    //otherwise square is free → legal move
+                    pseudoLegals[base + 1 + ptr] = square;
+                    ptr++;
                 }
-                ptr += j;
             }
-            globalLegalMoves[i][0] = (byte) (ptr + 1);
-            pieceCount ++;
+
+            pseudoLegals[base] = (byte) ptr;
+            pieceCount++;
         }
-
-
-        return globalLegalMoves;
     }
 
     private MoveTypes castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
-        if(board[from] == EmptyPiece.EMPTY_PIECE){
+        if (board[from] == EmptyPiece.EMPTY_PIECE) {
             return MoveTypes.KingMove;
         }
-        if(board[to] != EmptyPiece.EMPTY_PIECE){
+        if (board[to] != EmptyPiece.EMPTY_PIECE) {
             amountPieces -= 1;
         }
         Piece p = board[from].clone();
@@ -299,8 +280,7 @@ public class Board {
         board[from] = EmptyPiece.EMPTY_PIECE;
         board[to] = p;
 
-
-        if (p.getType() != PieceTypes.KING){
+        if (p.getType() != PieceTypes.KING) {
             return MoveTypes.GoodMove;
         }
 
@@ -308,22 +288,21 @@ public class Board {
     }
 
     private MoveTypes rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
-
-        // no king move
-        if (castleFreeMove(from, to, moved) != MoveTypes.KingMove){
+        if (castleFreeMove(from, to, moved) != MoveTypes.KingMove) {
             return MoveTypes.GoodMove;
         }
 
-        if(turn){
+        if (turn) {
             kingWPos = to;
-        }else {
+        } else {
             kingBPos = to;
         }
 
-
-        if(Helper.colDiff(from, to) > 1){
+        if (Helper.colDiff(from, to) > 1) {
             int dir = Integer.compare(to, from);
-            int rookPos = (dir < 0)?from - Helper.distanceLeftB(from):from + Helper.distanceRightB(from);
+            int rookPos = (dir < 0)
+                    ? from - Helper.distanceLeftB(from)
+                    : from + Helper.distanceRightB(from);
             rawMove(rookPos, to - dir, moved);
             return MoveTypes.Castle;
         }
@@ -331,7 +310,7 @@ public class Board {
         return MoveTypes.KingMove;
     }
 
-    public void move(int from , int to) throws CloneNotSupportedException {
+    public void move(int from, int to) throws CloneNotSupportedException {
         rawMove(from, to, true);
         turn = !turn;
     }
@@ -341,7 +320,6 @@ public class Board {
      */
     public String toStringBoard() {
         StringBuilder sb = new StringBuilder();
-        int cellWidth = 3;
         String horizontalLine = "+" + ("---+").repeat(sideLen) + "\n";
 
         for (int rank = sideLen - 1; rank >= 0; rank--) {
@@ -374,43 +352,15 @@ public class Board {
         sb.append("\n");
 
         return sb.toString();
-
-        /*
-
-    This will render like:
-            ```
-            +---+---+---+---+---+---+---+---+
-            | r | n | b | q | k | b | n | r | 8
-            +---+---+---+---+---+---+---+---+
-            | p | p | p | p | p | p | p | p | 7
-            +---+---+---+---+---+---+---+---+
-            |   |   |   |   |   |   |   |   | 6
-            +---+---+---+---+---+---+---+---+
-            |   |   |   |   |   |   |   |   | 5
-            +---+---+---+---+---+---+---+---+
-            |   |   |   |   |   |   |   |   | 4
-            +---+---+---+---+---+---+---+---+
-            |   |   |   |   |   |   |   |   | 3
-            +---+---+---+---+---+---+---+---+
-            | P | P | P | P | P | P | P | P | 2
-            +---+---+---+---+---+---+---+---+
-            | R | N | B | Q | K | B | N | R | 1
-            +---+---+---+---+---+---+---+---+
-              a   b   c   d   e   f   g   h
-
- */
     }
-
-
 
     /**
-     * Gibt, das board als Fen String aus
+     * Gibt das board als Fen String aus
      * @return fenString
      */
-    public String WriteAsFen(){
+    public String WriteAsFen() {
         return FenWriter.WriteFen(this);
     }
-
 
     public Piece[] getBoard() {
         return board;
@@ -420,20 +370,19 @@ public class Board {
         this.board = board;
     }
 
-    public boolean getTurn(){
+    public boolean getTurn() {
         return turn;
     }
 
     public static void main(String[] args) throws CloneNotSupportedException {
         Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         long starT = System.nanoTime();
-        byte[][] allMoves = null;
+        byte[] allMoves = null;
         for (int i = 0; i < 1000000; i++) {
             allMoves = board1.getMovesFromPosition().first();
         }
         long endT = System.nanoTime();
         long timeT = endT - starT;
-
 
         System.out.println("-----------------------");
         System.out.printf("""
@@ -445,23 +394,5 @@ public class Board {
                 (timeT / 1000000) / 1000,
                 100000000 / (timeT / 1000000));
         System.out.println("-----------------------");
-
-        /*
-        stand 13.03.2026 - kein Schach check
-        -----------------------
-        took time for full 1000000: 1687212500ns
-        avg time per board: 1687ns
-        so on avg 59276 per sec
-        -----------------------
-
-
-        stand 15.03.2026 - kein Schach check
-        -----------------------
-        took time for full 1000000: 82226015600 ns
-        avg time per board: 82226 ns
-        so on avg 1216 per sec
-        -----------------------
-         */
-
     }
 }
