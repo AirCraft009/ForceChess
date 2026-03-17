@@ -18,10 +18,6 @@ public class Board {
     public static int sideLen = 8;
     public static int size = 64;
 
-    // 1 length byte + 27 max moves (queen on open board)
-    // increase if you ever support fairy pieces with longer rays
-    static final int MOVE_STRIDE = 28;
-
     Piece[] board;
     private boolean turn = true;
     int totalMaterial = 0;
@@ -32,23 +28,28 @@ public class Board {
     public int teamBMaterial;
     private int kingWPos;
     private int kingBPos;
-
-    // flat stride array: square i -> base = i * MOVE_STRIDE
-    //   [base]        = number of legal moves for that square
-    //   [base + 1..n] = the move targets
-    private static byte[] globalLegalMoves;
+    private FastBitmap whiteAttackSquares;
+    private FastBitmap blackAttackSquares;
 
     int maxMoves = 0;
+
+    // Ray directions as {rowDelta, colDelta}.
+    // 0-3: straight (rank/file) — rook / queen
+    // 4-7: diagonal             — bishop / queen / pawn
+    private static final int[] RAY_ROW = { 0,  0,  1, -1,  1,  1, -1, -1 };
+    private static final int[] RAY_COL = { 1, -1,  0,  0,  1, -1,  1, -1 };
+
+    // Knight jump deltas
+    private static final int[] KNIGHT_ROW = { 2,  2, -2, -2,  1,  1, -1, -1 };
+    private static final int[] KNIGHT_COL = { 1, -1,  1, -1,  2, -2,  2, -2 };
 
     public Board() {
         board = new Piece[sideLen * sideLen];
         BuildFromFen("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-        globalLegalMoves = new byte[Board.size * MOVE_STRIDE];
     }
 
     public Board(String fenString) {
         BuildFromFen(fenString);
-        globalLegalMoves = new byte[Board.size * MOVE_STRIDE];
     }
 
     /**
@@ -83,7 +84,6 @@ public class Board {
         if (board[from].getType() != PieceTypes.KING) {
             return;
         }
-
         if (Helper.colDiff(from, to) > 1) {
             int dir = Integer.compare(to, from);
             int rookPos = (dir < 0) ? from - Helper.distanceLeftB(from) : from + Helper.distanceRightB(from);
@@ -91,46 +91,138 @@ public class Board {
         }
     }
 
-    public GameState checkChess(byte[] pseudoLegalMoves) throws CloneNotSupportedException {
-        boolean illegalMove = false;
+    /**
+     * Incremental check detection. Casts rays and knight jumps outward from
+     * kingPos to find any enemy attacker. This replaces the old approach of
+     * generating all opponent pseudo-legal moves and scanning them.
+     *
+     * Worst case: 8 rays * 7 steps + 8 knight squares + 8 king squares = ~80
+     * comparisons, versus ~300+ move generations in the old isChecked.
+     *
+     * @param kingPos   flat board index of the king to test
+     * @param kingColor true = white king, false = black king
+     */
+    public boolean isChecked(int kingPos, boolean kingColor) {
+        int kingRow = Helper.getRow(kingPos);
+        int kingCol = Helper.getCol(kingPos);
+
+        //  Rays (straight + diagonal)
+        for (int d = 0; d < 8; d++) {
+            int dr = RAY_ROW[d];
+            int dc = RAY_COL[d];
+            int r = kingRow + dr;
+            int c = kingCol + dc;
+            boolean firstStep = true;
+
+            while (r >= 0 && r < sideLen && c >= 0 && c < sideLen) {
+                Piece p = board[r * sideLen + c];
+
+                if (p != EmptyPiece.EMPTY_PIECE) {
+                    if (p.getColor() != kingColor) {
+                        PieceTypes t = p.getType();
+
+                        if (d < 4) {
+                            // Straight ray: rook or queen attacks
+                            if (t == PieceTypes.ROOK || t == PieceTypes.QUEEN) return true;
+                        } else {
+                            // Diagonal ray: bishop or queen attacks
+                            if (t == PieceTypes.BISHOP || t == PieceTypes.QUEEN) return true;
+
+                            // Pawn only attacks on the first diagonal step.
+                            // A white pawn sits below and attacks upward (r < kingRow).
+                            // A black pawn sits above and attacks downward (r > kingRow).
+                            if (firstStep && t == PieceTypes.PAWN) {
+                                boolean pawnIsWhite = p.getColor();
+                                if (pawnIsWhite && r < kingRow) return true;
+                                if (!pawnIsWhite && r > kingRow) return true;
+                            }
+                        }
+                    }
+                    // Blocker found (friend or foe) — ray is cut off
+                    break;
+                }
+
+                r += dr;
+                c += dc;
+                firstStep = false;
+            }
+        }
+
+        //  Knight jumps
+        for (int k = 0; k < 8; k++) {
+            int r = kingRow + KNIGHT_ROW[k];
+            int c = kingCol + KNIGHT_COL[k];
+            if (r < 0 || r >= sideLen || c < 0 || c >= sideLen) continue;
+
+            Piece p = board[r * sideLen + c];
+            if (p != EmptyPiece.EMPTY_PIECE
+                    && p.getColor() != kingColor
+                    && p.getType() == PieceTypes.KNIGHT) {
+                return true;
+            }
+        }
+
+        //  Adjacent enemy king (prevents kings walking next to each other)
+        for (int dr = -1; dr <= 1; dr++) {
+            for (int dc = -1; dc <= 1; dc++) {
+                if (dr == 0 && dc == 0) continue;
+                int r = kingRow + dr;
+                int c = kingCol + dc;
+                if (r < 0 || r >= sideLen || c < 0 || c >= sideLen) continue;
+
+                Piece p = board[r * sideLen + c];
+                if (p != EmptyPiece.EMPTY_PIECE
+                        && p.getColor() != kingColor
+                        && p.getType() == PieceTypes.KING) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Filters pseudo-legal moves down to legal moves by making each move,
+     * running incremental check detection, then restoring the board.
+     * Modifies pseudoLegalMoves in place and returns the resulting game state.
+     */
+    public GameState checkChess(byte[][] pseudoLegalMoves) throws CloneNotSupportedException {
         Piece[] baseState = board.clone();
         int kB = kingBPos;
         int kW = kingWPos;
         boolean hasMoves = false;
 
-        for (int i = 0; i < Board.size; i++) {
-            int base = i * MOVE_STRIDE;
-            int len = pseudoLegalMoves[base] & 0xFF;
+        for (int i = 0; i < pseudoLegalMoves.length; i++) {
+            byte[] moves = pseudoLegalMoves[i];
             int writePtr = 0;
 
-            for (int j = 0; j < len; j++) {
-                byte move = pseudoLegalMoves[base + 1 + j];
-                //System.out.printf("move: %d -> %d\n", i, move);
+            for (int j = 0; j < moves.length; j++) {
+                byte move = moves[j];
 
                 rawMove(i, move, false);
 
-                if (turn) {
-                    illegalMove = isChecked(kingWPos);
-                } else {
-                    illegalMove = isChecked(kingBPos);
-                }
+                // isChecked now uses incremental ray casting instead of full
+                // move generation — the hot path is now ~80 ops instead of ~300+
+                boolean inCheck = turn
+                        ? isChecked(kingWPos, true)
+                        : isChecked(kingBPos, false);
 
                 kingBPos = kB;
                 kingWPos = kW;
                 board = baseState.clone();
 
-                if (illegalMove) {
-                    continue;
-                }
+                if (inCheck) continue;
+
                 if (board[i].getColor() == turn) {
                     hasMoves = true;
                 }
 
-                // compact: keep only legal moves
-                pseudoLegalMoves[base + 1 + writePtr] = move;
+                moves[writePtr] = move;
                 writePtr++;
             }
-            pseudoLegalMoves[base] = (byte) writePtr;
+
+            pseudoLegalMoves[i] = Arrays.copyOf(moves, writePtr);
         }
 
         return checkCheckmate(hasMoves);
@@ -141,68 +233,47 @@ public class Board {
             return GameState.Continue;
         }
 
-        boolean inCheck;
-        if (turn) {
-            inCheck = isChecked(kingWPos);
-        } else {
-            inCheck = isChecked(kingBPos);
-        }
+        // No moves: distinguish checkmate from stalemate
+        boolean inCheck = turn
+                ? isChecked(kingWPos, true)
+                : isChecked(kingBPos, false);
 
-        if (inCheck) {
-            return GameState.CheckMate;
-        }
-
-        return GameState.StaleMate;
+        return inCheck ? GameState.CheckMate : GameState.StaleMate;
     }
 
-    public boolean isChecked(int kingPos) throws CloneNotSupportedException {
-        byte[] moveFields = new byte[Board.size * MOVE_STRIDE];
-        getPseudoMovesFromPosition(moveFields);
-
-        for (int i = 0; i < Board.size; i++) {
-            int base = i * MOVE_STRIDE;
-            int len = moveFields[base] & 0xFF;
-            for (int j = 0; j < len; j++) {
-                if ((moveFields[base + 1 + j] & 0xFF) == kingPos) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public DiversePair<byte[], GameState> getMovesFromPosition() throws CloneNotSupportedException {
-        getPseudoMovesFromPosition(globalLegalMoves);
-        return new DiversePair<>(globalLegalMoves, checkChess(globalLegalMoves));
+    public DiversePair<byte[][], GameState> getMovesFromPosition() throws CloneNotSupportedException {
+        byte[][] legalMoves = getPseudoMovesFromPosition();
+        return new DiversePair<>(legalMoves, checkChess(legalMoves));
     }
 
     /**
-     * Fills the flat stride array with pseudo-legal moves.
-     * For square i:
-     *   base = i * MOVE_STRIDE
-     *   moves[base]          = count of moves
-     *   moves[base + 1 .. n] = target squares
+     * Generates pseudo-legal moves for all squares.
+     * Does not filter for leaving own king in check — that is done in checkChess.
      */
-    private void getPseudoMovesFromPosition(byte[] pseudoLegals) throws CloneNotSupportedException {
+    private byte[][] getPseudoMovesFromPosition() throws CloneNotSupportedException {
         moveList.clear();
         byte[] moves = moveList.getMovesArray();
 
+        byte[][] legalMoves = new byte[size][];
+
         int pieceCount = 0;
+        int prevMoveCount = moveList.getMoveCount();
 
         for (int i = 0; i < board.length; i++) {
-            int base = i * MOVE_STRIDE;
-
             if (board[i].getType() == PieceTypes.EMPTY) {
-                pseudoLegals[base] = 0;
+                legalMoves[i] = new byte[0];
                 continue;
             }
 
             board[i].getMoves(i, moveList);
 
+            int newMoveCount = moveList.getMoveCount();
             int dirStart = moveList.getDirectionOffset(pieceCount);
             int dirCount = moveList.getDirectionCount(pieceCount);
 
             int ptr = 0;
+            byte[] legalMoveSection = new byte[newMoveCount - prevMoveCount];
+            prevMoveCount = newMoveCount;
 
             directionLoop:
             for (int d = 0; d < dirCount; d++) {
@@ -210,14 +281,15 @@ public class Board {
                 int moveOffset = moveList.getDirectionMovesOffset(dirIndex);
                 int moveLength = moveList.getDirectionMovesLength(dirIndex);
 
-                for (int j = 0; j < moveLength; j++) {
+                int j;
+                for (j = 0; j < moveLength; j++) {
                     byte square = moves[moveOffset + j];
 
                     if (board[i].getType() == PieceTypes.PAWN) {
                         if (Helper.isDiagonalMove(i, square)) {
                             if (board[square].getColor() != board[i].getColor()
                                     && board[square] != EmptyPiece.EMPTY_PIECE) {
-                                pseudoLegals[base + 1 + ptr] = square;
+                                legalMoveSection[ptr] = square;
                                 ptr++;
                             }
                             break;
@@ -243,29 +315,30 @@ public class Board {
                                     break directionLoop;
                                 }
                             }
-                            pseudoLegals[base + 1 + ptr] = square;
+                            legalMoveSection[ptr] = square;
                             ptr++;
                             break;
                         }
                     }
 
-                    // blocked → stop this direction
                     if (board[square] != EmptyPiece.EMPTY_PIECE) {
                         if (board[square].getColor() != board[i].getColor()) {
-                            pseudoLegals[base + 1 + ptr] = square;
+                            legalMoveSection[ptr] = square;
                             ptr++;
                         }
                         break;
                     }
 
-                    pseudoLegals[base + 1 + ptr] = square;
+                    legalMoveSection[ptr] = square;
                     ptr++;
                 }
             }
 
-            pseudoLegals[base] = (byte) ptr;
+            legalMoves[i] = Arrays.copyOf(legalMoveSection, ptr);
             pieceCount++;
         }
+
+        return legalMoves;
     }
 
     private MoveTypes castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
@@ -283,7 +356,6 @@ public class Board {
         if (p.getType() != PieceTypes.KING) {
             return MoveTypes.GoodMove;
         }
-
         return MoveTypes.KingMove;
     }
 
@@ -377,22 +449,20 @@ public class Board {
     public static void main(String[] args) throws CloneNotSupportedException {
         Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         long starT = System.nanoTime();
-        byte[] allMoves = null;
+        byte[][] allMoves = null;
         for (int i = 0; i < 1000000; i++) {
             allMoves = board1.getMovesFromPosition().first();
         }
         long endT = System.nanoTime();
         long timeT = endT - starT;
 
-        System.out.println("-----------------------");
-        System.out.printf("""
-                        took time for full 1000000: %d s
-                        avg time per board: %d Us
-                        so on avg %d per sec
-                        """,
-                timeT / 100000000,
-                (timeT / 1000000) / 1000,
-                100000000 / (timeT / 1000000));
-        System.out.println("-----------------------");
+        System.out.println("----------------------");
+        System.out.printf("took time for full 1000000: %d ns\n" +
+                        "avg time per board: %d ns\n" +
+                        "so on avg %d per sec\n",
+                timeT,
+                timeT / 1000000,
+                1000000000L / (timeT / 1000000));
+        System.out.println("----------------------");
     }
 }

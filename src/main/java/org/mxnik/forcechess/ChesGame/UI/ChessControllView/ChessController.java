@@ -15,7 +15,7 @@ public class ChessController implements EventHandler<Event> {
 
     final private ChessScene chessScene;
     final private Board board;
-    private DiversePair<byte[], GameState> currentMoveState;
+    private DiversePair<byte[][], GameState> currentMoveState;
     private boolean turn = true;
     private int firstClick = -1;
     private int secondClick = -1;
@@ -44,7 +44,7 @@ public class ChessController implements EventHandler<Event> {
             int buttonField = sourceButton.getField();
 
 
-            byte[] moves = currentMoveState.first();
+            byte[] moves = currentMoveState.first()[buttonField];
 
             boolean hasPiece = board.getBoard()[buttonField] != EmptyPiece.EMPTY_PIECE;
             boolean pieceColor = board.getBoard()[buttonField].getColor();
@@ -87,8 +87,8 @@ public class ChessController implements EventHandler<Event> {
      */
     public void highlightSquares(byte[] moves){
         //
-        for (int i = 1; i < moves[0]; i++) {
-            ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(moves[i]);
+        for (byte move : moves) {
+            ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(move);
             oldRect.setActive();
         }
     }
