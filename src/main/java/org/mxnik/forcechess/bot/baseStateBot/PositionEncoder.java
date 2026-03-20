@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.bot.botComponents;
+package org.mxnik.forcechess.bot.baseStateBot;
 
 /**
  * PositionEncoder
