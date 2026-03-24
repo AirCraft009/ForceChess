@@ -1,10 +1,12 @@
 package org.mxnik.forcechess.bot.baseStateBot;
 
+import org.mxnik.forcechess.Util.Bitboard;
+
 /**
  * PositionEncoder
  *
  * Encodes a chess position into a float[19][8][8] tensor suitable
- * for feeding into an AlphaZero-style neural network.
+ * for feeding into an AlphaZero-style NN.
  *
  * Plane layout (19 planes total):
  *
@@ -82,8 +84,8 @@ public final class PositionEncoder {
     }
 
     /**
-     * Encodes the position into a pre-allocated tensor (avoids allocation
-     * in the MCTS hot path — reuse the same array each search).
+     * Encodes the position into a pre-allocated tensor
+     * (avoids allocation in the MCTS hot path — reuse the same array each search).
      *
      * @param pos     the position to encode
      * @param tensor  output buffer, must be float[19][8][8]
@@ -92,27 +94,30 @@ public final class PositionEncoder {
         // Clear previous contents (important when reusing the buffer)
         clearTensor(tensor);
 
-        // ── Planes 0-11: piece bitboards ──────────────────────────────────
-        encodeBitboard(pos.whitePawns,   tensor[PLANE_WP]);
-        encodeBitboard(pos.whiteKnights, tensor[PLANE_WN]);
-        encodeBitboard(pos.whiteBishops, tensor[PLANE_WB]);
-        encodeBitboard(pos.whiteRooks,   tensor[PLANE_WR]);
-        encodeBitboard(pos.whiteQueens,  tensor[PLANE_WQ]);
-        encodeBitboard(pos.whiteKing,    tensor[PLANE_WK]);
-        encodeBitboard(pos.blackPawns,   tensor[PLANE_BP]);
-        encodeBitboard(pos.blackKnights, tensor[PLANE_BN]);
-        encodeBitboard(pos.blackBishops, tensor[PLANE_BB]);
-        encodeBitboard(pos.blackRooks,   tensor[PLANE_BR]);
-        encodeBitboard(pos.blackQueens,  tensor[PLANE_BQ]);
-        encodeBitboard(pos.blackKing,    tensor[PLANE_BK]);
+        // 0 - 11 piece layers
+        encodeBitboard(pos.WPawns.board,   tensor[PLANE_WP]);
+        encodeBitboard(pos.WKnights.board, tensor[PLANE_WN]);
+        encodeBitboard(pos.WBishops.board, tensor[PLANE_WB]);
+        encodeBitboard(pos.WRooks.board,   tensor[PLANE_WR]);
+        encodeBitboard(pos.WQueens.board,  tensor[PLANE_WQ]);
+        encodeBitboard(pos.WKings.board,    tensor[PLANE_WK]);
 
-        // ── Planes 12-15: castling rights (uniform planes) ────────────────
-        if (pos.castleWhiteKingside)  fillPlane(tensor[PLANE_CASTLE_WK], 1.0f);
-        if (pos.castleWhiteQueenside) fillPlane(tensor[PLANE_CASTLE_WQ], 1.0f);
-        if (pos.castleBlackKingside)  fillPlane(tensor[PLANE_CASTLE_BK], 1.0f);
-        if (pos.castleBlackQueenside) fillPlane(tensor[PLANE_CASTLE_BQ], 1.0f);
+        encodeBitboard(pos.BPawns.board,   tensor[PLANE_BP]);
+        encodeBitboard(pos.BKnights.board, tensor[PLANE_BN]);
+        encodeBitboard(pos.BBishops.board, tensor[PLANE_BB]);
+        encodeBitboard(pos.BRooks.board,   tensor[PLANE_BR]);
+        encodeBitboard(pos.BQueens.board,  tensor[PLANE_BQ]);
+        encodeBitboard(pos.BKings.board,    tensor[PLANE_BK]);
 
-        // ── Plane 16: en passant target square ───────────────────────────
+
+
+        // 12 - 15 volle Planes 1 / 0
+        if (pos.WKingCastle) fillPlane(tensor[PLANE_CASTLE_WK], 1.0f);
+        if (pos.WQueenCastle) fillPlane(tensor[PLANE_CASTLE_WQ], 1.0f);
+        if (pos.BKingCastle) fillPlane(tensor[PLANE_CASTLE_BK], 1.0f);
+        if (pos.BQueenCastle) fillPlane(tensor[PLANE_CASTLE_BQ], 1.0f);
+
+        // 16 enPassant Zielfeld
         // enPassantSquare == -1 means no en passant available
         if (pos.enPassantSquare >= 0) {
             int rank = pos.enPassantSquare >>> 3;   // divide by 8
@@ -120,13 +125,11 @@ public final class PositionEncoder {
             tensor[PLANE_EN_PASSANT][rank][file] = 1.0f;
         }
 
-        // ── Plane 17: side to move ────────────────────────────────────────
+        // Zugseite
         if (pos.whiteToMove) fillPlane(tensor[PLANE_SIDE], 1.0f);
         // black to move → plane stays all zeros (already cleared)
 
-        // ── Plane 18: fifty-move clock (normalised) ───────────────────────
-        // Divide by 100 so the value sits in [0, 1].
-        // At 100 the game is a draw — network should learn this boundary.
+        // 50 move Regel.
         float fiftyNorm = Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f);
         fillPlane(tensor[PLANE_FIFTY], fiftyNorm);
     }
@@ -136,11 +139,8 @@ public final class PositionEncoder {
     // -------------------------------------------------------------------------
 
     /**
-     * Scatters a bitboard into an 8×8 float plane.
+     * bitboard auf ein Plane aufgeteilt (rank x file)
      *
-     * bit index = rank * 8 + file  (little-endian square mapping)
-     * Iterates only over set bits using the standard popLsb trick —
-     * cost is O(popcount), not O(64).
      */
     private static void encodeBitboard(long bitboard, float[][] plane) {
         long b = bitboard;
@@ -176,23 +176,27 @@ public final class PositionEncoder {
     // -------------------------------------------------------------------------
 
     /**
-     * Minimal position container.
-     *
-     * In a real engine this would be your full board state class.
-     * Each long is a bitboard: bit (rank*8 + file) = 1 means a piece
-     * of that type occupies that square.
+     * Position Conatiner
      */
     public static final class Position {
 
-        // Piece bitboards (12 planes)
-        public long whitePawns,   whiteKnights, whiteBishops;
-        public long whiteRooks,   whiteQueens,  whiteKing;
-        public long blackPawns,   blackKnights, blackBishops;
-        public long blackRooks,   blackQueens,  blackKing;
+        public Bitboard WPawns;
+        public Bitboard BPawns;
+        public Bitboard WKnights;
+        public Bitboard BKnights;
+        public Bitboard WRooks;
+        public Bitboard BRooks;
+        public Bitboard WBishops;
+        public Bitboard BBishops;
+        public Bitboard WQueens;
+        public Bitboard BQueens;
+        public Bitboard WKings;
+        public Bitboard BKings;
 
-        // Castling rights
-        public boolean castleWhiteKingside, castleWhiteQueenside;
-        public boolean castleBlackKingside, castleBlackQueenside;
+        public boolean WQueenCastle;
+        public boolean WKingCastle;
+        public boolean BQueenCastle;
+        public boolean BKingCastle;
 
         // En passant: -1 if none, otherwise the target square index
         public int enPassantSquare = -1;
@@ -207,32 +211,27 @@ public final class PositionEncoder {
         public static Position startingPosition() {
             Position p = new Position();
 
-            p.whitePawns   = 0x000000000000FF00L; // rank 2
-            p.whiteKnights = 0x0000000000000042L; // b1, g1
-            p.whiteBishops = 0x0000000000000024L; // c1, f1
-            p.whiteRooks   = 0x0000000000000081L; // a1, h1
-            p.whiteQueens  = 0x0000000000000008L; // d1
-            p.whiteKing    = 0x0000000000000010L; // e1
+            p.WPawns   = new Bitboard(0x000000000000FF00L); // rank 2
+            p.WKnights = new Bitboard(0x0000000000000042L); // b1, g1
+            p.WBishops = new Bitboard(0x0000000000000024L); // c1, f1
+            p.WRooks   = new Bitboard(0x0000000000000081L); // a1, h1
+            p.WQueens  = new Bitboard(0x0000000000000008L); // d1
+            p.WKings    = new Bitboard(0x0000000000000010L); // e1
 
-            p.blackPawns   = 0x00FF000000000000L; // rank 7
-            p.blackKnights = 0x4200000000000000L; // b8, g8
-            p.blackBishops = 0x2400000000000000L; // c8, f8
-            p.blackRooks   = 0x8100000000000000L; // a8, h8
-            p.blackQueens  = 0x0800000000000000L; // d8
-            p.blackKing    = 0x1000000000000000L; // e8
+            p.BPawns  = new Bitboard(0x00FF000000000000L); // rank 7
+            p.BKnights = new Bitboard(0x4200000000000000L); // b8, g8
+            p.BBishops = new Bitboard(0x2400000000000000L); // c8, f8
+            p.BRooks   = new Bitboard(0x8100000000000000L); // a8, h8
+            p.BQueens  = new Bitboard(0x0800000000000000L); // d8
+            p.BKings    = new Bitboard(0x1000000000000000L); // e8
 
-            p.castleWhiteKingside  = true;
-            p.castleWhiteQueenside = true;
-            p.castleBlackKingside  = true;
-            p.castleBlackQueenside = true;
-
+            p.BQueenCastle = false;
+            p.WQueenCastle = false;
+            p.BKingCastle = false;
+            p.WKingCastle = false;
             return p;
         }
     }
-
-    // -------------------------------------------------------------------------
-    // Quick smoke test
-    // -------------------------------------------------------------------------
 
     public static void main(String[] args) {
         Position pos = Position.startingPosition();

@@ -92,12 +92,10 @@ public class Board {
     }
 
     /**
-     * Incremental check detection. Casts rays and knight jumps outward from
-     * kingPos to find any enemy attacker. This replaces the old approach of
-     * generating all opponent pseudo-legal moves and scanning them.
+     * Ist König in Schach.
      *
-     * Worst case: 8 rays * 7 steps + 8 knight squares + 8 king squares = ~80
-     * comparisons, versus ~300+ move generations in the old isChecked.
+     * Verwendet Ray-Modell beginnt vom könig aus in alle Richtungen (slide) und Springerform
+     * und check für Schach.
      *
      * @param kingPos   flat board index of the king to test
      * @param kingColor true = white king, false = black king

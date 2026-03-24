@@ -6,6 +6,12 @@ public final class Bitboard {
 
     public long board; // just a long, public for performance
 
+    public Bitboard(long l) {
+        board = l;
+    }
+
+    public Bitboard(){}
+
     // Move a piece
     public void set(int square)   { board |=  (1L << square); }
     public void clear(int square) { board &= ~(1L << square); }
