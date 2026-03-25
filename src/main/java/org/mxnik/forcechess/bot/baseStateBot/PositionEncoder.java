@@ -8,7 +8,7 @@ import org.mxnik.forcechess.Util.Bitboard;
  * Encodes a chess position into a float[19][8][8] tensor suitable
  * for feeding into an AlphaZero-style NN.
  *
- * Plane layout (19 planes total):
+ * Plane layout (21 planes total):
  *
  *  [0]  White pawns
  *  [1]  White knights
@@ -26,9 +26,11 @@ import org.mxnik.forcechess.Util.Bitboard;
  *  [13] White queenside castling right
  *  [14] Black kingside castling right
  *  [15] Black queenside castling right
- *  [16] En passant target square        (single 1 on target square)
- *  [17] Side to move                    (all 1s = white, all 0s = black)
- *  [18] Fifty-move counter              (normalised to [0,1])
+ *  [16] White double pawn moves
+ *  [17] Black double pawn moves
+ *  [18] En passant target square        (single 1 on target square)
+ *  [19] Side to move                    (all 1s = white, all 0s = black)
+ *  [20] Fifty-move counter              (normalised to [0,1])
  *
  * Coordinate convention:
  *   tensor[plane][rank][file]
@@ -36,12 +38,12 @@ import org.mxnik.forcechess.Util.Bitboard;
  *   file 0 = a-file, file 7 = h-file
  *
  * Bit index in each long:
- *   bit = rank * 8 + file   (matches standard little-endian mapping)
+ *   bit = rank * 8 + file
  */
 public final class PositionEncoder {
 
     // Number of planes in the tensor
-    public static final int PLANES = 19;
+    public static final int PLANES = 21;
     public static final int SIZE   = 8;
 
     // Plane indices — named constants keep encode() readable
@@ -61,9 +63,11 @@ public final class PositionEncoder {
     private static final int PLANE_CASTLE_WQ = 13;
     private static final int PLANE_CASTLE_BK = 14;
     private static final int PLANE_CASTLE_BQ = 15;
-    private static final int PLANE_EN_PASSANT = 16;
-    private static final int PLANE_SIDE       = 17;
-    private static final int PLANE_FIFTY      = 18;
+    private static final int PLANE_DOUBLE_PW = 16;
+    private static final int PLANE_DOUBLE_PB = 17;
+    private static final int PLANE_EN_PASSANT = 18;
+    private static final int PLANE_SIDE       = 19;
+    private static final int PLANE_FIFTY      = 20;
 
     private PositionEncoder() {}
 
@@ -100,14 +104,16 @@ public final class PositionEncoder {
         encodeBitboard(pos.WBishops.board, tensor[PLANE_WB]);
         encodeBitboard(pos.WRooks.board,   tensor[PLANE_WR]);
         encodeBitboard(pos.WQueens.board,  tensor[PLANE_WQ]);
-        encodeBitboard(pos.WKings.board,    tensor[PLANE_WK]);
+        encodeBitboard(pos.WKing.board,    tensor[PLANE_WK]);
 
         encodeBitboard(pos.BPawns.board,   tensor[PLANE_BP]);
         encodeBitboard(pos.BKnights.board, tensor[PLANE_BN]);
         encodeBitboard(pos.BBishops.board, tensor[PLANE_BB]);
         encodeBitboard(pos.BRooks.board,   tensor[PLANE_BR]);
         encodeBitboard(pos.BQueens.board,  tensor[PLANE_BQ]);
-        encodeBitboard(pos.BKings.board,    tensor[PLANE_BK]);
+        encodeBitboard(pos.BKing.board,    tensor[PLANE_BK]);
+        encodeBitboard(pos.WDoublePawnMove.board, tensor[PLANE_DOUBLE_PW]);
+        encodeBitboard(pos.BDoublePawnMove.board, tensor[PLANE_DOUBLE_PB]);
 
 
 
@@ -139,7 +145,8 @@ public final class PositionEncoder {
     // -------------------------------------------------------------------------
 
     /**
-     * bitboard auf ein Plane aufgeteilt (rank x file)
+     * Bitboard split on a plane of the tensor
+     *
      *
      */
     private static void encodeBitboard(long bitboard, float[][] plane) {
@@ -177,6 +184,10 @@ public final class PositionEncoder {
 
     /**
      * Position Conatiner
+     * Contains bitboards and entire gamestate
+     *
+     * usage - Movegen
+     * usage - plane encoding
      */
     public static final class Position {
 
@@ -190,8 +201,11 @@ public final class PositionEncoder {
         public Bitboard BBishops;
         public Bitboard WQueens;
         public Bitboard BQueens;
-        public Bitboard WKings;
-        public Bitboard BKings;
+        public Bitboard WKing;
+        public Bitboard BKing;
+        public Bitboard WDoublePawnMove;
+        public Bitboard BDoublePawnMove;
+        public Bitboard Occupied;
 
         public boolean WQueenCastle;
         public boolean WKingCastle;
@@ -211,20 +225,27 @@ public final class PositionEncoder {
         public static Position startingPosition() {
             Position p = new Position();
 
+            // White Piece Bitboards
             p.WPawns   = new Bitboard(0x000000000000FF00L); // rank 2
             p.WKnights = new Bitboard(0x0000000000000042L); // b1, g1
             p.WBishops = new Bitboard(0x0000000000000024L); // c1, f1
             p.WRooks   = new Bitboard(0x0000000000000081L); // a1, h1
             p.WQueens  = new Bitboard(0x0000000000000008L); // d1
-            p.WKings    = new Bitboard(0x0000000000000010L); // e1
+            p.WKing    = new Bitboard(0x0000000000000010L); // e1
 
+            // Black Piece Bitboards
             p.BPawns  = new Bitboard(0x00FF000000000000L); // rank 7
             p.BKnights = new Bitboard(0x4200000000000000L); // b8, g8
             p.BBishops = new Bitboard(0x2400000000000000L); // c8, f8
             p.BRooks   = new Bitboard(0x8100000000000000L); // a8, h8
             p.BQueens  = new Bitboard(0x0800000000000000L); // d8
-            p.BKings    = new Bitboard(0x1000000000000000L); // e8
+            p.BKing    = new Bitboard(0x1000000000000000L); // e8
 
+
+            // Extra layers (context)
+            p.Occupied = new Bitboard(0xFFFF00000000FFFFL);
+            p.WDoublePawnMove = new Bitboard(0x000000000000FF00L);
+            p.BDoublePawnMove = new Bitboard(0x00FF000000000000L);
             p.BQueenCastle = false;
             p.WQueenCastle = false;
             p.BKingCastle = false;
