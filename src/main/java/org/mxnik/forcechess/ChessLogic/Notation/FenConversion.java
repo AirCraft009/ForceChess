@@ -4,7 +4,7 @@ import org.mxnik.forcechess.ChessLogic.Pieces.*;
 
 import static org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes.*;
 
-class FenConversion {
+public class FenConversion {
 
     public static Piece FromFen(char c){
         return switch (c) {
@@ -22,5 +22,26 @@ class FenConversion {
             case 'K' -> new King(true, false);
             default -> IllegalPiece.ILLEGAL_PIECE;
         };
+    }
+
+
+    public static char FromPiece(PieceTypes p, boolean color) throws FenException{
+        switch (p){
+            case KING -> {
+                return (char) ('k' - ((color)? 32 : 0));
+            }case BISHOP -> {
+                return (char) ('b' - ((color)? 32 : 0));
+            }case KNIGHT -> {
+                return (char) ('n' - ((color)? 32 : 0));
+            }case ROOK -> {
+                return (char) ('r' - ((color)? 32 : 0));
+            }case QUEEN -> {
+                return (char) ('q' - ((color)? 32 : 0));
+            }case PAWN -> {
+                return (char) ('p' - ((color)? 32 : 0));
+            }default -> {
+                throw new FenException("got Illegal or Empty piece while trying to convert", p.value);
+            }
+        }
     }
 }

@@ -2,8 +2,8 @@ package org.mxnik.forcechess.ChessLogic.Moves;
 
 public enum MoveTypes {
     GoodMove,
-    IllegalMove,
+    //TODO: think of better name
+    KingMove,
     Promotion,
-    QueenCastle,
-    KingCastle;
+    Castle;
 }

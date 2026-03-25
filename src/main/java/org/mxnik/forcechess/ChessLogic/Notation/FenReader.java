@@ -2,8 +2,6 @@ package org.mxnik.forcechess.ChessLogic.Notation;
 
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.King;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
@@ -11,10 +9,9 @@ import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.Util.DiversePair;
 
 import java.util.Arrays;
-import java.util.Objects;
 
 
-public final class FenNotation {
+public final class FenReader {
     // sollte hidden sein
     // Board API sollte readFenBoard and writeFen exposen
     private final String boardPositions;
@@ -23,10 +20,10 @@ public final class FenNotation {
     private final String enPassent;
     private final String moveNumber;
     private final int boardLenght;
-    private DiversePair<King, Integer> kingWPos;
-    private DiversePair<King, Integer> kingBPos;
+    private int kingWPos;
+    private int kingBPos;
 
-    public FenNotation(String fenStr){
+    public FenReader(String fenStr){
         String [] fenParts = fenStr.split(" ");
         if (fenParts.length != 6) {
             throw new FenException("incomplete Fenstring incorrect number of subsections, expected 6 got: " + fenParts.length, 0);
@@ -43,7 +40,7 @@ public final class FenNotation {
         }
     }
 
-    public DiversePair<DiversePair<King, Integer>, DiversePair<King, Integer>> readKingPos(){
+    public DiversePair<Integer, Integer> readKingPos(){
         return new DiversePair<>(kingWPos, kingBPos);
     }
 
@@ -118,9 +115,9 @@ public final class FenNotation {
                     throw new FenException("Illegal char found in fenStr: " + c, charptr);
                 } else if (p.getType() == PieceTypes.KING){
                     if (p.getColor()){
-                        kingWPos = new DiversePair<>((King) p, ptr + j);
+                        kingWPos = ptr + j;
                     }else {
-                        kingBPos = new DiversePair<>((King) p, ptr + j);
+                        kingBPos = ptr + j;
                     }
                 }
 
@@ -132,12 +129,6 @@ public final class FenNotation {
             throw new FenException("Fen isn't complete: ", ptr);
         }
         return board;
-    }
-
-    @NotNull
-    @Contract(pure = true)
-    public static String writeFen(Piece[] board){
-        return "null";
     }
 
     public static void main(String[] args) {

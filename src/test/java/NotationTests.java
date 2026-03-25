@@ -1,6 +1,8 @@
 import org.junit.jupiter.api.Test;
+import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
-import org.mxnik.forcechess.ChessLogic.Notation.FenNotation;
+import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
+import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
@@ -11,7 +13,7 @@ public class NotationTests {
 
     @Test
     public void testReadFenParsesStartingPosition() {
-        FenNotation fenNotation = new FenNotation("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w q - 1 8");
+        FenReader fenNotation = new FenReader("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w q - 1 8");
         Piece[] board = fenNotation.readFenBoard();
 
 
@@ -38,29 +40,27 @@ public class NotationTests {
 
     @Test
     public void testReadFenRejectsIllegalCharacter() {
-        FenException ex = assertThrows(FenException.class, () -> new FenNotation("7x/8/8/8/8/8/8/8 w q - 1 8"));
+        FenException ex = assertThrows(FenException.class, () -> new FenReader("7x/8/8/8/8/8/8/8 w q - 1 8"));
         assertTrue(ex.getMessage().contains("Illegal Char"));
     }
 
     @Test
     public void testReadFenRejectsIncompleteFen() {
-        FenException ex = assertThrows(FenException.class, () -> new FenNotation("8/8/8/8/8/8/8"));
+        FenException ex = assertThrows(FenException.class, () -> new FenReader("8/8/8/8/8/8/8"));
         assertTrue(ex.getMessage().contains("Fen isn't complete"));
     }
 
     @Test
     public void testReadFenRejectsInvalidRowWidth() {
-        FenException ex = assertThrows(FenException.class, () -> new FenNotation("7/8/8/8/8/8/8/8"));
+        FenException ex = assertThrows(FenException.class, () -> new FenReader("7/8/8/8/8/8/8/8"));
         assertTrue(ex.getMessage().contains("don't match the sidelen"));
     }
 
-    @Test
-    public void testWriteFenCurrentBehaviorReturnsNullLiteral() {
-        Piece[] board = new Piece[64];
-        for (int i = 0; i < board.length; i++) {
-            board[i] = EmptyPiece.EMPTY_PIECE;
-        }
 
-        assertEquals("null", FenNotation.writeFen(board));
+    @Test
+    public void testWriteFenStartingPos(){
+        Board b = new Board();
+        String fenStr = FenWriter.WriteFen(b);
+        assertEquals("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", fenStr);
     }
 }

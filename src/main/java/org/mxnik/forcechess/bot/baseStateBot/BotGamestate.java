@@ -1,9 +1,8 @@
-package org.mxnik.forcechess.bot;
+package org.mxnik.forcechess.bot.baseStateBot;
 
 import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.Util.Bitboard;
-import org.mxnik.forcechess.Util.FastBitmap;
 
 /**
  * Hardcoded BotGamestate for 64 x 64 further training may be applied
@@ -28,48 +27,48 @@ public class BotGamestate {
     private Bitboard BQueenCastle = new Bitboard();
 
 
-    private void buildFromBoard(Board buildBoard){
+    private void buildFromBoard(Board buildBoard) {
         Piece[] b = buildBoard.getBoard();
-        for(int i = 0; i < Board.size; i++){
+        for (int i = 0; i < Board.size; i++) {
             Piece p = b[i];
-            switch (p.getType()){
+            switch (p.getType()) {
                 case PAWN -> {
-                    if (p.getColor()){
+                    if (p.getColor()) {
                         WPawns.set(i);
                         continue;
                     }
                     BPanws.set(i);
                 }
                 case BISHOP -> {
-                    if (p.getColor()){
+                    if (p.getColor()) {
                         WBishops.set(i);
                         continue;
                     }
                     BBishops.set(i);
                 }
                 case KNIGHT -> {
-                    if (p.getColor()){
+                    if (p.getColor()) {
                         WKnights.set(i);
                         continue;
                     }
                     BKnights.set(i);
                 }
                 case QUEEN -> {
-                    if (p.getColor()){
+                    if (p.getColor()) {
                         WQueens.set(i);
                         continue;
                     }
                     BQueens.set(i);
                 }
                 case ROOK -> {
-                    if (p.getColor()){
+                    if (p.getColor()) {
                         WRooks.set(i);
                         continue;
                     }
                     BRooks.set(i);
                 }
                 case KING -> {
-                    if (p.getColor()){
+                    if (p.getColor()) {
                         WKings.set(i);
                         continue;
                     }
@@ -79,11 +78,11 @@ public class BotGamestate {
         }
     }
 
-    public BotGamestate (Board buildBoard){
+    public BotGamestate(Board buildBoard) {
         buildFromBoard(buildBoard);
     }
 
-    public BotGamestate (String fenStr){
+    public BotGamestate(String fenStr) {
         Board bb = new Board(fenStr);
         buildFromBoard(bb);
     }

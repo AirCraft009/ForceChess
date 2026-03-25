@@ -7,11 +7,9 @@ import org.mxnik.forcechess.Util.Constants;
 
 public class ChessApplication extends Application {
     private final String pathToImages = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
-    Group root;
-    Constants constants;
 
     @Override
-    public void start(Stage primaryStage) {
+    public void start(Stage primaryStage) throws CloneNotSupportedException {
         new ChessScene();
     }
 

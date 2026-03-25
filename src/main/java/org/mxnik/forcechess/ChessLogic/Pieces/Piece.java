@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
+import org.mxnik.forcechess.Util.FastBitmap;
 import org.mxnik.forcechess.Util.Helper;
 
 import static org.mxnik.forcechess.Util.Helper.*;
