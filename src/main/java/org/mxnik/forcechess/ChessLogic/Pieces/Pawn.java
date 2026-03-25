@@ -68,12 +68,12 @@ public class Pawn extends Piece{
         moveList.startPiece();
 
         moveList.startDirection();
-        int target = pos + baseMove * ((color)? 1 : -1);
+        int target = pos + UP.offset * ((color)? 1 : -1);
         if (isValidMove(pos, target)) {
             moveList.addMoves((byte) target);
         }
 
-        target = pos + doubleMove * ((color)? 1 : -1);
+        target = pos + UP.offset * 2 * ((color)? 1 : -1);
         if (!hasMoved && isValidMove(pos, target)) {
             moveList.addMoves((byte) target);
         }

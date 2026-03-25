@@ -20,5 +20,9 @@ public enum MoveOffsets {
     public static void calculateOffset(int  sidelength) {
         UP.offset = (byte) sidelength;
         DOWN.offset = (byte) -sidelength;
+        DOWN_L.offset = (byte) (DOWN.offset - 1);
+        DOWN_R.offset = (byte) (DOWN.offset + 1);
+        UP_L.offset = (byte) (UP.offset - 1);
+        UP_R.offset = (byte) (UP.offset + 1);
     }
 }

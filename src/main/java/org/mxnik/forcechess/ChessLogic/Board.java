@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.ChessLogic;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
+import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
@@ -50,6 +51,7 @@ public class Board {
 
     public Board(String fenString) {
         BuildFromFen(fenString);
+        MoveOffsets.calculateOffset(sideLen);
     }
 
     /**
