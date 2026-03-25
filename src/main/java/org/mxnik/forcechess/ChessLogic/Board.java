@@ -67,6 +67,8 @@ public class Board {
         kingBPos = KingPositions.second();
         turn = notation.readFenTurn();
         sideLen = notation.readSideLen();
+        MoveOffsets.calculateOffset(sideLen);
+        Piece.refreshMoveSets();
 
         for (int i = 0; i < board.length; i++) {
             Piece p = board[i];

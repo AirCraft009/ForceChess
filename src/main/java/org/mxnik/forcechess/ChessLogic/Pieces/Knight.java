@@ -6,17 +6,21 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Knight extends Piece{
     public final static int dirCount = 8;
-    private final byte[] moveSet = {
-            (byte) (RIGHT.offset + UP.offset * 2),
-            (byte) (LEFT.offset + UP.offset * 2),
-            (byte) (RIGHT.offset + DOWN.offset * 2),
-            (byte) (LEFT.offset + DOWN.offset * 2),
+    private static final byte[] moveSet = new byte[dirCount];
+    static {
+        refreshMoveSet();
+    }
 
-            (byte) (RIGHT.offset * 2 + UP.offset),
-            (byte) (LEFT.offset * 2 + UP.offset),
-            (byte) (RIGHT.offset * 2 + DOWN.offset),
-            (byte) (LEFT.offset * 2+ DOWN.offset),
-    };
+    static void refreshMoveSet() {
+        moveSet[0] = (byte) (RIGHT.offset + UP.offset * 2);
+        moveSet[1] = (byte) (LEFT.offset + UP.offset * 2);
+        moveSet[2] = (byte) (RIGHT.offset + DOWN.offset * 2);
+        moveSet[3] = (byte) (LEFT.offset + DOWN.offset * 2);
+        moveSet[4] = (byte) (RIGHT.offset * 2 + UP.offset);
+        moveSet[5] = (byte) (LEFT.offset * 2 + UP.offset);
+        moveSet[6] = (byte) (RIGHT.offset * 2 + DOWN.offset);
+        moveSet[7] = (byte) (LEFT.offset * 2 + DOWN.offset);
+    }
 
     @Override
     public int getMaxDir() {

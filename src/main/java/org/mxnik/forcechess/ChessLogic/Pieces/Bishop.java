@@ -10,7 +10,18 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Bishop extends Piece {
     public final static int dirCount = 4;
-    private final byte[] moveSet = new byte[(Board.sideLen - 1) * 2];
+    private static byte[] moveSet = new byte[(Board.sideLen - 1) * 2];
+    static {
+        refreshMoveSet();
+    }
+
+    static void refreshMoveSet() {
+        int size = (Board.sideLen - 1) * 2;
+        if (moveSet.length != size) {
+            moveSet = new byte[size];
+        }
+    }
+
     public Bishop( boolean color, boolean hasMoved) {
         super(PieceTypes.BISHOP, color, hasMoved);
     }
