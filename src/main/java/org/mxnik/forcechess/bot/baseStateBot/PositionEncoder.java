@@ -2,6 +2,8 @@ package org.mxnik.forcechess.bot.baseStateBot;
 
 import org.mxnik.forcechess.Util.Bitboard;
 
+import java.util.Arrays;
+
 /**
  * PositionEncoder
  *
@@ -112,8 +114,7 @@ public final class PositionEncoder {
         encodeBitboard(pos.BRooks.board,   tensor[PLANE_BR]);
         encodeBitboard(pos.BQueens.board,  tensor[PLANE_BQ]);
         encodeBitboard(pos.BKing.board,    tensor[PLANE_BK]);
-        encodeBitboard(pos.WDoublePawnMove.board, tensor[PLANE_DOUBLE_PW]);
-        encodeBitboard(pos.BDoublePawnMove.board, tensor[PLANE_DOUBLE_PB]);
+
 
 
 
@@ -123,7 +124,12 @@ public final class PositionEncoder {
         if (pos.BKingCastle) fillPlane(tensor[PLANE_CASTLE_BK], 1.0f);
         if (pos.BQueenCastle) fillPlane(tensor[PLANE_CASTLE_BQ], 1.0f);
 
-        // 16 enPassant Zielfeld
+        // 16 - 17 double pawn moves
+        encodeBitboard(pos.WDoublePawnMove.board, tensor[PLANE_DOUBLE_PW]);
+        encodeBitboard(pos.BDoublePawnMove.board, tensor[PLANE_DOUBLE_PB]);
+
+        // 16 enPassant
+        // while a bitboard alr exists opening setting a single bit in the file is easier
         // enPassantSquare == -1 means no en passant available
         if (pos.enPassantSquare >= 0) {
             int rank = pos.enPassantSquare >>> 3;   // divide by 8
@@ -131,7 +137,7 @@ public final class PositionEncoder {
             tensor[PLANE_EN_PASSANT][rank][file] = 1.0f;
         }
 
-        // Zugseite
+        // side to move
         if (pos.whiteToMove) fillPlane(tensor[PLANE_SIDE], 1.0f);
         // black to move → plane stays all zeros (already cleared)
 
@@ -206,6 +212,7 @@ public final class PositionEncoder {
         public Bitboard WDoublePawnMove;
         public Bitboard BDoublePawnMove;
         public Bitboard Occupied;
+        public Bitboard enPassant;
 
         public boolean WQueenCastle;
         public boolean WKingCastle;
@@ -246,6 +253,7 @@ public final class PositionEncoder {
             p.Occupied = new Bitboard(0xFFFF00000000FFFFL);
             p.WDoublePawnMove = new Bitboard(0x000000000000FF00L);
             p.BDoublePawnMove = new Bitboard(0x00FF000000000000L);
+            p.enPassant = new Bitboard(0L);
             p.BQueenCastle = false;
             p.WQueenCastle = false;
             p.BKingCastle = false;
@@ -280,6 +288,10 @@ public final class PositionEncoder {
         // Reuse buffer test (hot path)
         float[][][] buffer = new float[PLANES][SIZE][SIZE];
         encode(pos, buffer);
+        int[] moves = new int[256];
+        MoveGen.generateMoves(pos, 0, moves);
+        System.out.println(Move.from(moves[1]));
+        System.out.println(Move.to(moves[1]));
         System.out.println("\nReuse buffer test passed — no allocation.");
     }
 }
