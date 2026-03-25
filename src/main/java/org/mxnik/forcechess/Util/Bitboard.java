@@ -2,6 +2,12 @@ package org.mxnik.forcechess.Util;
 
 import java.util.function.IntConsumer;
 
+/**
+ * Bitboard with helper functions
+ * public long (64 spaces) for efficiency
+ *
+ *
+ */
 public final class Bitboard {
 
     public long board; // just a long, public for performance
@@ -27,7 +33,10 @@ public final class Bitboard {
         return sq;
     }
 
-    // Iterate over all set squares — core of move generation
+    /**
+     * Iterate over all set squares — core of move generation
+     * @param fn generation function
+     */
     public void forEach(IntConsumer fn) {
         long b = board;
         while (b != 0L) {
