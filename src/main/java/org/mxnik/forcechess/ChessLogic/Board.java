@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.ChessLogic;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
+import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
@@ -50,6 +51,7 @@ public class Board {
 
     public Board(String fenString) {
         BuildFromFen(fenString);
+        MoveOffsets.calculateOffset(sideLen);
     }
 
     /**
@@ -65,6 +67,8 @@ public class Board {
         kingBPos = KingPositions.second();
         turn = notation.readFenTurn();
         sideLen = notation.readSideLen();
+        MoveOffsets.calculateOffset(sideLen);
+        Piece.refreshMoveSets();
 
         for (int i = 0; i < board.length; i++) {
             Piece p = board[i];
@@ -80,16 +84,7 @@ public class Board {
         moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
-    private void resetCastle(int from, int to) throws CloneNotSupportedException {
-        if (board[from].getType() != PieceTypes.KING) {
-            return;
-        }
-        if (Helper.colDiff(from, to) > 1) {
-            int dir = Integer.compare(to, from);
-            int rookPos = (dir < 0) ? from - Helper.distanceLeftB(from) : from + Helper.distanceRightB(from);
-            rawMove(to - dir, rookPos, false);
-        }
-    }
+
 
     /**
      * Ist König in Schach.
@@ -273,13 +268,13 @@ public class Board {
             byte[] legalMoveSection = new byte[newMoveCount - prevMoveCount];
             prevMoveCount = newMoveCount;
 
-            directionLoop:
             for (int d = 0; d < dirCount; d++) {
                 int dirIndex = dirStart + d;
                 int moveOffset = moveList.getDirectionMovesOffset(dirIndex);
                 int moveLength = moveList.getDirectionMovesLength(dirIndex);
 
                 int j;
+                moveLoop:
                 for (j = 0; j < moveLength; j++) {
                     byte square = moves[moveOffset + j];
 
@@ -298,9 +293,10 @@ public class Board {
                         }
                     } else if (board[i].getType() == PieceTypes.KING) {
                         int dir = Integer.compare(square, i);
-                        Piece corner = (dir < 0)
-                                ? board[i - Helper.distanceLeftB(i)]
-                                : board[i + Helper.distanceRightB(i)];
+                        int cornerPos = (dir < 0)
+                                ? i - Helper.distanceLeftB(i)
+                                : i + Helper.distanceRightB(i);
+                        Piece corner = board[cornerPos];
 
                         if (Helper.colDiff(i, square) > 1) {
                             if (board[i].isHasMoved()
@@ -308,9 +304,9 @@ public class Board {
                                     || corner.getType() != PieceTypes.ROOK) {
                                 break;
                             }
-                            for (int k = i + dir; k != square; k += dir) {
+                            for (int k = i + dir; k != cornerPos; k += dir) {
                                 if (board[k] != EmptyPiece.EMPTY_PIECE) {
-                                    break directionLoop;
+                                    break moveLoop;
                                 }
                             }
                             legalMoveSection[ptr] = square;

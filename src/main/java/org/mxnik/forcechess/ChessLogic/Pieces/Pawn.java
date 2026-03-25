@@ -13,21 +13,22 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Pawn extends Piece{
     public final static int dirCount = 3;
-    public static final byte baseMove = UP.offset;
-    public static final byte doubleMove = (byte) (UP.offset * 2);
+    private static final byte[] moveSet = new byte[4];
+    private static final byte[] captureMoves = new byte[2];
+    static {
+        refreshMoveSet();
+    }
 
-    // to group all other moves in different directions
-    private static final byte[] otherMoves = {
-            UP_R.offset,
-            UP_L.offset
-    };
+    static void refreshMoveSet() {
+        moveSet[0] = UP.offset;
+        moveSet[1] = (byte) (UP.offset * 2);
+        moveSet[2] = UP_R.offset;
+        moveSet[3] = UP_L.offset;
 
-    private final byte[] moveSet = {
-            UP.offset,
-            (byte) (UP.offset * 2),
-            UP_R.offset,
-            UP_L.offset
-    };
+        captureMoves[0] = UP_R.offset;
+        captureMoves[1] = UP_L.offset;
+    }
+
     public Pawn(boolean color, boolean hasMoved) {
         super(PieceTypes.PAWN, color, hasMoved);
     }
@@ -68,19 +69,17 @@ public class Pawn extends Piece{
         moveList.startPiece();
 
         moveList.startDirection();
-        int target = pos + baseMove * ((color)? 1 : -1);
+        int target = pos + UP.offset * ((color)? 1 : -1);
         if (isValidMove(pos, target)) {
             moveList.addMoves((byte) target);
         }
 
-        target = pos + doubleMove * ((color)? 1 : -1);
+        target = pos + UP.offset * 2 * ((color)? 1 : -1);
         if (!hasMoved && isValidMove(pos, target)) {
             moveList.addMoves((byte) target);
         }
 
-
-
-        for (byte moveOffset : otherMoves) {
+        for (byte moveOffset : captureMoves) {
             target = pos + moveOffset * ((color)? 1 : -1);
             if (!isValidMove(pos, target)) {
                 continue;

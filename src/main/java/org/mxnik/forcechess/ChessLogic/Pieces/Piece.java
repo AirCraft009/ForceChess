@@ -76,6 +76,15 @@ public abstract class Piece implements Cloneable {
         return type;
     }
 
+    public static void refreshMoveSets() {
+        Bishop.refreshMoveSet();
+        Rook.refreshMoveSet();
+        Queen.refreshMoveSet();
+        Knight.refreshMoveSet();
+        King.refreshMoveSet();
+        Pawn.refreshMoveSet();
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("Piece{");
@@ -86,4 +95,3 @@ public abstract class Piece implements Cloneable {
         return sb.toString();
     }
 }
-
