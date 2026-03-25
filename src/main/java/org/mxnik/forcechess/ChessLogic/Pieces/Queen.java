@@ -9,7 +9,17 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.DOWN;
 
 public class Queen extends Piece{
     public final static int dirCount = 8;
-    private final byte[] moveSet = new byte[(Board.sideLen - 1) * 4];
+    private static byte[] moveSet = new byte[(Board.sideLen - 1) * 4];
+    static {
+        refreshMoveSet();
+    }
+
+    static void refreshMoveSet() {
+        int size = (Board.sideLen - 1) * 4;
+        if (moveSet.length != size) {
+            moveSet = new byte[size];
+        }
+    }
 
     public Queen(boolean color, boolean hasMoved) {
         super(PieceTypes.QUEEN, color, hasMoved);

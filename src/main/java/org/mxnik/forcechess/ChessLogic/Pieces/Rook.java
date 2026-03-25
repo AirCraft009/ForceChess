@@ -11,8 +11,18 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Rook extends Piece {
     public final static int dirCount = 4;
-    // 7 (boardlen -1) in each cardinal direction
-    private final byte[] moveSet = new byte[(Board.sideLen - 1) * 2];
+    private static byte[] moveSet = new byte[(Board.sideLen - 1) * 2];
+    static {
+        refreshMoveSet();
+    }
+
+    static void refreshMoveSet() {
+        int size = (Board.sideLen - 1) * 2;
+        if (moveSet.length != size) {
+            moveSet = new byte[size];
+        }
+    }
+
     public Rook( boolean color, boolean hasMoved) {
         super(PieceTypes.ROOK, color, hasMoved);
     }
