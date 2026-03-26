@@ -211,8 +211,11 @@ public final class PositionEncoder {
         public Bitboard BKing;
         public Bitboard WDoublePawnMove;
         public Bitboard BDoublePawnMove;
-        public Bitboard Occupied;
-        public Bitboard enPassant;
+        public long enPassant;
+        public long Occupied;
+        public long WPieces;
+        public long BPieces;
+
 
         public boolean WQueenCastle;
         public boolean WKingCastle;
@@ -250,15 +253,25 @@ public final class PositionEncoder {
 
 
             // Extra layers (context)
-            p.Occupied = new Bitboard(0xFFFF00000000FFFFL);
-            p.WDoublePawnMove = new Bitboard(0x000000000000FF00L);
-            p.BDoublePawnMove = new Bitboard(0x00FF000000000000L);
-            p.enPassant = new Bitboard(0L);
+            p.enPassant = 0; // none
+            p.WDoublePawnMove = new Bitboard(0x000000000000FF00L); // rank 2
+            p.BDoublePawnMove = new Bitboard(0x00FF000000000000L); // rank 7
             p.BQueenCastle = false;
             p.WQueenCastle = false;
             p.BKingCastle = false;
             p.WKingCastle = false;
+
+            //Helper Layers
+            p.Occupied = 0xFFFF00000000FFFFL; // rank 1-2 & 7-8
+            p.WPieces = 0xFFFF000000000000L;
+            p.BPieces = 0x000000000000FFFFL;
             return p;
+        }
+
+        public void updateHelper(){
+            BPieces = BPawns.board | BBishops.board | BKnights.board | BRooks.board | BQueens.board | BKing.board;
+            WPieces = WPawns.board | WBishops.board | WKnights.board | WRooks.board | WQueens.board | WKing.board;
+            Occupied = BPieces | WPieces;
         }
     }
 
@@ -278,7 +291,7 @@ public final class PositionEncoder {
         // Castling should be all 1s
         System.out.println("\n=== Plane 12: White kingside castling ===");
         System.out.println("tensor[12][0][0] = " + tensor[PLANE_CASTLE_WK][0][0]
-            + "  (expected 1.0)");
+            + "  (expected 0.0)");
 
         // Side to move: white → all 1s
         System.out.println("\n=== Plane 17: Side to move ===");
@@ -288,10 +301,12 @@ public final class PositionEncoder {
         // Reuse buffer test (hot path)
         float[][][] buffer = new float[PLANES][SIZE][SIZE];
         encode(pos, buffer);
-        int[] moves = new int[256];
-        MoveGen.generateMoves(pos, 0, moves);
-        System.out.println(Move.from(moves[1]));
-        System.out.println(Move.to(moves[1]));
         System.out.println("\nReuse buffer test passed — no allocation.");
+
+        // Move gen test (Pre allocated moves - hot path)
+        int[] moves = new int[256];
+        System.out.println(MoveGen.generateMoves(pos, 0, true, moves));
+        System.out.println(Move.from(moves[17]));
+        System.out.println(Move.to(moves[17]));
     }
 }
