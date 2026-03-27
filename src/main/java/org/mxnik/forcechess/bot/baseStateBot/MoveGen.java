@@ -179,6 +179,17 @@ public class MoveGen {
         return offset;
     }
 
+
+    /**
+     * turns a bitboard of final positions to encoded moves
+     * @param ownPieces pieces of the same color
+     * @param enemyPieces pieces of the opposite color
+     * @param endPositions bitboard of endpositions
+     * @param startSq starting square
+     * @param offset offset into the moves arr
+     * @param moves array of moves till max MCTS depth
+     * @return new offset into moves
+     */
     private static int drainBitboard(long ownPieces, long enemyPieces, long endPositions, int startSq, int offset, int[] moves){
         // ignore moves ending on own pieces
         endPositions &= ~ownPieces;
@@ -197,6 +208,13 @@ public class MoveGen {
         return offset;
     }
 
+    /**
+     * Returns all moves visitable by a queen on square
+     * @param square position of the queen
+     * @param occupied bitboard of occupied positions
+     * @param ownPieces bitboard of pos occupied by own piecs
+     * @return all moves
+     */
     private static long QueenMoves(int square, long occupied, long ownPieces){
         long endAttackPos = 0L;
 
@@ -206,6 +224,13 @@ public class MoveGen {
         return endAttackPos;
     }
 
+    /**
+     * Returns all moves visitable by a rook on square
+     * @param square position of the rook
+     * @param occupied bitboard of occupied positions
+     * @param ownPieces bitboard of pos occupied by own piecs
+     * @return all moves
+     */
     private static long RookMoves(int square, long occupied, long ownPieces){
         long endAttackPos = 0L;
 
@@ -216,6 +241,13 @@ public class MoveGen {
         return endAttackPos;
     }
 
+    /**
+     * Returns all moves visitable by a bishop on square
+     * @param square position of the bishop
+     * @param occupied bitboard of occupied positions
+     * @param ownPieces bitboard of pos occupied by own pieces
+     * @return all moves
+     */
     private static long BishopMoves(int square, long occupied, long ownPieces){
         long endAttackPos = 0L;
 
@@ -227,6 +259,15 @@ public class MoveGen {
         return endAttackPos;
     }
 
+    /**
+     * Slide attacks like rook, bishop and queen
+     * in one direction till block
+     * @param square start-square
+     * @param delta offset to move (dir)
+     * @param occupied bitboard of occupied positions
+     * @param ownPieces bitboard of pos occupied by own pieces
+     * @return all moves in that direction
+     */
     private static long slideAttacks(int square, int delta, long occupied, long ownPieces){
         long attack = 0L;
 

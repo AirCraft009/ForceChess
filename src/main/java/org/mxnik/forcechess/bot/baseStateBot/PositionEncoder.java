@@ -309,5 +309,8 @@ public final class PositionEncoder {
         System.out.println(MoveGen.generateMoves(pos, 0, true, moves));
         System.out.println(Move.from(moves[0]));
         System.out.println(Move.to(moves[0]));
+
+        //visualise bitB
+        //System.out.println(Bitboard.visualiseBitboard(new Bitboard(pos.Occupied)));
     }
 }
