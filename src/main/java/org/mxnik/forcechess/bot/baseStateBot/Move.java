@@ -35,6 +35,7 @@ public final class Move {
 
     // where to jump to on every square
     public static final long[] KNIGHT_LOOKUP = new long[64];
+    public static final long[] KING_LOOKUP = new long[64];
 
     static {
         for (int sq = 0; sq < 64; sq++) {
@@ -48,6 +49,15 @@ public final class Move {
                             | ((b >> 10) & ~FILE_GH)        // down 1, left 2
                             | ((b >> 15) & ~FILE_A)         // down 2, right 1
                             | ((b >> 17) & ~FILE_H);        // down 2, left 1
+        }
+
+        for (int sq = 0; sq < 64; sq++) {
+            long b = 1L << sq;
+            KING_LOOKUP[sq] =
+                    ((b << 8))                   // up 1
+                            | ((b >> 8))         // down 1
+                            | ((b << 1) & ~FILE_A)        // right 1
+                            | ((b >> 1) & ~FILE_H);        // left 1
         }
     }
 

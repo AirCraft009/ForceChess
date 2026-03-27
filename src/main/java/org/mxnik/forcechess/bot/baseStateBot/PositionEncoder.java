@@ -244,7 +244,7 @@ public final class PositionEncoder {
             p.WKing    = new Bitboard(0x0000000000000010L); // e1
 
             // Black Piece Bitboards
-            p.BPawns  = new Bitboard(0x00FF000000000000L); // rank 7
+            p.BPawns   = new Bitboard(0x00FF000000000000L); // rank 7
             p.BKnights = new Bitboard(0x4200000000000000L); // b8, g8
             p.BBishops = new Bitboard(0x2400000000000000L); // c8, f8
             p.BRooks   = new Bitboard(0x8100000000000000L); // a8, h8
@@ -263,8 +263,9 @@ public final class PositionEncoder {
 
             //Helper Layers
             p.Occupied = 0xFFFF00000000FFFFL; // rank 1-2 & 7-8
-            p.WPieces = 0xFFFF000000000000L;
-            p.BPieces = 0x000000000000FFFFL;
+            p.WPieces  = 0x000000000000FFFFL;
+            p.BPieces  = 0xFFFF000000000000L;
+
             return p;
         }
 
@@ -306,7 +307,7 @@ public final class PositionEncoder {
         // Move gen test (Pre allocated moves - hot path)
         int[] moves = new int[256];
         System.out.println(MoveGen.generateMoves(pos, 0, true, moves));
-        System.out.println(Move.from(moves[17]));
-        System.out.println(Move.to(moves[17]));
+        System.out.println(Move.from(moves[0]));
+        System.out.println(Move.to(moves[0]));
     }
 }
