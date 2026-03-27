@@ -12,33 +12,33 @@ public class MoveGen {
         if (whiteToMove){
             return generateMovesW(position, offset, moves);
         }
-
-
-        return offset;
+        return generateMovesB(position, offset, moves);
     }
 
+
     /**
-     * generates all moves for the white side
+     * Generates all moves for the BLack side
+     * @param pos the current positions / gamestate
+     * @param offset offset to start in move arr
+     * @param moves all moves till full depth
+     * @return new offset into moves arr
      */
     private static int generateMovesB (PositionEncoder.Position pos, int offset, int[] moves){
-        // White Pawn move gen
-
+        // Black Pawn move gen
         // single & double pushes can't take anything
-        long singleP = (pos.WPawns.board << PositionEncoder.SIZE) & ~pos.Occupied;
-        long doubleP = ((pos.WPawns.board & pos.WDoublePawnMove.board) << PositionEncoder.SIZE * 2)  & ~pos.Occupied;
+        long singleP = (pos.BPawns.board << PositionEncoder.SIZE) & ~pos.Occupied;
+        long doubleP = ((pos.BPawns.board & pos.BDoublePawnMove.board) << PositionEncoder.SIZE * 2)  & ~pos.Occupied;
         // check if field is occupied (by enemy) when trying to take
-        long attackL = (pos.WPawns.board << PositionEncoder.SIZE - 1) & pos.BPieces;
-        long attackR = (pos.WPawns.board << PositionEncoder.SIZE + 1) & pos.BPieces;
+        long attackL = (pos.BPawns.board << PositionEncoder.SIZE - 1) & pos.WPieces;
+        long attackR = (pos.BPawns.board << PositionEncoder.SIZE + 1) & pos.WPieces;
 
         // check if any attack fields land on the enPassant square
-        long enPassantL = (pos.WPawns.board << PositionEncoder.SIZE - 1)
+        long enPassantL = (pos.BPawns.board << PositionEncoder.SIZE - 1)
                 & (pos.enPassant);
-        long enPassantR = (pos.WPawns.board << PositionEncoder.SIZE + 1)
+        long enPassantR = (pos.BPawns.board << PositionEncoder.SIZE + 1)
                 & (pos.enPassant);
 
-        // White Pawn end
-
-        // get actual moves
+        // gen actual moves (add to move array)
         offset = formatMoves(singleP, PositionEncoder.SIZE, offset, Move.FLAG_GENERIC, moves);
         offset = formatMoves(doubleP, PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, moves);
         offset = formatMoves(attackL, PositionEncoder.SIZE - 1, offset, Move.FLAG_CAPTURE, moves);
@@ -46,57 +46,63 @@ public class MoveGen {
         offset = formatMoves(enPassantL, PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT, moves);
         offset = formatMoves(enPassantR, PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT, moves);
 
-        // White Knight move gen
-        while (!pos.WKnights.isEmpty()){
-            int startSq = pos.WKnights.popLsb();
+        // Black Pawn end
+
+        // Black Knight move gen
+        while (!pos.BKnights.isEmpty()){
+            int startSq = pos.BKnights.popLsb();
             //get all end positions possible from startSq
             long endPositions = Move.KNIGHT_LOOKUP[startSq];
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, startSq, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, startSq, offset, moves);
         }
 
-        // White Knight end
+        // Black Knight end
 
-        // White-Bishops
+        // Black-Bishops
         int sq;
         long endPositions;
-        while (!pos.WBishops.isEmpty()){
-            sq = pos.WBishops.popLsb();
-            endPositions = BishopMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, offset, moves);
+        while (!pos.BBishops.isEmpty()){
+            sq = pos.BBishops.popLsb();
+            endPositions = BishopMoves(sq, pos.Occupied, pos.BPieces);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, offset, moves);
         }
 
-        // White Bishop end
+        // Black Bishop end
 
-        // White Rook move gen
-        while (!pos.WRooks.isEmpty()){
-            sq = pos.WRooks.popLsb();
-            endPositions = RookMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, offset, moves);
+        // Black Rook move gen
+        while (!pos.BRooks.isEmpty()){
+            sq = pos.BRooks.popLsb();
+            endPositions = RookMoves(sq, pos.Occupied, pos.BPieces);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, offset, moves);
         }
-        // White Rook end
+        // Black Rook end
 
-        // White Queen move gen
+        // Black Queen move gen
 
-        while (!pos.WQueens.isEmpty()){
-            sq = pos.WQueens.popLsb();
-            endPositions = QueenMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, offset, moves);
+        while (!pos.BQueens.isEmpty()){
+            sq = pos.BQueens.popLsb();
+            endPositions = QueenMoves(sq, pos.Occupied, pos.BPieces);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, offset, moves);
         }
 
-        // White Queen end.
+        // Black Queen end.
 
-        // White King move gen
-        while (!pos.WKing.isEmpty()){
-            int startSq = pos.WKing.popLsb();
+        // Black King move gen
+        while (!pos.BKing.isEmpty()){
+            int startSq = pos.BKing.popLsb();
             //get all end positions possible from startSq
             endPositions = Move.KING_LOOKUP[startSq];
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, startSq, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, startSq, offset, moves);
         }
         return offset;
     }
 
     /**
-     * generates all moves for the white side
+     * Generates all moves for the White side
+     * @param pos the current positions / gamestate
+     * @param offset offset to start in move arr
+     * @param moves all moves till full depth
+     * @return new offset into moves arr
      */
     private static int generateMovesW (PositionEncoder.Position pos, int offset, int[] moves){
         // White Pawn move gen
