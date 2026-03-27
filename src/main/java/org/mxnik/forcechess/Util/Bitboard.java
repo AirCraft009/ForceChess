@@ -1,6 +1,12 @@
 package org.mxnik.forcechess.Util;
 
+import org.mxnik.forcechess.ChessLogic.Notation.FenException;
+import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
+
 import java.util.function.IntConsumer;
+
+import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 
 /**
  * Bitboard with helper functions
@@ -43,5 +49,35 @@ public final class Bitboard {
             fn.accept(Long.numberOfTrailingZeros(b));
             b &= b - 1;
         }
+    }
+
+    public static String  visualiseBitboard(Bitboard board){
+        StringBuilder sb = new StringBuilder();
+        String horizontalLine = "+" + ("---+").repeat(8) + "\n";
+
+        for (int rank = 8 - 1; rank >= 0; rank--) {
+            sb.append(horizontalLine);
+            sb.append("|");
+            for (int file = 0; file < 8; file++) {
+                int index = rank * 8 + file;
+                boolean exist = board.get(index);
+
+                char symbol = ' ';
+                if(exist){
+                    symbol = 'x';
+                }
+                sb.append(" ").append(symbol).append(" |");
+            }
+            sb.append(" ").append(rank + 1).append("\n");
+        }
+
+        sb.append(horizontalLine);
+        sb.append(" ");
+        for (int file = 0; file < 8; file++) {
+            sb.append(" ").append((char) ('a' + file)).append("  ");
+        }
+        sb.append("\n");
+
+        return sb.toString();
     }
 }
