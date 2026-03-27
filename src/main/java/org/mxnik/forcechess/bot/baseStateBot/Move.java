@@ -1,29 +1,70 @@
 package org.mxnik.forcechess.bot.baseStateBot;
 
 // A move packed into one int:
-// bits 0-5:  from square
-// bits 6-11: to square
-// bits 12-15: flags (capture, castle, en passant, promotion piece)
+// bits 0  - 5:  from square
+// bits 6  - 11: to square
+// bits 12 - 15: flags (capture, castle, en passant, promotion piece)
+// bit  16     : Color (W/B)
+// bits 17 - 19: PieceType (R, N, B, K, Q, P)
+
 public final class Move {
-    public static int of(int from, int to, int flags) {
-        return from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT;
+    /**
+     * encodes a move into a single integer
+     * @param from start square
+     * @param to end square
+     * @param flags Move flags (capture, castle etc..)
+     * @param isWhite 0 for white 1 for black
+     * @param PieceType PieceType constants
+     * @return encoded move
+     */
+    public static int of(int from, int to, int flags, int isWhite, int PieceType) {
+        return from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT | isWhite << COLOR_SHIFT | PieceType << PIECE_T_SHIFT;
     }
     public static int from(int move)  { return move & MOVE_MASK; }
     public static int to(int move)    { return (move >>> TO_MOVE_SHIFT) & MOVE_MASK; }
-    public static int flags(int move) { return (move >>> FLAG_SHIFT) & 0xF; }
+    public static int flags(int move) { return (move >>> FLAG_SHIFT) & FLAG_MASK; }
+    public static int Color(int move) { return (move >>> COLOR_SHIFT) & COLOR_MASK; }
+    public static int PieceType(int move) { return (move >>> PIECE_T_SHIFT) & PIECE_T_MASK; }
 
     public static final int FLAG_GENERIC = 0;
     public static final int FLAG_CAPTURE   = 1;
     public static final int FLAG_CASTLE    = 2;
     public static final int FLAG_EN_PASSANT = 3;
     public static final int FLAG_PROMOTE_Q = 4;
+    public static final int FLAG_PROMOTE_R = 5;
+    public static final int FLAG_PROMOTE_B = 6;
+    public static final int FLAG_PROMOTE_N = 7;
 
-    public static final int MOVE_MASK = 0x3F;
+    // Shifts and masks
     public static final int TO_MOVE_SHIFT = 6;
+    public static final int MOVE_MASK = 0x3F;
+
     public static final int FLAG_SHIFT = 12;
+    public static final int FLAG_MASK = 0xF;
+
+    public static final int COLOR_SHIFT = 16;
+    public static final int COLOR_MASK = 0x1;
+
+    public static final int PIECE_T_SHIFT = 17;
+    public static final int PIECE_T_MASK = 0x7;
+
+    // Color
+
+    public static final int WHITE = 0;
+    public static final int BLACK = 1;
+
+    // PieceType
+
+    public static final int ROOK   = 0;
+    public static final int KNIGHT = 1;
+    public static final int BISHOP = 2;
+    public static final int KING   = 3;
+    public static final int QUEEN  = 4;
+    public static final int PAWN = 5;
+
+
 
     // out of bounds checkers.
-
     // R-Border
     public static final long FILE_A = 0x0101010101010101L;
     // L-Border
