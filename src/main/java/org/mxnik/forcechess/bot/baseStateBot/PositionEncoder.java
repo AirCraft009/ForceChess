@@ -2,8 +2,6 @@ package org.mxnik.forcechess.bot.baseStateBot;
 
 import org.mxnik.forcechess.Util.Bitboard;
 
-import java.util.Arrays;
-
 /**
  * PositionEncoder
  *
@@ -189,9 +187,9 @@ public final class PositionEncoder {
     // -------------------------------------------------------------------------
 
     /**
-     * Position Conatiner
-     * Contains bitboards and entire gamestate
-     *
+     * Position Container
+     * Contains bitboards and entire game-state
+     * <p>
      * usage - Movegen
      * usage - plane encoding
      */
@@ -211,12 +209,13 @@ public final class PositionEncoder {
         public Bitboard BKing;
         public Bitboard WDoublePawnMove;
         public Bitboard BDoublePawnMove;
+        public Bitboard ScratchBoard;
         public long enPassant;
         public long Occupied;
         public long WPieces;
         public long BPieces;
 
-
+        // castling rights uniform 1 or 0
         public boolean WQueenCastle;
         public boolean WKingCastle;
         public boolean BQueenCastle;
@@ -231,8 +230,71 @@ public final class PositionEncoder {
         // Fifty-move rule counter (0-100)
         public int fiftyMoveCounter = 0;
 
+        // PieceTypes encoded
+        // Color (1bit) PieceType(3bits)
+        public byte[] pieceMap = new byte[64];
+
+
+        public UndoMoveInfo makeMove(int move){
+            int from = Move.from(move);
+            int to = Move.to(move);
+            int moveType = Move.flags(move);
+            boolean color = Move.color(move);
+            int pieceT = Move.pieceType(move);
+
+            Bitboard pieceBoard = getBitboardFromPiece(pieceT);
+
+            // make move on piece Layer
+            movePiece(from, to);
+
+            //TODO: remove or add castling-rights if necessary
+
+            switch (moveType){
+                case Move.FLAG_CASTLE_K_CAPTURE, Move.FLAG_CASTLE_Q_CAPTURE -> throw new IllegalStateException("Castle can't be of type capture: " + Integer.toBinaryString(moveType));
+                case Move.FLAG_EN_PASSANT -> throw new IllegalStateException("En-Passant can't be a normal (non-capture): " + Integer.toBinaryString(moveType));
+                case Move.FLAG_CASTLE_K, Move.FLAG_CASTLE_Q -> {
+                    // secondary board is the Rook board for the correct color
+                    return new UndoMoveInfo(from, to, moveType, pieceBoard, getBitboardFromPieceType(color, Piece.ROOK));
+                }
+
+                case Move.FLAG_GENERIC -> {
+                    return new UndoMoveInfo(from, to, moveType, pieceBoard, ScratchBoard);
+                }
+                case Move.FLAG_GENERIC_CAPTURE -> {
+                    int takenPiece = pieceMap[to];
+                    // remove taken-piece
+                    Bitboard takenBoard = getBitboardFromPiece(takenPiece);
+                    takenBoard.clear(to);
+                    return new UndoMoveInfo(from, to, moveType, pieceBoard, takenBoard);
+                }
+                default -> {
+                    //handle rest
+                    return new UndoMoveInfo(from, to, moveType, pieceBoard, ScratchBoard);
+                }
+            }
+        }
+
+        public void unmakeMove(UndoMoveInfo info){
+
+        }
+
+        private void movePiece(int from, int to){
+            int movedPiece = pieceMap[from];
+            int takenPiece = pieceMap[to];
+
+            Bitboard fromBoard = getBitboardFromPiece(movedPiece);
+            Bitboard toBoard = getBitboardFromPiece(takenPiece);
+
+            //move piece
+            fromBoard.clear(from);
+            fromBoard.set(to);
+            //delete Piece
+            toBoard.clear(to);
+            updateHelper();
+        }
+
         /** Constructs a standard starting position. */
-        public static Position startingPosition() {
+        public static Position StartingPosition() {
             Position p = new Position();
 
             // White Piece Bitboards
@@ -265,7 +327,44 @@ public final class PositionEncoder {
             p.Occupied = 0xFFFF00000000FFFFL; // rank 1-2 & 7-8
             p.WPieces  = 0x000000000000FFFFL;
             p.BPieces  = 0xFFFF000000000000L;
+            p.ScratchBoard = new Bitboard();
 
+            // PieceMap - setup
+            // White Pieces
+            p.pieceMap[0] = Piece.WHITE | (Piece.ROOK << 1);
+            p.pieceMap[1] = Piece.WHITE | (Piece.KNIGHT << 1);
+            p.pieceMap[2] = Piece.WHITE | (Piece.BISHOP<< 1);
+            p.pieceMap[3] = Piece.WHITE | (Piece.QUEEN << 1);
+            p.pieceMap[4] = Piece.WHITE | (Piece.KING << 1);
+            p.pieceMap[5] = Piece.WHITE | (Piece.BISHOP<< 1);
+            p.pieceMap[6] = Piece.WHITE | (Piece.KNIGHT << 1);
+            p.pieceMap[7] = Piece.WHITE | (Piece.ROOK << 1);
+            p.pieceMap[8] = Piece.WHITE | (Piece.PAWN << 1);
+            p.pieceMap[9] = Piece.WHITE | (Piece.PAWN << 1);
+            p.pieceMap[10] = Piece.WHITE | (Piece.PAWN << 1);
+            p.pieceMap[11] = Piece.WHITE | (Piece.PAWN << 1);
+            p.pieceMap[12] = Piece.WHITE | (Piece.PAWN << 1);
+            p.pieceMap[13] = Piece.WHITE | (Piece.PAWN << 1);
+            p.pieceMap[14] = Piece.WHITE | (Piece.PAWN << 1);
+            p.pieceMap[15] = Piece.WHITE | (Piece.PAWN << 1);
+
+            // Black Pieces
+            p.pieceMap[63] = Piece.BLACK | (Piece.ROOK << 1);
+            p.pieceMap[62] = Piece.BLACK | (Piece.KNIGHT << 1);
+            p.pieceMap[61] = Piece.BLACK | (Piece.BISHOP<< 1);
+            p.pieceMap[60] = Piece.BLACK | (Piece.QUEEN << 1);
+            p.pieceMap[59] = Piece.BLACK | (Piece.KING << 1);
+            p.pieceMap[58] = Piece.BLACK | (Piece.BISHOP<< 1);
+            p.pieceMap[57] = Piece.BLACK | (Piece.KNIGHT << 1);
+            p.pieceMap[56] = Piece.BLACK | (Piece.ROOK << 1);
+            p.pieceMap[55] = Piece.BLACK | (Piece.PAWN << 1);
+            p.pieceMap[54] = Piece.BLACK | (Piece.PAWN << 1);
+            p.pieceMap[53] = Piece.BLACK | (Piece.PAWN << 1);
+            p.pieceMap[52] = Piece.BLACK | (Piece.PAWN << 1);
+            p.pieceMap[51] = Piece.BLACK | (Piece.PAWN << 1);
+            p.pieceMap[50] = Piece.BLACK | (Piece.PAWN << 1);
+            p.pieceMap[49] = Piece.BLACK | (Piece.PAWN << 1);
+            p.pieceMap[48] = Piece.BLACK | (Piece.PAWN << 1);
             return p;
         }
 
@@ -274,10 +373,42 @@ public final class PositionEncoder {
             WPieces = WPawns.board | WBishops.board | WKnights.board | WRooks.board | WQueens.board | WKing.board;
             Occupied = BPieces | WPieces;
         }
+
+        private Bitboard getBitboardFromPiece(int p){
+            boolean color = Piece.color(p);
+            int PieceT = Piece.pieceT(p);
+            return getBitboardFromPieceType(color, PieceT);
+        }
+
+        private Bitboard getBitboardFromPieceType(boolean color, int PieceT){
+            if(color){
+                return switch (PieceT) {
+                    case Piece.BISHOP->  WBishops;
+                    case Piece.KNIGHT -> WKnights;
+                    case Piece.ROOK ->  WRooks;
+                    case Piece.QUEEN ->  WQueens;
+                    case Piece.KING ->  WKing;
+                    case Piece.PAWN -> WPawns;
+                    case Piece.EMPTY_PIECE -> ScratchBoard;
+                    default -> throw new InvalidPieceTypeException("No Matching PieceType found");
+                };
+            }else{
+                return switch (PieceT) {
+                    case Piece.BISHOP->  BBishops;
+                    case Piece.KNIGHT -> BKnights;
+                    case Piece.ROOK ->  BRooks;
+                    case Piece.QUEEN ->  BQueens;
+                    case Piece.KING ->  BKing;
+                    case Piece.PAWN -> BPawns;
+                    case Piece.EMPTY_PIECE -> ScratchBoard;
+                    default -> throw new InvalidPieceTypeException("No Matching PieceType found: " + Integer.toBinaryString(PieceT));
+                };
+            }
+        }
     }
 
     public static void main(String[] args) {
-        Position pos = Position.startingPosition();
+        Position pos = Position.StartingPosition();
         float[][][] tensor = encode(pos);
 
         // White pawns should be set on rank 1 (index), files 0-7

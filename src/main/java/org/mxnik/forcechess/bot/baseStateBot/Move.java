@@ -1,11 +1,13 @@
 package org.mxnik.forcechess.bot.baseStateBot;
 
 // A move packed into one int:
-// bits 0  - 5:  from square
+// bits 0  - 5 :  from square
 // bits 6  - 11: to square
 // bits 12 - 15: flags (capture, castle, en passant, promotion piece)
-// bit  16     : Color (W/B)
-// bits 17 - 19: PieceType (R, N, B, K, Q, P)
+// └─> bits(12-14) Type, bit 15 (is a capture)
+// bits 16 - 19: Piece
+// └─> bit  16     : Color (W/B)
+// └─> bits 17 - 19: PieceType (R, N, B, K, Q, P)
 
 public final class Move {
     /**
@@ -20,47 +22,53 @@ public final class Move {
     public static int of(int from, int to, int flags, int isWhite, int PieceType) {
         return from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT | isWhite << COLOR_SHIFT | PieceType << PIECE_T_SHIFT;
     }
+    // getter methods
     public static int from(int move)  { return move & MOVE_MASK; }
     public static int to(int move)    { return (move >>> TO_MOVE_SHIFT) & MOVE_MASK; }
     public static int flags(int move) { return (move >>> FLAG_SHIFT) & FLAG_MASK; }
-    public static int Color(int move) { return (move >>> COLOR_SHIFT) & COLOR_MASK; }
-    public static int PieceType(int move) { return (move >>> PIECE_T_SHIFT) & PIECE_T_MASK; }
+    public static boolean color(int move) { return (((move >>> COLOR_SHIFT) & COLOR_MASK)) == 1L; }
+    public static int pieceType(int move) { return (move >>> PIECE_T_SHIFT) & PIECE_T_MASK; }
 
-    public static final int FLAG_GENERIC = 0;
-    public static final int FLAG_CAPTURE   = 1;
-    public static final int FLAG_CASTLE    = 2;
-    public static final int FLAG_EN_PASSANT = 3;
-    public static final int FLAG_PROMOTE_Q = 4;
-    public static final int FLAG_PROMOTE_R = 5;
-    public static final int FLAG_PROMOTE_B = 6;
-    public static final int FLAG_PROMOTE_N = 7;
+    public static boolean attackFromFlag(int flag){ return ((flag >>> 3) & 0x1) == 1L;}
+    public static int baseFlag(int flag){ return (flag & 0x7);}
+
 
     // Shifts and masks
     public static final int TO_MOVE_SHIFT = 6;
-    public static final int MOVE_MASK = 0x3F;
+    public static final int MOVE_MASK     = 0x3F;
 
     public static final int FLAG_SHIFT = 12;
-    public static final int FLAG_MASK = 0xF;
+    public static final int FLAG_MASK  = 0xF;
+
+    public static final int Piece_MASK = 0xF;
 
     public static final int COLOR_SHIFT = 16;
-    public static final int COLOR_MASK = 0x1;
+    public static final int COLOR_MASK  = 0x1;
 
     public static final int PIECE_T_SHIFT = 17;
-    public static final int PIECE_T_MASK = 0x7;
+    public static final int PIECE_T_MASK  = 0x7;
 
-    // Color
 
-    public static final int WHITE = 0;
-    public static final int BLACK = 1;
+    // Flags (bit 0 -> attack bit); (bits 1-3 ->
+    public static final int CAPTURE_BIT     = 8;
 
-    // PieceType
+    public static final int FLAG_GENERIC    = 0;
+    public static final int FLAG_CASTLE_K   = 1;// no legal capture variant
+    public static final int FLAG_CASTLE_Q   = 2;// no legal capture variant
+    public static final int FLAG_EN_PASSANT = 3;// illegal state only for checks
+    public static final int FLAG_PROMOTE_Q  = 4;
+    public static final int FLAG_PROMOTE_R  = 5;
+    public static final int FLAG_PROMOTE_B  = 6;
+    public static final int FLAG_PROMOTE_N  = 7;
 
-    public static final int ROOK   = 0;
-    public static final int KNIGHT = 1;
-    public static final int BISHOP = 2;
-    public static final int KING   = 3;
-    public static final int QUEEN  = 4;
-    public static final int PAWN = 5;
+    public static final int FLAG_GENERIC_CAPTURE    = 8;
+    public static final int FLAG_CASTLE_K_CAPTURE   = 9;   // illegal state only for checks
+    public static final int FLAG_CASTLE_Q_CAPTURE   = 0xA; // illegal state only for checks
+    public static final int FLAG_EN_PASSANT_CAPTURE = 0xB; // no legal non-capture variant
+    public static final int FLAG_PROMOTE_Q_CAPTURE  = 0xC;
+    public static final int FLAG_PROMOTE_R_CAPTURE  = 0xD;
+    public static final int FLAG_PROMOTE_B_CAPTURE  = 0xE;
+    public static final int FLAG_PROMOTE_N_CAPTURE  = 0xF;
 
 
 

@@ -40,12 +40,14 @@ public class MoveGen {
                 & (pos.enPassant);
 
         // gen actual moves (add to move array)
-        offset = formatPawnMoves(singleP, PositionEncoder.SIZE, offset, Move.FLAG_GENERIC, Move.BLACK, moves);
-        offset = formatPawnMoves(doubleP, PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, Move.BLACK, moves);
-        offset = formatPawnMoves(attackL, PositionEncoder.SIZE - 1, offset, Move.FLAG_CAPTURE, Move.BLACK, moves);
-        offset = formatPawnMoves(attackR, PositionEncoder.SIZE + 1, offset, Move.FLAG_CAPTURE, Move.BLACK, moves);
-        offset = formatPawnMoves(enPassantL, PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT, Move.BLACK, moves);
-        offset = formatPawnMoves(enPassantR, PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT, Move.BLACK, moves);
+        offset = formatPawnMoves(singleP, PositionEncoder.SIZE, offset, Move.FLAG_GENERIC, Piece.BLACK, moves);
+        offset = formatPawnMoves(doubleP, PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, Piece.BLACK, moves);
+        offset = formatPawnMoves(attackL, PositionEncoder.SIZE - 1, offset,  Move.FLAG_GENERIC_CAPTURE, Piece.BLACK, moves); // Move.FLAG_GENERIC | Move.CAPTURE_BIT = Move.CAPTURE_BIT
+        offset = formatPawnMoves(attackR, PositionEncoder.SIZE + 1, offset,  Move.FLAG_GENERIC_CAPTURE, Piece.BLACK, moves);
+        offset = formatPawnMoves(enPassantL, PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, Piece.BLACK, moves);
+        offset = formatPawnMoves(enPassantR, PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE , Piece.BLACK, moves);
+
+        //TODO: Promotion
 
         // Black Pawn end
 
@@ -54,7 +56,7 @@ public class MoveGen {
             int startSq = pos.BKnights.popLsb();
             //get all end positions possible from startSq
             long endPositions = Move.KNIGHT_LOOKUP[startSq];
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, startSq, Move.BLACK, Move.QUEEN, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, startSq, Piece.BLACK, Piece.KNIGHT, offset, moves);
         }
 
         // Black Knight end
@@ -65,7 +67,7 @@ public class MoveGen {
         while (!pos.BBishops.isEmpty()){
             sq = pos.BBishops.popLsb();
             endPositions = BishopMoves(sq, pos.Occupied, pos.BPieces);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Move.BLACK, Move.QUEEN, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Piece.BLACK, Piece.BISHOP, offset, moves);
         }
 
         // Black Bishop end
@@ -74,7 +76,7 @@ public class MoveGen {
         while (!pos.BRooks.isEmpty()){
             sq = pos.BRooks.popLsb();
             endPositions = RookMoves(sq, pos.Occupied, pos.BPieces);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Move.BLACK, Move.QUEEN, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Piece.BLACK, Piece.ROOK, offset, moves);
         }
         // Black Rook end
 
@@ -83,7 +85,7 @@ public class MoveGen {
         while (!pos.BQueens.isEmpty()){
             sq = pos.BQueens.popLsb();
             endPositions = QueenMoves(sq, pos.Occupied, pos.BPieces);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Move.BLACK, Move.QUEEN, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Piece.BLACK, Piece.QUEEN, offset, moves);
         }
 
         // Black Queen end.
@@ -94,14 +96,14 @@ public class MoveGen {
             int startSq = pos.BKing.popLsb();
             //get all end positions possible from startSq
             endPositions = Move.KING_LOOKUP[startSq];
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, startSq, Move.BLACK, Move.QUEEN, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, startSq, Piece.BLACK, Piece.KING, offset, moves);
         }
         return offset;
     }
 
     /**
      * Generates all moves for the White side
-     * @param pos the current positions / gamestate
+     * @param pos the current positions / game-state
      * @param offset offset to start in move arr
      * @param moves all moves till full depth
      * @return new offset into moves arr
@@ -125,21 +127,20 @@ public class MoveGen {
         // White Pawn end
 
         // get actual moves
-        offset = formatPawnMoves(singleP, PositionEncoder.SIZE, offset, Move.FLAG_GENERIC, Move.WHITE, moves);
-        offset = formatPawnMoves(doubleP, PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, Move.WHITE, moves);
-        offset = formatPawnMoves(attackL, PositionEncoder.SIZE - 1, offset, Move.FLAG_CAPTURE, Move.WHITE, moves);
-        offset = formatPawnMoves(attackR, PositionEncoder.SIZE + 1, offset, Move.FLAG_CAPTURE, Move.WHITE, moves);
-        offset = formatPawnMoves(enPassantL, PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT, Move.WHITE, moves);
-        offset = formatPawnMoves(enPassantR, PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT, Move.WHITE, moves);
+        offset = formatPawnMoves(singleP, PositionEncoder.SIZE, offset, Move.FLAG_GENERIC, Piece.WHITE, moves);
+        offset = formatPawnMoves(doubleP, PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, Piece.WHITE, moves);
+        offset = formatPawnMoves(attackL, PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE, Piece.WHITE, moves);
+        offset = formatPawnMoves(attackR, PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE, Piece.WHITE, moves);
+        offset = formatPawnMoves(enPassantL, PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, Piece.WHITE, moves);
+        offset = formatPawnMoves(enPassantR, PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, Piece.WHITE, moves);
 
         // White Knight move gen
         while (!pos.WKnights.isEmpty()){
             int startSq = pos.WKnights.popLsb();
             //get all end positions possible from startSq
             long endPositions = Move.KNIGHT_LOOKUP[startSq];
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, startSq, Move.WHITE, Move.KNIGHT, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, startSq, Piece.WHITE, Piece.KNIGHT, offset, moves);
         }
-
         // White Knight end
 
         // White-Bishops
@@ -148,7 +149,7 @@ public class MoveGen {
         while (!pos.WBishops.isEmpty()){
             sq = pos.WBishops.popLsb();
             endPositions = BishopMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Move.WHITE, Move.BISHOP, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Piece.WHITE, Piece.BISHOP, offset, moves);
         }
 
         // White Bishop end
@@ -157,7 +158,7 @@ public class MoveGen {
         while (!pos.WRooks.isEmpty()){
             sq = pos.WRooks.popLsb();
             endPositions = RookMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Move.WHITE, Move.ROOK, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Piece.WHITE, Piece.ROOK, offset, moves);
         }
         // White Rook end
 
@@ -166,7 +167,7 @@ public class MoveGen {
         while (!pos.WQueens.isEmpty()){
             sq = pos.WQueens.popLsb();
             endPositions = QueenMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Move.WHITE, Move.QUEEN, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Piece.WHITE, Piece.QUEEN, offset, moves);
         }
 
         // White Queen end.
@@ -177,7 +178,7 @@ public class MoveGen {
             int startSq = pos.WKing.popLsb();
             //get all end positions possible from startSq
             endPositions = Move.KING_LOOKUP[startSq];
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, startSq, Move.WHITE, Move.KING, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, startSq, Piece.WHITE, Piece.KING, offset, moves);
         }
         return offset;
     }
@@ -187,7 +188,7 @@ public class MoveGen {
      * turns a bitboard of final positions to encoded moves
      * @param ownPieces pieces of the same color
      * @param enemyPieces pieces of the opposite color
-     * @param endPositions bitboard of endpositions
+     * @param endPositions bitboard of end-positions
      * @param startSq starting square
      * @param offset offset into the moves arr
      * @param moves array of moves till max MCTS depth
@@ -204,7 +205,7 @@ public class MoveGen {
             endPositions &= endPositions - 1;
             // is there an enemy piece
             if((enemyPieces >>> square & 1L) == 1L){
-                moves[offset] = Move.of(startSq, square, Move.FLAG_CAPTURE, color, PieceType);
+                moves[offset] = Move.of(startSq, square, Move.FLAG_GENERIC_CAPTURE, color, PieceType);
             }else {
                 moves[offset] = Move.of(startSq, square, Move.FLAG_GENERIC, color, PieceType);
             }
@@ -313,7 +314,7 @@ public class MoveGen {
         while(bitBoard != 0){
             int sq = Long.numberOfTrailingZeros(bitBoard);
             bitBoard &= bitBoard - 1;  // clears lowest set bit
-            moves[offset] = Move.of(sq - moveOffset, sq, color, Move.PAWN, flags);
+            moves[offset] = Move.of(sq - moveOffset, sq,flags, color, Piece.PAWN);
             offset ++;
         }
         return offset;
