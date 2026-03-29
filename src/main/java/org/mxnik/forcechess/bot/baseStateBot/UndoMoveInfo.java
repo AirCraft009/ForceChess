@@ -12,5 +12,5 @@ import org.mxnik.forcechess.Util.Bitboard;
  * @param secondaryBitboard secondary Bitboard (WRook after castle, BQueen after QueenTrade)
  *
  */
-public record UndoMoveInfo(Integer from, Integer to, Integer flags, Bitboard pieceBitboard, Bitboard secondaryBitboard) {
+public record UndoMoveInfo(Integer from, Integer to, Integer flags, long pieceBitboard, long secondaryBitboard) {
 }

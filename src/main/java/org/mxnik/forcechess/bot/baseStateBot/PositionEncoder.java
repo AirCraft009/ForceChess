@@ -1,11 +1,15 @@
 package org.mxnik.forcechess.bot.baseStateBot;
 
 import org.mxnik.forcechess.Util.Bitboard;
+import org.mxnik.forcechess.Util.Helper;
+
+import static org.mxnik.forcechess.RayDetection.*;
+import static org.mxnik.forcechess.RayDetection.KNIGHT_COL;
 
 /**
  * PositionEncoder
  *
- * Encodes a chess position into a float[19][8][8] tensor suitable
+ * Encodes a chess position into a float[21][8][8] tensor suitable
  * for feeding into an AlphaZero-style NN.
  *
  * Plane layout (21 planes total):
@@ -42,29 +46,27 @@ import org.mxnik.forcechess.Util.Bitboard;
  */
 public final class PositionEncoder {
 
-    // Number of planes in the tensor
     public static final int PLANES = 21;
     public static final int SIZE   = 8;
 
-    // Plane indices — named constants keep encode() readable
-    private static final int PLANE_WP  = 0;
-    private static final int PLANE_WN  = 1;
-    private static final int PLANE_WB  = 2;
-    private static final int PLANE_WR  = 3;
-    private static final int PLANE_WQ  = 4;
-    private static final int PLANE_WK  = 5;
-    private static final int PLANE_BP  = 6;
-    private static final int PLANE_BN  = 7;
-    private static final int PLANE_BB  = 8;
-    private static final int PLANE_BR  = 9;
-    private static final int PLANE_BQ  = 10;
-    private static final int PLANE_BK  = 11;
-    private static final int PLANE_CASTLE_WK = 12;
-    private static final int PLANE_CASTLE_WQ = 13;
-    private static final int PLANE_CASTLE_BK = 14;
-    private static final int PLANE_CASTLE_BQ = 15;
-    private static final int PLANE_DOUBLE_PW = 16;
-    private static final int PLANE_DOUBLE_PB = 17;
+    private static final int PLANE_WP         = 0;
+    private static final int PLANE_WN         = 1;
+    private static final int PLANE_WB         = 2;
+    private static final int PLANE_WR         = 3;
+    private static final int PLANE_WQ         = 4;
+    private static final int PLANE_WK         = 5;
+    private static final int PLANE_BP         = 6;
+    private static final int PLANE_BN         = 7;
+    private static final int PLANE_BB         = 8;
+    private static final int PLANE_BR         = 9;
+    private static final int PLANE_BQ         = 10;
+    private static final int PLANE_BK         = 11;
+    private static final int PLANE_CASTLE_WK  = 12;
+    private static final int PLANE_CASTLE_WQ  = 13;
+    private static final int PLANE_CASTLE_BK  = 14;
+    private static final int PLANE_CASTLE_BQ  = 15;
+    private static final int PLANE_DOUBLE_PW  = 16;
+    private static final int PLANE_DOUBLE_PB  = 17;
     private static final int PLANE_EN_PASSANT = 18;
     private static final int PLANE_SIDE       = 19;
     private static final int PLANE_FIFTY      = 20;
@@ -75,12 +77,6 @@ public final class PositionEncoder {
     // Public API
     // -------------------------------------------------------------------------
 
-    /**
-     * Encodes the given position into a freshly allocated float[19][8][8].
-     *
-     * @param pos  the position to encode
-     * @return     tensor[plane][rank][file], all values in [0, 1]
-     */
     public static float[][][] encode(Position pos) {
         float[][][] tensor = new float[PLANES][SIZE][SIZE];
         encode(pos, tensor);
@@ -88,360 +84,487 @@ public final class PositionEncoder {
     }
 
     /**
-     * Encodes the position into a pre-allocated tensor
-     * (avoids allocation in the MCTS hot path — reuse the same array each search).
-     *
-     * @param pos     the position to encode
-     * @param tensor  output buffer, must be float[19][8][8]
+     * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
      */
     public static void encode(Position pos, float[][][] tensor) {
-        // Clear previous contents (important when reusing the buffer)
         clearTensor(tensor);
 
-        // 0 - 11 piece layers
-        encodeBitboard(pos.WPawns.board,   tensor[PLANE_WP]);
-        encodeBitboard(pos.WKnights.board, tensor[PLANE_WN]);
-        encodeBitboard(pos.WBishops.board, tensor[PLANE_WB]);
-        encodeBitboard(pos.WRooks.board,   tensor[PLANE_WR]);
-        encodeBitboard(pos.WQueens.board,  tensor[PLANE_WQ]);
-        encodeBitboard(pos.WKing.board,    tensor[PLANE_WK]);
+        // Piece planes 0–11
+        encodeBitboard(pos.WPawns,   tensor[PLANE_WP]);
+        encodeBitboard(pos.WKnights, tensor[PLANE_WN]);
+        encodeBitboard(pos.WBishops, tensor[PLANE_WB]);
+        encodeBitboard(pos.WRooks,   tensor[PLANE_WR]);
+        encodeBitboard(pos.WQueens,  tensor[PLANE_WQ]);
+        encodeBitboard(pos.WKing,    tensor[PLANE_WK]);
 
-        encodeBitboard(pos.BPawns.board,   tensor[PLANE_BP]);
-        encodeBitboard(pos.BKnights.board, tensor[PLANE_BN]);
-        encodeBitboard(pos.BBishops.board, tensor[PLANE_BB]);
-        encodeBitboard(pos.BRooks.board,   tensor[PLANE_BR]);
-        encodeBitboard(pos.BQueens.board,  tensor[PLANE_BQ]);
-        encodeBitboard(pos.BKing.board,    tensor[PLANE_BK]);
+        encodeBitboard(pos.BPawns,   tensor[PLANE_BP]);
+        encodeBitboard(pos.BKnights, tensor[PLANE_BN]);
+        encodeBitboard(pos.BBishops, tensor[PLANE_BB]);
+        encodeBitboard(pos.BRooks,   tensor[PLANE_BR]);
+        encodeBitboard(pos.BQueens,  tensor[PLANE_BQ]);
+        encodeBitboard(pos.BKing,    tensor[PLANE_BK]);
 
-
-
-
-        // 12 - 15 volle Planes 1 / 0
-        if (pos.WKingCastle) fillPlane(tensor[PLANE_CASTLE_WK], 1.0f);
+        // Castling rights — uniform planes
+        if (pos.WKingCastle)  fillPlane(tensor[PLANE_CASTLE_WK], 1.0f);
         if (pos.WQueenCastle) fillPlane(tensor[PLANE_CASTLE_WQ], 1.0f);
-        if (pos.BKingCastle) fillPlane(tensor[PLANE_CASTLE_BK], 1.0f);
+        if (pos.BKingCastle)  fillPlane(tensor[PLANE_CASTLE_BK], 1.0f);
         if (pos.BQueenCastle) fillPlane(tensor[PLANE_CASTLE_BQ], 1.0f);
 
-        // 16 - 17 double pawn moves
-        encodeBitboard(pos.WDoublePawnMove.board, tensor[PLANE_DOUBLE_PW]);
-        encodeBitboard(pos.BDoublePawnMove.board, tensor[PLANE_DOUBLE_PB]);
+        // Double pawn move planes
+        encodeBitboard(pos.WDoublePawnMove, tensor[PLANE_DOUBLE_PW]);
+        encodeBitboard(pos.BDoublePawnMove, tensor[PLANE_DOUBLE_PB]);
 
-        // 16 enPassant
-        // while a bitboard alr exists opening setting a single bit in the file is easier
-        // enPassantSquare == -1 means no en passant available
+        // En passant — single square
         if (pos.enPassantSquare >= 0) {
-            int rank = pos.enPassantSquare >>> 3;   // divide by 8
-            int file = pos.enPassantSquare & 7;     // modulo 8
+            int rank = pos.enPassantSquare >>> 3;
+            int file = pos.enPassantSquare & 7;
             tensor[PLANE_EN_PASSANT][rank][file] = 1.0f;
         }
 
-        // side to move
+        // Side to move
         if (pos.whiteToMove) fillPlane(tensor[PLANE_SIDE], 1.0f);
-        // black to move → plane stays all zeros (already cleared)
 
-        // 50 move Regel.
-        float fiftyNorm = Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f);
-        fillPlane(tensor[PLANE_FIFTY], fiftyNorm);
+        // Fifty-move rule
+        fillPlane(tensor[PLANE_FIFTY], Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
     }
 
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
 
-    /**
-     * Bitboard split on a plane of the tensor
-     *
-     *
-     */
     private static void encodeBitboard(long bitboard, float[][] plane) {
         long b = bitboard;
         while (b != 0L) {
-            int sq   = Long.numberOfTrailingZeros(b); // index of lowest set bit
-            int rank = sq >>> 3;                      // sq / 8
-            int file = sq & 7;                        // sq % 8
+            int sq   = Bitboard.lsb(b);
+            int rank = sq >>> 3;
+            int file = sq & 7;
             plane[rank][file] = 1.0f;
-            b &= b - 1;                               // clear lowest set bit
+            b = Bitboard.popLsb(b); // returns board with LSB cleared
         }
     }
 
-    /** Sets every cell in a plane to the given value. */
     private static void fillPlane(float[][] plane, float value) {
-        for (int rank = 0; rank < SIZE; rank++) {
-            for (int file = 0; file < SIZE; file++) {
-                plane[rank][file] = value;
-            }
-        }
+        for (float[] row : plane) java.util.Arrays.fill(row, value);
     }
 
-    /** Zeros the entire tensor (used when reusing a pre-allocated buffer). */
     private static void clearTensor(float[][][] tensor) {
-        for (float[][] plane : tensor) {
-            for (float[] row : plane) {
+        for (float[][] plane : tensor)
+            for (float[] row : plane)
                 java.util.Arrays.fill(row, 0.0f);
-            }
-        }
     }
 
     // -------------------------------------------------------------------------
-    // Position record
+    // Position
     // -------------------------------------------------------------------------
 
     /**
-     * Position Container
-     * Contains bitboards and entire game-state
-     * <p>
-     * usage - Movegen
-     * usage - plane encoding
+     * Position container — all bitboards are raw longs.
+     * Use the static Bitboard helpers (Bitboard.set, Bitboard.clear, etc.)
+     * to manipulate them; assign the returned value back to the field.
+     *
+     *   pos.WPawns = Bitboard.set(pos.WPawns, sq);
+     *   pos.WPawns = Bitboard.clear(pos.WPawns, sq);
      */
     public static final class Position {
 
-        public Bitboard WPawns;
-        public Bitboard BPawns;
-        public Bitboard WKnights;
-        public Bitboard BKnights;
-        public Bitboard WRooks;
-        public Bitboard BRooks;
-        public Bitboard WBishops;
-        public Bitboard BBishops;
-        public Bitboard WQueens;
-        public Bitboard BQueens;
-        public Bitboard WKing;
-        public Bitboard BKing;
-        public Bitboard WDoublePawnMove;
-        public Bitboard BDoublePawnMove;
-        public Bitboard ScratchBoard;
-        public long enPassant;
+        // ---- Piece bitboards (raw longs) ------------------------------------
+        public long WPawns;
+        public long WKnights;
+        public long WBishops;
+        public long WRooks;
+        public long WQueens;
+        public long WKing;
+
+        public long BPawns;
+        public long BKnights;
+        public long BBishops;
+        public long BRooks;
+        public long BQueens;
+        public long BKing;
+
+        // ---- Context bitboards ----------------------------------------------
+        public long WDoublePawnMove;
+        public long BDoublePawnMove;
+        public long enPassant;      // bitboard form (kept for ray use)
         public long Occupied;
         public long WPieces;
         public long BPieces;
 
-        // castling rights uniform 1 or 0
+        // ---- Castling permissions (may castle if rights arise) ---------------
+        public boolean WQueenCastlePerm;
+        public boolean WKingCastlePerm;
+        public boolean BQueenCastlePerm;
+        public boolean BKingCastlePerm;
+
+        // ---- Castling rights (current game state) ---------------------------
         public boolean WQueenCastle;
         public boolean WKingCastle;
         public boolean BQueenCastle;
         public boolean BKingCastle;
 
-        // En passant: -1 if none, otherwise the target square index
+        // ---- En passant: -1 if none, otherwise target square index ----------
         public int enPassantSquare = -1;
 
-        // Side to move
+        // ---- Side to move ---------------------------------------------------
         public boolean whiteToMove = true;
 
-        // Fifty-move rule counter (0-100)
+        // ---- Fifty-move rule counter (0–100) --------------------------------
         public int fiftyMoveCounter = 0;
 
-        // PieceTypes encoded
-        // Color (1bit) PieceType(3bits)
+        // ---- Piece map: Color(1 bit) | PieceType(3 bits) per square ---------
         public byte[] pieceMap = new byte[64];
 
+        // =====================================================================
+        // Make / Unmake
+        // =====================================================================
 
-        public UndoMoveInfo makeMove(int move){
-            int from = Move.from(move);
-            int to = Move.to(move);
-            int moveType = Move.flags(move);
+        public UndoMoveInfo makeMove(int move) {
+            int from      = Move.from(move);
+            int to        = Move.to(move);
+            int moveType  = Move.flags(move);
             boolean color = Move.color(move);
-            int pieceT = Move.pieceType(move);
+            int pieceT    = Move.pieceType(move);
 
-            Bitboard pieceBoard = getBitboardFromPiece(pieceT);
+            switch (moveType) {
+                case Move.FLAG_CASTLE_K_CAPTURE,
+                     Move.FLAG_CASTLE_Q_CAPTURE -> throw new IllegalStateException(
+                        "Castle can't be of type capture: " + Integer.toBinaryString(moveType));
 
-            // make move on piece Layer
-            movePiece(from, to);
+                case Move.FLAG_EN_PASSANT -> throw new IllegalStateException(
+                        "En-Passant can't be a normal (non-capture): " + Integer.toBinaryString(moveType));
 
-            //TODO: remove or add castling-rights if necessary
-
-            switch (moveType){
-                case Move.FLAG_CASTLE_K_CAPTURE, Move.FLAG_CASTLE_Q_CAPTURE -> throw new IllegalStateException("Castle can't be of type capture: " + Integer.toBinaryString(moveType));
-                case Move.FLAG_EN_PASSANT -> throw new IllegalStateException("En-Passant can't be a normal (non-capture): " + Integer.toBinaryString(moveType));
                 case Move.FLAG_CASTLE_K, Move.FLAG_CASTLE_Q -> {
-                    // secondary board is the Rook board for the correct color
-                    return new UndoMoveInfo(from, to, moveType, pieceBoard, getBitboardFromPieceType(color, Piece.ROOK));
+                    long rookBoard = getLongFromPieceType(color, Piece.ROOK);
+                    long pieceBoard = getLongFromPieceType(color, pieceT);
+                    movePiece(from, to);
+                    return new UndoMoveInfo(from, to, moveType, pieceBoard, rookBoard);
                 }
 
-                case Move.FLAG_GENERIC -> {
-                    return new UndoMoveInfo(from, to, moveType, pieceBoard, ScratchBoard);
-                }
                 case Move.FLAG_GENERIC_CAPTURE -> {
-                    int takenPiece = pieceMap[to];
-                    // remove taken-piece
-                    Bitboard takenBoard = getBitboardFromPiece(takenPiece);
-                    takenBoard.clear(to);
+                    long pieceBoard  = getLongFromPiece(pieceMap[from]);
+                    long takenBoard  = getLongFromPiece(pieceMap[to]);
+                    movePiece(from, to);
                     return new UndoMoveInfo(from, to, moveType, pieceBoard, takenBoard);
                 }
+
                 default -> {
-                    //handle rest
-                    return new UndoMoveInfo(from, to, moveType, pieceBoard, ScratchBoard);
+                    // FLAG_GENERIC and anything else
+                    long pieceBoard = getLongFromPiece(pieceMap[from]);
+                    movePiece(from, to);
+                    return new UndoMoveInfo(from, to, moveType, pieceBoard, 0L);
                 }
             }
         }
 
-        public void unmakeMove(UndoMoveInfo info){
-
+        public void unmakeMove(UndoMoveInfo info) {
+            // TODO: implement unmake
         }
 
-        private void movePiece(int from, int to){
+        // =====================================================================
+        // Check detection
+        // =====================================================================
+
+        public boolean checkChess(boolean color) {
+            return color
+                    ? checkChess(WKing, true)
+                    : checkChess(BKing, false);
+        }
+
+        private boolean checkChess(long kingBoard, boolean kingColor) {
+            int kingPos = Bitboard.lsb(kingBoard);
+            int kingRow = Helper.getRow(kingPos);
+            int kingCol = Helper.getCol(kingPos);
+
+            // Rays (straight + diagonal)
+            for (int dir = 0; dir < 8; dir++) {
+                int dr = RAY_ROW[dir];
+                int dc = RAY_COL[dir];
+                int r = kingRow + dr;
+                int c = kingCol + dc;
+                boolean firstStep = true;
+
+                while (r >= 0 && r < SIZE && c >= 0 && c < SIZE) {
+                    int p = pieceMap[r * SIZE + c];
+
+                    if (p != Piece.EMPTY_PIECE) {
+                        if (Piece.color(p) != kingColor) {
+                            int type = Piece.pieceT(p);
+
+                            if (dir < 4) {
+                                // straight rays Rook or Queen
+                                if (type == Piece.ROOK || type == Piece.QUEEN) return true;
+                            } else {
+                                // diagonal rays Bishop or Queen
+                                if (type == Piece.BISHOP || type == Piece.QUEEN) return true;
+
+                                // Pawns only attack one square diagonal
+                                if (firstStep && type == Piece.PAWN) {
+                                    boolean pawnIsWhite = Move.color(p);
+                                    if (pawnIsWhite  && r < kingRow) return true;
+                                    if (!pawnIsWhite && r > kingRow) return true;
+                                }
+                            }
+                        }
+                        break; // blocker — ray cut off
+                    }
+
+                    r += dr;
+                    c += dc;
+                    firstStep = false;
+                }
+            }
+
+            // Knight jumps
+            for (int k = 0; k < 8; k++) {
+                int r = kingRow + KNIGHT_ROW[k];
+                int c = kingCol + KNIGHT_COL[k];
+                if (r < 0 || r >= SIZE || c < 0 || c >= SIZE) continue;
+
+                int p = pieceMap[r * SIZE + c];
+                if (Piece.pieceT(p) != Piece.EMPTY_PIECE
+                        && Piece.color(p) != kingColor
+                        && Piece.pieceT(p) == Piece.KNIGHT) {
+                    return true;
+                }
+            }
+
+            // Adjacent enemy king
+            for (int dr = -1; dr <= 1; dr++) {
+                for (int dc = -1; dc <= 1; dc++) {
+                    if (dr == 0 && dc == 0) continue;
+                    int r = kingRow + dr;
+                    int c = kingCol + dc;
+                    if (r < 0 || r >= SIZE || c < 0 || c >= SIZE) continue;
+
+                    int p = pieceMap[r * SIZE + c];
+                    if (Piece.pieceT(p) != Piece.EMPTY_PIECE
+                            && Piece.color(p) != kingColor
+                            && Piece.pieceT(p) == Piece.KING) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        // =====================================================================
+        // Internal helpers
+        // =====================================================================
+
+        private void movePiece(int from, int to) {
             int movedPiece = pieceMap[from];
             int takenPiece = pieceMap[to];
 
-            Bitboard fromBoard = getBitboardFromPiece(movedPiece);
-            Bitboard toBoard = getBitboardFromPiece(takenPiece);
+            // Move the piece on its own bitboard
+            setOnBoard(movedPiece, from, to);
 
-            //move piece
-            fromBoard.clear(from);
-            fromBoard.set(to);
-            //delete Piece
-            toBoard.clear(to);
+            // Remove any captured piece from its bitboard
+            if (takenPiece != Piece.EMPTY_PIECE) {
+                clearOnBoard(takenPiece, to);
+            }
+
+            // Keep pieceMap in sync
+            pieceMap[to]   = (byte) movedPiece;
+            pieceMap[from] = (byte) Piece.EMPTY_PIECE;
+
             updateHelper();
         }
 
-        /** Constructs a standard starting position. */
-        public static Position StartingPosition() {
-            Position p = new Position();
+        /**
+         * Moves a piece on its corresponding bitboard (clear from, set to).
+         * Looks up the board by piece byte and reassigns the field.
+         */
+        private void setOnBoard(int piece, int from, int to) {
+            boolean color = Piece.color(piece);
+            int type      = Piece.pieceT(piece);
 
-            // White Piece Bitboards
-            p.WPawns   = new Bitboard(0x000000000000FF00L); // rank 2
-            p.WKnights = new Bitboard(0x0000000000000042L); // b1, g1
-            p.WBishops = new Bitboard(0x0000000000000024L); // c1, f1
-            p.WRooks   = new Bitboard(0x0000000000000081L); // a1, h1
-            p.WQueens  = new Bitboard(0x0000000000000008L); // d1
-            p.WKing    = new Bitboard(0x0000000000000010L); // e1
-
-            // Black Piece Bitboards
-            p.BPawns   = new Bitboard(0x00FF000000000000L); // rank 7
-            p.BKnights = new Bitboard(0x4200000000000000L); // b8, g8
-            p.BBishops = new Bitboard(0x2400000000000000L); // c8, f8
-            p.BRooks   = new Bitboard(0x8100000000000000L); // a8, h8
-            p.BQueens  = new Bitboard(0x0800000000000000L); // d8
-            p.BKing    = new Bitboard(0x1000000000000000L); // e8
-
-
-            // Extra layers (context)
-            p.enPassant = 0; // none
-            p.WDoublePawnMove = new Bitboard(0x000000000000FF00L); // rank 2
-            p.BDoublePawnMove = new Bitboard(0x00FF000000000000L); // rank 7
-            p.BQueenCastle = false;
-            p.WQueenCastle = false;
-            p.BKingCastle = false;
-            p.WKingCastle = false;
-
-            //Helper Layers
-            p.Occupied = 0xFFFF00000000FFFFL; // rank 1-2 & 7-8
-            p.WPieces  = 0x000000000000FFFFL;
-            p.BPieces  = 0xFFFF000000000000L;
-            p.ScratchBoard = new Bitboard();
-
-            // PieceMap - setup
-            // White Pieces
-            p.pieceMap[0] = Piece.WHITE | (Piece.ROOK << 1);
-            p.pieceMap[1] = Piece.WHITE | (Piece.KNIGHT << 1);
-            p.pieceMap[2] = Piece.WHITE | (Piece.BISHOP<< 1);
-            p.pieceMap[3] = Piece.WHITE | (Piece.QUEEN << 1);
-            p.pieceMap[4] = Piece.WHITE | (Piece.KING << 1);
-            p.pieceMap[5] = Piece.WHITE | (Piece.BISHOP<< 1);
-            p.pieceMap[6] = Piece.WHITE | (Piece.KNIGHT << 1);
-            p.pieceMap[7] = Piece.WHITE | (Piece.ROOK << 1);
-            p.pieceMap[8] = Piece.WHITE | (Piece.PAWN << 1);
-            p.pieceMap[9] = Piece.WHITE | (Piece.PAWN << 1);
-            p.pieceMap[10] = Piece.WHITE | (Piece.PAWN << 1);
-            p.pieceMap[11] = Piece.WHITE | (Piece.PAWN << 1);
-            p.pieceMap[12] = Piece.WHITE | (Piece.PAWN << 1);
-            p.pieceMap[13] = Piece.WHITE | (Piece.PAWN << 1);
-            p.pieceMap[14] = Piece.WHITE | (Piece.PAWN << 1);
-            p.pieceMap[15] = Piece.WHITE | (Piece.PAWN << 1);
-
-            // Black Pieces
-            p.pieceMap[63] = Piece.BLACK | (Piece.ROOK << 1);
-            p.pieceMap[62] = Piece.BLACK | (Piece.KNIGHT << 1);
-            p.pieceMap[61] = Piece.BLACK | (Piece.BISHOP<< 1);
-            p.pieceMap[60] = Piece.BLACK | (Piece.QUEEN << 1);
-            p.pieceMap[59] = Piece.BLACK | (Piece.KING << 1);
-            p.pieceMap[58] = Piece.BLACK | (Piece.BISHOP<< 1);
-            p.pieceMap[57] = Piece.BLACK | (Piece.KNIGHT << 1);
-            p.pieceMap[56] = Piece.BLACK | (Piece.ROOK << 1);
-            p.pieceMap[55] = Piece.BLACK | (Piece.PAWN << 1);
-            p.pieceMap[54] = Piece.BLACK | (Piece.PAWN << 1);
-            p.pieceMap[53] = Piece.BLACK | (Piece.PAWN << 1);
-            p.pieceMap[52] = Piece.BLACK | (Piece.PAWN << 1);
-            p.pieceMap[51] = Piece.BLACK | (Piece.PAWN << 1);
-            p.pieceMap[50] = Piece.BLACK | (Piece.PAWN << 1);
-            p.pieceMap[49] = Piece.BLACK | (Piece.PAWN << 1);
-            p.pieceMap[48] = Piece.BLACK | (Piece.PAWN << 1);
-            return p;
+            if (color) { // white
+                switch (type) {
+                    case Piece.PAWN   -> { WPawns   = Bitboard.clear(WPawns,   from); WPawns   = Bitboard.set(WPawns,   to); }
+                    case Piece.KNIGHT -> { WKnights = Bitboard.clear(WKnights, from); WKnights = Bitboard.set(WKnights, to); }
+                    case Piece.BISHOP -> { WBishops = Bitboard.clear(WBishops, from); WBishops = Bitboard.set(WBishops, to); }
+                    case Piece.ROOK   -> { WRooks   = Bitboard.clear(WRooks,   from); WRooks   = Bitboard.set(WRooks,   to); }
+                    case Piece.QUEEN  -> { WQueens  = Bitboard.clear(WQueens,  from); WQueens  = Bitboard.set(WQueens,  to); }
+                    case Piece.KING   -> { WKing    = Bitboard.clear(WKing,    from); WKing    = Bitboard.set(WKing,    to); }
+                    default -> throw new InvalidPieceTypeException("setOnBoard: unknown white piece type " + type);
+                }
+            } else { // black
+                switch (type) {
+                    case Piece.PAWN   -> { BPawns   = Bitboard.clear(BPawns,   from); BPawns   = Bitboard.set(BPawns,   to); }
+                    case Piece.KNIGHT -> { BKnights = Bitboard.clear(BKnights, from); BKnights = Bitboard.set(BKnights, to); }
+                    case Piece.BISHOP -> { BBishops = Bitboard.clear(BBishops, from); BBishops = Bitboard.set(BBishops, to); }
+                    case Piece.ROOK   -> { BRooks   = Bitboard.clear(BRooks,   from); BRooks   = Bitboard.set(BRooks,   to); }
+                    case Piece.QUEEN  -> { BQueens  = Bitboard.clear(BQueens,  from); BQueens  = Bitboard.set(BQueens,  to); }
+                    case Piece.KING   -> { BKing    = Bitboard.clear(BKing,    from); BKing    = Bitboard.set(BKing,    to); }
+                    default -> throw new InvalidPieceTypeException("setOnBoard: unknown black piece type " + type);
+                }
+            }
         }
 
-        public void updateHelper(){
-            BPieces = BPawns.board | BBishops.board | BKnights.board | BRooks.board | BQueens.board | BKing.board;
-            WPieces = WPawns.board | WBishops.board | WKnights.board | WRooks.board | WQueens.board | WKing.board;
-            Occupied = BPieces | WPieces;
+        /** Clears a square on the bitboard corresponding to the given piece byte. */
+        private void clearOnBoard(int piece, int sq) {
+            boolean color = Piece.color(piece);
+            int type      = Piece.pieceT(piece);
+
+            if (color) {
+                switch (type) {
+                    case Piece.PAWN   -> WPawns   = Bitboard.clear(WPawns,   sq);
+                    case Piece.KNIGHT -> WKnights = Bitboard.clear(WKnights, sq);
+                    case Piece.BISHOP -> WBishops = Bitboard.clear(WBishops, sq);
+                    case Piece.ROOK   -> WRooks   = Bitboard.clear(WRooks,   sq);
+                    case Piece.QUEEN  -> WQueens  = Bitboard.clear(WQueens,  sq);
+                    case Piece.KING   -> WKing    = Bitboard.clear(WKing,    sq);
+                    default -> throw new InvalidPieceTypeException("clearOnBoard: unknown white piece type " + type);
+                }
+            } else {
+                switch (type) {
+                    case Piece.PAWN   -> BPawns   = Bitboard.clear(BPawns,   sq);
+                    case Piece.KNIGHT -> BKnights = Bitboard.clear(BKnights, sq);
+                    case Piece.BISHOP -> BBishops = Bitboard.clear(BBishops, sq);
+                    case Piece.ROOK   -> BRooks   = Bitboard.clear(BRooks,   sq);
+                    case Piece.QUEEN  -> BQueens  = Bitboard.clear(BQueens,  sq);
+                    case Piece.KING   -> BKing    = Bitboard.clear(BKing,    sq);
+                    default -> throw new InvalidPieceTypeException("clearOnBoard: unknown black piece type " + type);
+                }
+            }
         }
 
-        private Bitboard getBitboardFromPiece(int p){
-            boolean color = Piece.color(p);
-            int PieceT = Piece.pieceT(p);
-            return getBitboardFromPieceType(color, PieceT);
+        // =====================================================================
+        // Lookup helpers (return the long value, not a reference)
+        // =====================================================================
+
+        /** Returns the current value of the bitboard for the given piece byte. */
+        public long getLongFromPiece(int p) {
+            return getLongFromPieceType(Piece.color(p), Piece.pieceT(p));
         }
 
-        private Bitboard getBitboardFromPieceType(boolean color, int PieceT){
-            if(color){
-                return switch (PieceT) {
-                    case Piece.BISHOP->  WBishops;
-                    case Piece.KNIGHT -> WKnights;
-                    case Piece.ROOK ->  WRooks;
-                    case Piece.QUEEN ->  WQueens;
-                    case Piece.KING ->  WKing;
-                    case Piece.PAWN -> WPawns;
-                    case Piece.EMPTY_PIECE -> ScratchBoard;
-                    default -> throw new InvalidPieceTypeException("No Matching PieceType found");
+        /** Returns the current value of the bitboard for a color + piece type. */
+        public long getLongFromPieceType(boolean color, int type) {
+            if (color) {
+                return switch (type) {
+                    case Piece.PAWN         -> WPawns;
+                    case Piece.KNIGHT       -> WKnights;
+                    case Piece.BISHOP       -> WBishops;
+                    case Piece.ROOK         -> WRooks;
+                    case Piece.QUEEN        -> WQueens;
+                    case Piece.KING         -> WKing;
+                    case Piece.EMPTY_PIECE  -> 0L;
+                    default -> throw new InvalidPieceTypeException("No matching piece type: " + type);
                 };
-            }else{
-                return switch (PieceT) {
-                    case Piece.BISHOP->  BBishops;
-                    case Piece.KNIGHT -> BKnights;
-                    case Piece.ROOK ->  BRooks;
-                    case Piece.QUEEN ->  BQueens;
-                    case Piece.KING ->  BKing;
-                    case Piece.PAWN -> BPawns;
-                    case Piece.EMPTY_PIECE -> ScratchBoard;
-                    default -> throw new InvalidPieceTypeException("No Matching PieceType found: " + Integer.toBinaryString(PieceT));
+            } else {
+                return switch (type) {
+                    case Piece.PAWN         -> BPawns;
+                    case Piece.KNIGHT       -> BKnights;
+                    case Piece.BISHOP       -> BBishops;
+                    case Piece.ROOK         -> BRooks;
+                    case Piece.QUEEN        -> BQueens;
+                    case Piece.KING         -> BKing;
+                    case Piece.EMPTY_PIECE  -> 0L;
+                    default -> throw new InvalidPieceTypeException("No matching piece type: " + type);
                 };
             }
         }
+
+        // =====================================================================
+        // Starting position
+        // =====================================================================
+
+        public static Position StartingPosition() {
+            Position p = new Position();
+
+            p.WPawns   = 0x000000000000FF00L; // rank 2
+            p.WKnights = 0x0000000000000042L; // b1, g1
+            p.WBishops = 0x0000000000000024L; // c1, f1
+            p.WRooks   = 0x0000000000000081L; // a1, h1
+            p.WQueens  = 0x0000000000000008L; // d1
+            p.WKing    = 0x0000000000000010L; // e1
+
+            p.BPawns   = 0x00FF000000000000L; // rank 7
+            p.BKnights = 0x4200000000000000L; // b8, g8
+            p.BBishops = 0x2400000000000000L; // c8, f8
+            p.BRooks   = 0x8100000000000000L; // a8, h8
+            p.BQueens  = 0x0800000000000000L; // d8
+            p.BKing    = 0x1000000000000000L; // e8
+
+            p.WDoublePawnMove = 0x000000000000FF00L; // rank 2
+            p.BDoublePawnMove = 0x00FF000000000000L; // rank 7
+            p.enPassant       = 0L;
+
+            p.Occupied = 0xFFFF00000000FFFFL;
+            p.WPieces  = 0x000000000000FFFFL;
+            p.BPieces  = 0xFFFF000000000000L;
+
+            p.WKingCastle  = false;
+            p.WQueenCastle = false;
+            p.BKingCastle  = false;
+            p.BQueenCastle = false;
+
+            // White piece map
+            p.pieceMap[0]  = Piece.WHITE | (Piece.ROOK   << 1);
+            p.pieceMap[1]  = Piece.WHITE | (Piece.KNIGHT << 1);
+            p.pieceMap[2]  = Piece.WHITE | (Piece.BISHOP << 1);
+            p.pieceMap[3]  = Piece.WHITE | (Piece.QUEEN  << 1);
+            p.pieceMap[4]  = Piece.WHITE | (Piece.KING   << 1);
+            p.pieceMap[5]  = Piece.WHITE | (Piece.BISHOP << 1);
+            p.pieceMap[6]  = Piece.WHITE | (Piece.KNIGHT << 1);
+            p.pieceMap[7]  = Piece.WHITE | (Piece.ROOK   << 1);
+            for (int i = 8; i < 16; i++)
+                p.pieceMap[i] = Piece.WHITE | (Piece.PAWN << 1);
+
+            // Black piece map
+            p.pieceMap[56] = Piece.BLACK | (Piece.ROOK   << 1);
+            p.pieceMap[57] = Piece.BLACK | (Piece.KNIGHT << 1);
+            p.pieceMap[58] = Piece.BLACK | (Piece.BISHOP << 1);
+            p.pieceMap[59] = Piece.BLACK | (Piece.KING   << 1); // NOTE: was QUEEN at 59 and KING at 60 — fixed to match bitboards (e8=60, d8=59)
+            p.pieceMap[60] = Piece.BLACK | (Piece.QUEEN  << 1);
+            p.pieceMap[61] = Piece.BLACK | (Piece.BISHOP << 1);
+            p.pieceMap[62] = Piece.BLACK | (Piece.KNIGHT << 1);
+            p.pieceMap[63] = Piece.BLACK | (Piece.ROOK   << 1);
+            for (int i = 48; i < 56; i++)
+                p.pieceMap[i] = Piece.BLACK | (Piece.PAWN << 1);
+
+            return p;
+        }
+
+        public void updateHelper() {
+            WPieces  = WPawns | WKnights | WBishops | WRooks | WQueens | WKing;
+            BPieces  = BPawns | BKnights | BBishops | BRooks | BQueens | BKing;
+            Occupied = WPieces | BPieces;
+        }
     }
+
+    // -------------------------------------------------------------------------
+    // Smoke test
+    // -------------------------------------------------------------------------
 
     public static void main(String[] args) {
         Position pos = Position.StartingPosition();
         float[][][] tensor = encode(pos);
 
-        // White pawns should be set on rank 1 (index), files 0-7
-        System.out.println("=== Plane 0: White pawns (rank 1) ===");
+        System.out.println("=== Plane 0: White pawns ===");
         for (int rank = 7; rank >= 0; rank--) {
-            for (int file = 0; file < 8; file++) {
+            for (int file = 0; file < 8; file++)
                 System.out.print((int) tensor[PLANE_WP][rank][file] + " ");
-            }
             System.out.println("  ← rank " + (rank + 1));
         }
 
-        // Castling should be all 1s
-        System.out.println("\n=== Plane 12: White kingside castling ===");
-        System.out.println("tensor[12][0][0] = " + tensor[PLANE_CASTLE_WK][0][0]
-            + "  (expected 0.0)");
+        System.out.println("\n=== Plane 12: White kingside castling (expect 0.0) ===");
+        System.out.println("tensor[12][0][0] = " + tensor[PLANE_CASTLE_WK][0][0]);
 
-        // Side to move: white → all 1s
-        System.out.println("\n=== Plane 17: Side to move ===");
-        System.out.println("tensor[17][0][0] = " + tensor[PLANE_SIDE][0][0]
-            + "  (expected 1.0, white to move)");
+        System.out.println("\n=== Plane 19: Side to move (expect 1.0 = white) ===");
+        System.out.println("tensor[19][0][0] = " + tensor[PLANE_SIDE][0][0]);
 
-        // Reuse buffer test (hot path)
         float[][][] buffer = new float[PLANES][SIZE][SIZE];
         encode(pos, buffer);
-        System.out.println("\nReuse buffer test passed — no allocation.");
+        System.out.println("\nReuse buffer test passed.");
 
-        // Move gen test (Pre allocated moves - hot path)
         int[] moves = new int[256];
-        System.out.println(MoveGen.generateMoves(pos, 0, true, moves));
-        System.out.println(Move.from(moves[0]));
-        System.out.println(Move.to(moves[0]));
+        int actLen = MoveGen.generateMoves(pos, 0, true, moves);
+        for (int i = 0; i < actLen; i++)
+            System.out.printf("Piece(%d) from: %d -> to: %d%n",
+                    Move.pieceType(moves[i]), Move.from(moves[i]), Move.to(moves[i]));
 
-        //visualise bitB
-        //System.out.println(Bitboard.visualiseBitboard(new Bitboard(pos.Occupied)));
+        System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
     }
 }

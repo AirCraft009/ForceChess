@@ -15,43 +15,29 @@ import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
  *
  */
 public final class Bitboard {
-
-    public long board; // just a long, public for performance
-
-    public Bitboard(long l) {
-        board = l;
-    }
-
-    public Bitboard(){}
-
     // Move a piece
-    public void set(int square)   { board |=  (1L << square); }
-    public void clear(int square) { board &= ~(1L << square); }
-    public boolean get(int square){ return (board >>> square & 1L) == 1L; }
+    public static long set(long board, int square)   { return board |=  (1L << square); }
+    public static long clear(long board, int square) { return board &= ~(1L << square); }
+    public static boolean get(long board, int square){ return (board >>> square & 1L) == 1L; }
 
     // Chess-specific ops — these are where the value is
-    public boolean isEmpty()          { return board == 0L; }
-    public int     popCount()         { return Long.bitCount(board); }
-    public int     lsb()              { return Long.numberOfTrailingZeros(board); }
-    public int     popLsb()           {
-        int sq = lsb();
-        board &= board - 1;  // clears lowest set bit
-        return sq;
-    }
+    public static boolean isEmpty(long board)          { return board == 0L; }
+    public static int     popCount(long board)         { return Long.bitCount(board); }
+    public static int     lsb(long board)              { return Long.numberOfTrailingZeros(board); }
+    public static long popLsb(long board)            { return board & (board - 1); } // returns new board, lsb() gets the square
 
     /**
      * Iterate over all set squares — core of move generation
      * @param fn generation function
      */
-    public void forEach(IntConsumer fn) {
-        long b = board;
-        while (b != 0L) {
-            fn.accept(Long.numberOfTrailingZeros(b));
-            b &= b - 1;
+    public static void forEach(long board, IntConsumer fn) {
+        while (board != 0L) {
+            fn.accept(Long.numberOfTrailingZeros(board));
+            board &= board - 1;
         }
     }
 
-    public static String  visualiseBitboard(Bitboard board){
+    public static String  visualiseBitboard(long board){
         StringBuilder sb = new StringBuilder();
         String horizontalLine = "+" + ("---+").repeat(8) + "\n";
 
@@ -60,7 +46,7 @@ public final class Bitboard {
             sb.append("|");
             for (int file = 0; file < 8; file++) {
                 int index = rank * 8 + file;
-                boolean exist = board.get(index);
+                boolean exist = Bitboard.get(board, index);
 
                 char symbol = ' ';
                 if(exist){

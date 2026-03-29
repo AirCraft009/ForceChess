@@ -1,321 +1,241 @@
 package org.mxnik.forcechess.bot.baseStateBot;
 
+import org.mxnik.forcechess.Util.Bitboard;
+
 public class MoveGen {
     /**
-     * Generates all possible moves for the side to move
+     * Generates all possible moves for the side to move.
+     *
      * @param position current gamestate
-     * @param offset start in the move array
-     * @param moves all moves from top of MCTS to bottom depth max 256 * max search depth
+     * @param offset   start index in the move array
+     * @param moves    pre-allocated move array (max 256 * search depth)
      * @return new offset
      */
-    public static int generateMoves (PositionEncoder.Position position, int offset, boolean whiteToMove, int[] moves){
-        //TODO: add Tests
-        if (whiteToMove){
-            return generateMovesW(position, offset, moves);
-        }
+    public static int generateMoves(PositionEncoder.Position position, int offset, boolean whiteToMove, int[] moves) {
+        if (whiteToMove) return generateMovesW(position, offset, moves);
         return generateMovesB(position, offset, moves);
     }
 
+    // -------------------------------------------------------------------------
+    // White
+    // -------------------------------------------------------------------------
 
-    /**
-     * Generates all moves for the BLack side
-     * @param pos the current positions / gamestate
-     * @param offset offset to start in move arr
-     * @param moves all moves till full depth
-     * @return new offset into moves arr
-     */
-    private static int generateMovesB (PositionEncoder.Position pos, int offset, int[] moves){
-        // Black Pawn move gen
-        // single & double pushes can't take anything
-        long singleP = (pos.BPawns.board << PositionEncoder.SIZE) & ~pos.Occupied;
-        long doubleP = ((pos.BPawns.board & pos.BDoublePawnMove.board) << PositionEncoder.SIZE * 2)  & ~pos.Occupied;
-        // check if field is occupied (by enemy) when trying to take
-        long attackL = (pos.BPawns.board << PositionEncoder.SIZE - 1) & pos.WPieces;
-        long attackR = (pos.BPawns.board << PositionEncoder.SIZE + 1) & pos.WPieces;
+    private static int generateMovesW(PositionEncoder.Position pos, int offset, int[] moves) {
+        // Pawn pushes — can't land on any occupied square
+        long singleP = (pos.WPawns << PositionEncoder.SIZE) & ~pos.Occupied;
+        long doubleP = ((pos.WPawns & pos.WDoublePawnMove) << PositionEncoder.SIZE * 2) & ~pos.Occupied;
 
-        // check if any attack fields land on the enPassant square
-        long enPassantL = (pos.BPawns.board << PositionEncoder.SIZE - 1)
-                & (pos.enPassant);
-        long enPassantR = (pos.BPawns.board << PositionEncoder.SIZE + 1)
-                & (pos.enPassant);
+        // Pawn attacks — must land on enemy square
+        long attackL = (pos.WPawns << PositionEncoder.SIZE - 1) & pos.BPieces;
+        long attackR = (pos.WPawns << PositionEncoder.SIZE + 1) & pos.BPieces;
 
-        // gen actual moves (add to move array)
-        offset = formatPawnMoves(singleP, PositionEncoder.SIZE, offset, Move.FLAG_GENERIC, Piece.BLACK, moves);
-        offset = formatPawnMoves(doubleP, PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, Piece.BLACK, moves);
-        offset = formatPawnMoves(attackL, PositionEncoder.SIZE - 1, offset,  Move.FLAG_GENERIC_CAPTURE, Piece.BLACK, moves); // Move.FLAG_GENERIC | Move.CAPTURE_BIT = Move.CAPTURE_BIT
-        offset = formatPawnMoves(attackR, PositionEncoder.SIZE + 1, offset,  Move.FLAG_GENERIC_CAPTURE, Piece.BLACK, moves);
-        offset = formatPawnMoves(enPassantL, PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, Piece.BLACK, moves);
-        offset = formatPawnMoves(enPassantR, PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE , Piece.BLACK, moves);
+        // En passant attacks
+        long enPassantL = (pos.WPawns << PositionEncoder.SIZE - 1) & pos.enPassant;
+        long enPassantR = (pos.WPawns << PositionEncoder.SIZE + 1) & pos.enPassant;
 
+        offset = formatPawnMoves(singleP,     PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC,             Piece.WHITE, moves);
+        offset = formatPawnMoves(doubleP,     PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC,             Piece.WHITE, moves);
+        offset = formatPawnMoves(attackL,     PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE,     Piece.WHITE, moves);
+        offset = formatPawnMoves(attackR,     PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE,     Piece.WHITE, moves);
+        offset = formatPawnMoves(enPassantL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  Piece.WHITE, moves);
+        offset = formatPawnMoves(enPassantR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  Piece.WHITE, moves);
         //TODO: Promotion
 
-        // Black Pawn end
-
-        // Black Knight move gen
-        while (!pos.BKnights.isEmpty()){
-            int startSq = pos.BKnights.popLsb();
-            //get all end positions possible from startSq
-            long endPositions = Move.KNIGHT_LOOKUP[startSq];
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, startSq, Piece.BLACK, Piece.KNIGHT, offset, moves);
+        // Knights
+        long knights = pos.WKnights;
+        while (!Bitboard.isEmpty(knights)) {
+            int sq = Bitboard.lsb(knights);
+            knights = Bitboard.popLsb(knights);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KNIGHT_LOOKUP[sq], sq, Piece.WHITE, Piece.KNIGHT, offset, moves);
         }
 
-        // Black Knight end
-
-        // Black-Bishops
-        int sq;
-        long endPositions;
-        while (!pos.BBishops.isEmpty()){
-            sq = pos.BBishops.popLsb();
-            endPositions = BishopMoves(sq, pos.Occupied, pos.BPieces);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Piece.BLACK, Piece.BISHOP, offset, moves);
+        // Bishops
+        long bishops = pos.WBishops;
+        while (!Bitboard.isEmpty(bishops)) {
+            int sq = Bitboard.lsb(bishops);
+            bishops = Bitboard.popLsb(bishops);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, bishopMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, Piece.BISHOP, offset, moves);
         }
 
-        // Black Bishop end
-
-        // Black Rook move gen
-        while (!pos.BRooks.isEmpty()){
-            sq = pos.BRooks.popLsb();
-            endPositions = RookMoves(sq, pos.Occupied, pos.BPieces);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Piece.BLACK, Piece.ROOK, offset, moves);
-        }
-        // Black Rook end
-
-        // Black Queen move gen
-
-        while (!pos.BQueens.isEmpty()){
-            sq = pos.BQueens.popLsb();
-            endPositions = QueenMoves(sq, pos.Occupied, pos.BPieces);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, sq, Piece.BLACK, Piece.QUEEN, offset, moves);
+        // Rooks
+        long rooks = pos.WRooks;
+        while (!Bitboard.isEmpty(rooks)) {
+            int sq = Bitboard.lsb(rooks);
+            rooks = Bitboard.popLsb(rooks);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, rookMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, Piece.ROOK, offset, moves);
         }
 
-        // Black Queen end.
-
-        // Black King move gen
-        //TODO: add castles
-        while (!pos.BKing.isEmpty()){
-            int startSq = pos.BKing.popLsb();
-            //get all end positions possible from startSq
-            endPositions = Move.KING_LOOKUP[startSq];
-            offset = drainBitboard(pos.BPieces, pos.WPieces, endPositions, startSq, Piece.BLACK, Piece.KING, offset, moves);
+        // Queens
+        long queens = pos.WQueens;
+        while (!Bitboard.isEmpty(queens)) {
+            int sq = Bitboard.lsb(queens);
+            queens = Bitboard.popLsb(queens);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, queenMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, Piece.QUEEN, offset, moves);
         }
+
+        // King
+        // TODO: add castling
+        long king = pos.WKing;
+        while (!Bitboard.isEmpty(king)) {
+            int sq = Bitboard.lsb(king);
+            king = Bitboard.popLsb(king);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KING_LOOKUP[sq], sq, Piece.WHITE, Piece.KING, offset, moves);
+        }
+
         return offset;
     }
 
-    /**
-     * Generates all moves for the White side
-     * @param pos the current positions / game-state
-     * @param offset offset to start in move arr
-     * @param moves all moves till full depth
-     * @return new offset into moves arr
-     */
-    private static int generateMovesW (PositionEncoder.Position pos, int offset, int[] moves){
-        // White Pawn move gen
+    // -------------------------------------------------------------------------
+    // Black
+    // -------------------------------------------------------------------------
 
-        // single & double pushes can't take anything
-        long singleP = (pos.WPawns.board << PositionEncoder.SIZE) & ~pos.Occupied;
-        long doubleP = ((pos.WPawns.board & pos.WDoublePawnMove.board) << PositionEncoder.SIZE * 2)  & ~pos.Occupied;
-        // check if field is occupied (by enemy) when trying to take
-        long attackL = (pos.WPawns.board << PositionEncoder.SIZE - 1) & pos.BPieces;
-        long attackR = (pos.WPawns.board << PositionEncoder.SIZE + 1) & pos.BPieces;
+    private static int generateMovesB(PositionEncoder.Position pos, int offset, int[] moves) {
+        // Pawn pushes
+        long singleP = (pos.BPawns << PositionEncoder.SIZE) & ~pos.Occupied;
+        long doubleP = ((pos.BPawns & pos.BDoublePawnMove) << PositionEncoder.SIZE * 2) & ~pos.Occupied;
 
-        // check if any attack fields land on the enPassant square
-        long enPassantL = (pos.WPawns.board << PositionEncoder.SIZE - 1)
-                & (pos.enPassant);
-        long enPassantR = (pos.WPawns.board << PositionEncoder.SIZE + 1)
-                & (pos.enPassant);
+        // Pawn attacks
+        long attackL = (pos.BPawns << PositionEncoder.SIZE - 1) & pos.WPieces;
+        long attackR = (pos.BPawns << PositionEncoder.SIZE + 1) & pos.WPieces;
 
-        // White Pawn end
+        // En passant
+        long enPassantL = (pos.BPawns << PositionEncoder.SIZE - 1) & pos.enPassant;
+        long enPassantR = (pos.BPawns << PositionEncoder.SIZE + 1) & pos.enPassant;
 
-        // get actual moves
-        offset = formatPawnMoves(singleP, PositionEncoder.SIZE, offset, Move.FLAG_GENERIC, Piece.WHITE, moves);
-        offset = formatPawnMoves(doubleP, PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, Piece.WHITE, moves);
-        offset = formatPawnMoves(attackL, PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE, Piece.WHITE, moves);
-        offset = formatPawnMoves(attackR, PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE, Piece.WHITE, moves);
-        offset = formatPawnMoves(enPassantL, PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, Piece.WHITE, moves);
-        offset = formatPawnMoves(enPassantR, PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, Piece.WHITE, moves);
+        offset = formatPawnMoves(singleP,     PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC,             Piece.BLACK, moves);
+        offset = formatPawnMoves(doubleP,     PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC,             Piece.BLACK, moves);
+        offset = formatPawnMoves(attackL,     PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE,     Piece.BLACK, moves);
+        offset = formatPawnMoves(attackR,     PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE,     Piece.BLACK, moves);
+        offset = formatPawnMoves(enPassantL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  Piece.BLACK, moves);
+        offset = formatPawnMoves(enPassantR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  Piece.BLACK, moves);
+        //TODO: Promotion
 
-        // White Knight move gen
-        while (!pos.WKnights.isEmpty()){
-            int startSq = pos.WKnights.popLsb();
-            //get all end positions possible from startSq
-            long endPositions = Move.KNIGHT_LOOKUP[startSq];
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, startSq, Piece.WHITE, Piece.KNIGHT, offset, moves);
-        }
-        // White Knight end
-
-        // White-Bishops
-        int sq;
-        long endPositions;
-        while (!pos.WBishops.isEmpty()){
-            sq = pos.WBishops.popLsb();
-            endPositions = BishopMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Piece.WHITE, Piece.BISHOP, offset, moves);
+        // Knights
+        long knights = pos.BKnights;
+        while (!Bitboard.isEmpty(knights)) {
+            int sq = Bitboard.lsb(knights);
+            knights = Bitboard.popLsb(knights);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KNIGHT_LOOKUP[sq], sq, Piece.BLACK, Piece.KNIGHT, offset, moves);
         }
 
-        // White Bishop end
-
-        // White Rook move gen
-        while (!pos.WRooks.isEmpty()){
-            sq = pos.WRooks.popLsb();
-            endPositions = RookMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Piece.WHITE, Piece.ROOK, offset, moves);
-        }
-        // White Rook end
-
-        // White Queen move gen
-
-        while (!pos.WQueens.isEmpty()){
-            sq = pos.WQueens.popLsb();
-            endPositions = QueenMoves(sq, pos.Occupied, pos.WPieces);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, sq, Piece.WHITE, Piece.QUEEN, offset, moves);
+        // Bishops
+        long bishops = pos.BBishops;
+        while (!Bitboard.isEmpty(bishops)) {
+            int sq = Bitboard.lsb(bishops);
+            bishops = Bitboard.popLsb(bishops);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, bishopMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, Piece.BISHOP, offset, moves);
         }
 
-        // White Queen end.
-
-        // White King move gen
-        // TODO: add castles
-        while (!pos.WKing.isEmpty()){
-            int startSq = pos.WKing.popLsb();
-            //get all end positions possible from startSq
-            endPositions = Move.KING_LOOKUP[startSq];
-            offset = drainBitboard(pos.WPieces, pos.BPieces, endPositions, startSq, Piece.WHITE, Piece.KING, offset, moves);
+        // Rooks
+        long rooks = pos.BRooks;
+        while (!Bitboard.isEmpty(rooks)) {
+            int sq = Bitboard.lsb(rooks);
+            rooks = Bitboard.popLsb(rooks);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, rookMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, Piece.ROOK, offset, moves);
         }
+
+        // Queens
+        long queens = pos.BQueens;
+        while (!Bitboard.isEmpty(queens)) {
+            int sq = Bitboard.lsb(queens);
+            queens = Bitboard.popLsb(queens);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, queenMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, Piece.QUEEN, offset, moves);
+        }
+
+        // King
+        // TODO: add castling
+        long king = pos.BKing;
+        while (!Bitboard.isEmpty(king)) {
+            int sq = Bitboard.lsb(king);
+            king = Bitboard.popLsb(king);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KING_LOOKUP[sq], sq, Piece.BLACK, Piece.KING, offset, moves);
+        }
+
         return offset;
     }
 
+    // -------------------------------------------------------------------------
+    // Slide move helpers
+    // -------------------------------------------------------------------------
 
-    /**
-     * turns a bitboard of final positions to encoded moves
-     * @param ownPieces pieces of the same color
-     * @param enemyPieces pieces of the opposite color
-     * @param endPositions bitboard of end-positions
-     * @param startSq starting square
-     * @param offset offset into the moves arr
-     * @param moves array of moves till max MCTS depth
-     * @param color 0 for white 1 for black
-     * @param PieceType PieceType constants from Move class
-     * @return new offset into moves
-     */
-    private static int drainBitboard(long ownPieces, long enemyPieces, long endPositions, int startSq, int color, int PieceType, int offset, int[] moves){
-        // ignore moves ending on own pieces
-        endPositions &= ~ownPieces;
+    private static long queenMoves(int square, long occupied, long ownPieces) {
+        // BUG FIX: was calling rookMoves twice — queens move like rook + bishop
+        return rookMoves(square, occupied, ownPieces)
+             | bishopMoves(square, occupied, ownPieces);
+    }
 
-        while (endPositions != 0){
-            int square = Long.numberOfTrailingZeros(endPositions);
-            endPositions &= endPositions - 1;
-            // is there an enemy piece
-            if((enemyPieces >>> square & 1L) == 1L){
-                moves[offset] = Move.of(startSq, square, Move.FLAG_GENERIC_CAPTURE, color, PieceType);
-            }else {
-                moves[offset] = Move.of(startSq, square, Move.FLAG_GENERIC, color, PieceType);
-            }
-            offset++;
-        }
-        return offset;
+    private static long rookMoves(int square, long occupied, long ownPieces) {
+        return slideAttacks(square,  PositionEncoder.SIZE, occupied, ownPieces)  // up
+             | slideAttacks(square, -PositionEncoder.SIZE, occupied, ownPieces)  // down
+             | slideAttacks(square, -1,                    occupied, ownPieces)  // left
+             | slideAttacks(square,  1,                    occupied, ownPieces); // right
+    }
+
+    private static long bishopMoves(int square, long occupied, long ownPieces) {
+        return slideAttacks(square,  PositionEncoder.SIZE + 1, occupied, ownPieces)  // right-up
+             | slideAttacks(square,  PositionEncoder.SIZE - 1, occupied, ownPieces)  // left-up
+             | slideAttacks(square, -PositionEncoder.SIZE + 1, occupied, ownPieces)  // right-down
+             | slideAttacks(square, -PositionEncoder.SIZE - 1, occupied, ownPieces); // left-down
     }
 
     /**
-     * Returns all moves visitable by a queen on square
-     * @param square position of the queen
-     * @param occupied bitboard of occupied positions
-     * @param ownPieces bitboard of pos occupied by own piecs
-     * @return all moves
+     * Slides in one direction until the edge of the board or a collision.
+     * Captures on enemy pieces are included; own-piece collisions are stripped
+     * in drainBitboard, not here, so the caller can distinguish captures.
      */
-    private static long QueenMoves(int square, long occupied, long ownPieces){
-        long endAttackPos = 0L;
-
-        endAttackPos |= RookMoves(square, occupied, ownPieces); // Up, Down, Left, Right
-        endAttackPos |= RookMoves(square, occupied, ownPieces); // Right-Up, Left-Up, Right-Down, Left-Down
-
-        return endAttackPos;
-    }
-
-    /**
-     * Returns all moves visitable by a rook on square
-     * @param square position of the rook
-     * @param occupied bitboard of occupied positions
-     * @param ownPieces bitboard of pos occupied by own piecs
-     * @return all moves
-     */
-    private static long RookMoves(int square, long occupied, long ownPieces){
-        long endAttackPos = 0L;
-
-        endAttackPos |= slideAttacks(square, PositionEncoder.SIZE, occupied, ownPieces); // Up
-        endAttackPos |= slideAttacks(square, -PositionEncoder.SIZE, occupied, ownPieces); // Down
-        endAttackPos |= slideAttacks(square, -1, occupied, ownPieces); // Left
-        endAttackPos |= slideAttacks(square, 1, occupied, ownPieces); // Right
-        return endAttackPos;
-    }
-
-    /**
-     * Returns all moves visitable by a bishop on square
-     * @param square position of the bishop
-     * @param occupied bitboard of occupied positions
-     * @param ownPieces bitboard of pos occupied by own pieces
-     * @return all moves
-     */
-    private static long BishopMoves(int square, long occupied, long ownPieces){
-        long endAttackPos = 0L;
-
-        endAttackPos |= slideAttacks(square, PositionEncoder.SIZE+1, occupied, ownPieces); // Right-Up
-        endAttackPos |= slideAttacks(square, PositionEncoder.SIZE-1, occupied, ownPieces); // Left-Up
-        endAttackPos |= slideAttacks(square, -PositionEncoder.SIZE+1, occupied, ownPieces); // Right-Down
-        endAttackPos |= slideAttacks(square, -PositionEncoder.SIZE-1, occupied, ownPieces); // Left-Down
-
-        return endAttackPos;
-    }
-
-    /**
-     * Slide attacks like rook, bishop and queen
-     * in one direction till block
-     * @param square start-square
-     * @param delta offset to move (dir)
-     * @param occupied bitboard of occupied positions
-     * @param ownPieces bitboard of pos occupied by own pieces
-     * @return all moves in that direction
-     */
-    private static long slideAttacks(int square, int delta, long occupied, long ownPieces){
+    private static long slideAttacks(int square, int delta, long occupied, long ownPieces) {
         long attack = 0L;
-
         long b = 1L << square;
-        // go until fall from board or collision with piece
-        while(true){
+
+        while (true) {
             b <<= delta;
-            if(b == 0L) // fall of board
-                break;
+            if (b == 0L) break;   // fell off the board
 
-            attack |= b; // set attack
+            attack |= b;
 
-            if((b & occupied) != 0L) { // any piece collision
-
-                break;
-            }
+            if ((b & occupied) != 0L) break; // piece collision — include square, stop ray
         }
-        //remove any colls with own pieces
-        attack &= ~ownPieces;
 
+        attack &= ~ownPieces; // strip own-piece collisions
         return attack;
     }
 
-
+    // -------------------------------------------------------------------------
+    // Move array helpers
+    // -------------------------------------------------------------------------
 
     /**
-     * receive a long bitboard with endpositions
-     * fill the moves arr with the recalced moves
-     *
-     * @param bitBoard end positions
-     * @param moveOffset offset used to get to the end position
-     * @param offset offset in the moves array
-     * @param moves arrays of moves to max search
-     * @param color Color 0 for white 1 for black
-     * @return new offset
+     * Drains a bitboard of end-squares into the move array,
+     * tagging each move as capture or quiet based on enemy occupancy.
      */
-    private static int formatPawnMoves(long bitBoard, int moveOffset, int offset, int flags, int color, int[] moves){
-        while(bitBoard != 0){
-            int sq = Long.numberOfTrailingZeros(bitBoard);
-            bitBoard &= bitBoard - 1;  // clears lowest set bit
-            moves[offset] = Move.of(sq - moveOffset, sq,flags, color, Piece.PAWN);
-            offset ++;
+    private static int drainBitboard(long ownPieces, long enemyPieces, long endPositions,
+                                     int startSq, int color, int pieceType,
+                                     int offset, int[] moves) {
+        endPositions &= ~ownPieces; // never land on own pieces
+
+        while (endPositions != 0L) {
+            int sq = Bitboard.lsb(endPositions);
+            endPositions = Bitboard.popLsb(endPositions);
+
+            int flag = (enemyPieces >>> sq & 1L) == 1L
+                ? Move.FLAG_GENERIC_CAPTURE
+                : Move.FLAG_GENERIC;
+
+            moves[offset++] = Move.of(startSq, sq, flag, color, pieceType);
+        }
+        return offset;
+    }
+
+    /**
+     * Converts a bitboard of pawn destination squares into move entries.
+     * The source square is recovered by subtracting the push offset.
+     */
+    private static int formatPawnMoves(long bitBoard, int moveOffset, int offset,
+                                       int flags, int color, int[] moves) {
+        while (bitBoard != 0L) {
+            int sq = Bitboard.lsb(bitBoard);
+            bitBoard = Bitboard.popLsb(bitBoard);
+            moves[offset++] = Move.of(sq - moveOffset, sq, flags, color, Piece.PAWN);
         }
         return offset;
     }
