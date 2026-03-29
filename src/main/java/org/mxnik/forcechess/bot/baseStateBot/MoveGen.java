@@ -3,8 +3,10 @@ package org.mxnik.forcechess.bot.baseStateBot;
 import org.mxnik.forcechess.Util.Bitboard;
 
 public class MoveGen {
+
     /**
-     * Generates all possible moves for the side to move.
+     * Generates all legal moves for the side to move.
+     *
      *
      * @param position current gamestate
      * @param offset   start index in the move array
@@ -12,6 +14,21 @@ public class MoveGen {
      * @return new offset
      */
     public static int generateMoves(PositionEncoder.Position position, int offset, boolean whiteToMove, int[] moves) {
+        int pseudoOffset = generatePseudoMoves(position, offset, whiteToMove, moves);
+        return pseudoOffset;
+    }
+
+
+    /**
+     * Generates all possible moves for the side to move.
+     * Doesn't check for legal moves (king in check)
+     *
+     * @param position current gamestate
+     * @param offset   start index in the move array
+     * @param moves    pre-allocated move array (max 256 * search depth)
+     * @return new offset
+     */
+    public static int generatePseudoMoves(PositionEncoder.Position position, int offset, boolean whiteToMove, int[] moves) {
         if (whiteToMove) return generateMovesW(position, offset, moves);
         return generateMovesB(position, offset, moves);
     }
@@ -186,7 +203,7 @@ public class MoveGen {
      * @param delta offset to move
      * @param occupied blockers (own & enemyPieces)
      * @param ownPieces (same colored pieces)
-     * @param border fields that cannot be accessed <p> example:rook moving upward (+8) bottom row is border
+     * @param border fields that cannot be accessed <p> example: rook moving upward (+8) <p> bottom row is border
      */
     private static long slideAttacks(int square, int delta, long occupied, long ownPieces, long border) {
         long attack = 0L;
