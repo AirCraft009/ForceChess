@@ -159,36 +159,43 @@ public class MoveGen {
     // -------------------------------------------------------------------------
 
     private static long queenMoves(int square, long occupied, long ownPieces) {
-        // BUG FIX: was calling rookMoves twice — queens move like rook + bishop
         return rookMoves(square, occupied, ownPieces)
              | bishopMoves(square, occupied, ownPieces);
     }
 
     private static long rookMoves(int square, long occupied, long ownPieces) {
-        return slideAttacks(square,  PositionEncoder.SIZE, occupied, ownPieces)  // up
-             | slideAttacks(square, -PositionEncoder.SIZE, occupied, ownPieces)  // down
-             | slideAttacks(square, -1,                    occupied, ownPieces)  // left
-             | slideAttacks(square,  1,                    occupied, ownPieces); // right
+        return slideAttacks(square,  PositionEncoder.SIZE, occupied, ownPieces, Move.ROW_1)  // up
+             | slideAttacks(square, -PositionEncoder.SIZE, occupied, ownPieces, Move.ROW_8)  // down
+             | slideAttacks(square, -1, occupied, ownPieces, Move.FILE_H)              // left
+             | slideAttacks(square,  1, occupied, ownPieces, Move.FILE_A);             // right
     }
 
     private static long bishopMoves(int square, long occupied, long ownPieces) {
-        return slideAttacks(square,  PositionEncoder.SIZE + 1, occupied, ownPieces)  // right-up
-             | slideAttacks(square,  PositionEncoder.SIZE - 1, occupied, ownPieces)  // left-up
-             | slideAttacks(square, -PositionEncoder.SIZE + 1, occupied, ownPieces)  // right-down
-             | slideAttacks(square, -PositionEncoder.SIZE - 1, occupied, ownPieces); // left-down
+        return slideAttacks(square,  PositionEncoder.SIZE + 1, occupied, ownPieces, Move.FILE_A | Move.ROW_1)  // right-up
+             | slideAttacks(square,  PositionEncoder.SIZE - 1, occupied, ownPieces, Move.FILE_H | Move.ROW_1)  // left-up
+             | slideAttacks(square, -PositionEncoder.SIZE + 1, occupied, ownPieces, Move.FILE_A | Move.ROW_8)  // right-down
+             | slideAttacks(square, -PositionEncoder.SIZE - 1, occupied, ownPieces, Move.FILE_H | Move.ROW_8); // left-down
     }
 
     /**
      * Slides in one direction until the edge of the board or a collision.
      * Captures on enemy pieces are included; own-piece collisions are stripped
      * in drainBitboard, not here, so the caller can distinguish captures.
+     *
+     * @param square starting square
+     * @param delta offset to move
+     * @param occupied blockers (own & enemyPieces)
+     * @param ownPieces (same colored pieces)
+     * @param border fields that cannot be accessed <p> example:rook moving upward (+8) bottom row is border
      */
-    private static long slideAttacks(int square, int delta, long occupied, long ownPieces) {
+    private static long slideAttacks(int square, int delta, long occupied, long ownPieces, long border) {
         long attack = 0L;
         long b = 1L << square;
 
         while (true) {
             b <<= delta;
+            // check with inverted border
+            b &= ~border;
             if (b == 0L) break;   // fell off the board
 
             attack |= b;
