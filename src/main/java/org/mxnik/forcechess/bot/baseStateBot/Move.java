@@ -76,11 +76,16 @@ public final class Move {
     // R-Border
     public static final long FILE_A = 0x0101010101010101L;
     // L-Border
-    public static final long FILE_H = 0x0808080808080808L;
+    public static final long FILE_H = 0x8080808080808080L;
     // FILE_A and B
     static final long FILE_AB = FILE_A | (FILE_A << 1);
     //FILE_A and H
     static final long FILE_GH = FILE_H | (FILE_H >> 1);
+
+    // Top-Border
+    public static final long ROW_8 = 0x0101010101010101L;
+    // Bottom-Border
+    public static final long ROW_1 = 0x0101010101010101L;
 
     // where to jump to on every square
     public static final long[] KNIGHT_LOOKUP = new long[64];
