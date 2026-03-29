@@ -108,8 +108,8 @@ public final class Move {
         for (int sq = 0; sq < 64; sq++) {
             long b = 1L << sq;
             KING_LOOKUP[sq] =
-                    ((b << 8))                   // up 1
-                            | ((b >> 8))         // down 1
+                    ((b << 8) & ~ROW_1)                   // up 1
+                            | ((b >> 8) & ~ROW_8)         // down 1
                             | ((b << 1) & ~FILE_A)        // right 1
                             | ((b >> 1) & ~FILE_H);        // left 1
         }
