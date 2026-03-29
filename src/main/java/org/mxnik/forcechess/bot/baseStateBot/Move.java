@@ -83,9 +83,9 @@ public final class Move {
     static final long FILE_GH = FILE_H | (FILE_H >> 1);
 
     // Top-Border
-    public static final long ROW_8 = 0x0101010101010101L;
+    public static final long ROW_8 = 0xFF00000000000000L;
     // Bottom-Border
-    public static final long ROW_1 = 0x0101010101010101L;
+    public static final long ROW_1 = 0x00000000000000FFL;
 
     // where to jump to on every square
     public static final long[] KNIGHT_LOOKUP = new long[64];
