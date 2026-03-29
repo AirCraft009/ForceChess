@@ -237,27 +237,31 @@ public final class PositionEncoder {
                     long rookBoard = getLongFromPieceType(color, Piece.ROOK);
                     long pieceBoard = getLongFromPieceType(color, pieceT);
                     movePiece(from, to);
-                    return new UndoMoveInfo(from, to, moveType, pieceBoard, rookBoard);
+                    return new UndoMoveInfo(from, to, moveType);
                 }
 
                 case Move.FLAG_GENERIC_CAPTURE -> {
                     long pieceBoard  = getLongFromPiece(pieceMap[from]);
                     long takenBoard  = getLongFromPiece(pieceMap[to]);
                     movePiece(from, to);
-                    return new UndoMoveInfo(from, to, moveType, pieceBoard, takenBoard);
+                    return new UndoMoveInfo(from, to, moveType);
                 }
 
                 default -> {
                     // FLAG_GENERIC and anything else
                     long pieceBoard = getLongFromPiece(pieceMap[from]);
                     movePiece(from, to);
-                    return new UndoMoveInfo(from, to, moveType, pieceBoard, 0L);
+                    return new UndoMoveInfo(from, to, moveType);
                 }
             }
         }
 
-        public void unmakeMove(UndoMoveInfo info) {
-            // TODO: implement unmake
+        public void unmakeMove(int move) {
+            int from      = Move.from(move);
+            int to        = Move.to(move);
+            int moveType  = Move.flags(move);
+            boolean color = Move.color(move);
+            int pieceT    = Move.pieceType(move);
         }
 
         // =====================================================================
@@ -560,7 +564,7 @@ public final class PositionEncoder {
         System.out.println("\nReuse buffer test passed.");
 
         int[] moves = new int[256];
-        int actLen = MoveGen.generateMoves(pos, 0, true, moves);
+        int actLen = MoveGen.generatePseudoMoves(pos, 0, true, moves);
         for (int i = 0; i < actLen; i++)
             System.out.printf("Piece(%d) from: %d -> to: %d%n",
                     Move.pieceType(moves[i]), Move.from(moves[i]), Move.to(moves[i]));
