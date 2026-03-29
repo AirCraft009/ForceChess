@@ -14,6 +14,7 @@ import org.mxnik.forcechess.Util.Helper;
 import java.util.Arrays;
 
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
+import static org.mxnik.forcechess.RayDetection.*;
 
 public class Board {
     public static int sideLen = 8;
@@ -33,16 +34,6 @@ public class Board {
     private FastBitmap blackAttackSquares;
 
     int maxMoves = 0;
-
-    // Ray directions as {rowDelta, colDelta}.
-    // 0-3: straight (rank/file) — rook / queen
-    // 4-7: diagonal             — bishop / queen / pawn
-    private static final int[] RAY_ROW = { 0,  0,  1, -1,  1,  1, -1, -1 };
-    private static final int[] RAY_COL = { 1, -1,  0,  0,  1, -1,  1, -1 };
-
-    // Knight jump deltas
-    private static final int[] KNIGHT_ROW = { 2,  2, -2, -2,  1,  1, -1, -1 };
-    private static final int[] KNIGHT_COL = { 1, -1,  1, -1,  2, -2,  2, -2 };
 
     public Board() {
         board = new Piece[sideLen * sideLen];
