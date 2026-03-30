@@ -218,12 +218,10 @@ public final class PositionEncoder {
         // Make / Unmake
         // =====================================================================
 
-        public UndoMoveInfo makeMove(int move) {
+        public int makeMove(int move) {
             int from      = Move.from(move);
             int to        = Move.to(move);
             int moveType  = Move.flags(move);
-            boolean color = Move.color(move);
-            int pieceT    = Move.pieceType(move);
 
             switch (moveType) {
                 case Move.FLAG_CASTLE_K_CAPTURE,
@@ -234,34 +232,37 @@ public final class PositionEncoder {
                         "En-Passant can't be a normal (non-capture): " + Integer.toBinaryString(moveType));
 
                 case Move.FLAG_CASTLE_K, Move.FLAG_CASTLE_Q -> {
-                    long rookBoard = getLongFromPieceType(color, Piece.ROOK);
-                    long pieceBoard = getLongFromPieceType(color, pieceT);
                     movePiece(from, to);
-                    return new UndoMoveInfo(from, to, moveType);
+                    return UndoMoveInfo.of(move, Piece.EMPTY_PIECE);
                 }
 
                 case Move.FLAG_GENERIC_CAPTURE -> {
-                    long pieceBoard  = getLongFromPiece(pieceMap[from]);
-                    long takenBoard  = getLongFromPiece(pieceMap[to]);
+                    int takenPiece = pieceMap[to];
                     movePiece(from, to);
-                    return new UndoMoveInfo(from, to, moveType);
+                    return UndoMoveInfo.of(move, takenPiece);
                 }
 
                 default -> {
                     // FLAG_GENERIC and anything else
-                    long pieceBoard = getLongFromPiece(pieceMap[from]);
+                    //TODO: handle Capture promotions and normal Promotions
                     movePiece(from, to);
-                    return new UndoMoveInfo(from, to, moveType);
+                    return UndoMoveInfo.of(move, Piece.EMPTY_PIECE);
                 }
             }
         }
 
-        public void unmakeMove(int move) {
+        public void unmakeMove(int undoInfo) {
+            int move = UndoMoveInfo.move(undoInfo);
             int from      = Move.from(move);
             int to        = Move.to(move);
             int moveType  = Move.flags(move);
             boolean color = Move.color(move);
             int pieceT    = Move.pieceType(move);
+
+            movePiece(to, from);
+
+            // first clears bit (does nothing no piece there) then sets it;
+            MoveOnBoard(UndoMoveInfo.takenPiece(undoInfo), to, to);
         }
 
         // =====================================================================
@@ -361,7 +362,7 @@ public final class PositionEncoder {
             int takenPiece = pieceMap[to];
 
             // Move the piece on its own bitboard
-            setOnBoard(movedPiece, from, to);
+            MoveOnBoard(movedPiece, from, to);
 
             // Remove any captured piece from its bitboard
             if (takenPiece != Piece.EMPTY_PIECE) {
@@ -379,29 +380,31 @@ public final class PositionEncoder {
          * Moves a piece on its corresponding bitboard (clear from, set to).
          * Looks up the board by piece byte and reassigns the field.
          */
-        private void setOnBoard(int piece, int from, int to) {
+        private void MoveOnBoard(int piece, int from, int to) {
             boolean color = Piece.color(piece);
             int type      = Piece.pieceT(piece);
 
             if (color) { // white
                 switch (type) {
+                    case Piece.EMPTY_PIECE -> {}
                     case Piece.PAWN   -> { WPawns   = Bitboard.clear(WPawns,   from); WPawns   = Bitboard.set(WPawns,   to); }
                     case Piece.KNIGHT -> { WKnights = Bitboard.clear(WKnights, from); WKnights = Bitboard.set(WKnights, to); }
                     case Piece.BISHOP -> { WBishops = Bitboard.clear(WBishops, from); WBishops = Bitboard.set(WBishops, to); }
                     case Piece.ROOK   -> { WRooks   = Bitboard.clear(WRooks,   from); WRooks   = Bitboard.set(WRooks,   to); }
                     case Piece.QUEEN  -> { WQueens  = Bitboard.clear(WQueens,  from); WQueens  = Bitboard.set(WQueens,  to); }
                     case Piece.KING   -> { WKing    = Bitboard.clear(WKing,    from); WKing    = Bitboard.set(WKing,    to); }
-                    default -> throw new InvalidPieceTypeException("setOnBoard: unknown white piece type " + type);
+                    default -> throw new InvalidPieceTypeException("MoveOnBoard: unknown white piece type " + type);
                 }
             } else { // black
                 switch (type) {
+                    case Piece.EMPTY_PIECE -> {}
                     case Piece.PAWN   -> { BPawns   = Bitboard.clear(BPawns,   from); BPawns   = Bitboard.set(BPawns,   to); }
                     case Piece.KNIGHT -> { BKnights = Bitboard.clear(BKnights, from); BKnights = Bitboard.set(BKnights, to); }
                     case Piece.BISHOP -> { BBishops = Bitboard.clear(BBishops, from); BBishops = Bitboard.set(BBishops, to); }
                     case Piece.ROOK   -> { BRooks   = Bitboard.clear(BRooks,   from); BRooks   = Bitboard.set(BRooks,   to); }
                     case Piece.QUEEN  -> { BQueens  = Bitboard.clear(BQueens,  from); BQueens  = Bitboard.set(BQueens,  to); }
                     case Piece.KING   -> { BKing    = Bitboard.clear(BKing,    from); BKing    = Bitboard.set(BKing,    to); }
-                    default -> throw new InvalidPieceTypeException("setOnBoard: unknown black piece type " + type);
+                    default -> throw new InvalidPieceTypeException("MoveOnBoard: unknown black piece type " + type);
                 }
             }
         }
@@ -413,6 +416,7 @@ public final class PositionEncoder {
 
             if (color) {
                 switch (type) {
+                    case Piece.EMPTY_PIECE -> {}
                     case Piece.PAWN   -> WPawns   = Bitboard.clear(WPawns,   sq);
                     case Piece.KNIGHT -> WKnights = Bitboard.clear(WKnights, sq);
                     case Piece.BISHOP -> WBishops = Bitboard.clear(WBishops, sq);
@@ -423,6 +427,7 @@ public final class PositionEncoder {
                 }
             } else {
                 switch (type) {
+                    case Piece.EMPTY_PIECE -> {}
                     case Piece.PAWN   -> BPawns   = Bitboard.clear(BPawns,   sq);
                     case Piece.KNIGHT -> BKnights = Bitboard.clear(BKnights, sq);
                     case Piece.BISHOP -> BBishops = Bitboard.clear(BBishops, sq);

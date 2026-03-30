@@ -5,9 +5,6 @@ package org.mxnik.forcechess.bot.baseStateBot;
 // bits 6  - 11: to square
 // bits 12 - 15: flags (capture, castle, en passant, promotion piece)
 // └─> bits(12-14) Type, bit 15 (is a capture)
-// bits 16 - 19: Piece
-// └─> bit  16     : Color (W/B)
-// └─> bits 17 - 19: PieceType (R, N, B, K, Q, P)
 
 public final class Move {
     /**
@@ -15,38 +12,27 @@ public final class Move {
      * @param from start square
      * @param to end square
      * @param flags Move flags (capture, castle etc..)
-     * @param isWhite 0 for white 1 for black
-     * @param PieceType PieceType constants
      * @return encoded move
      */
-    public static int of(int from, int to, int flags, int isWhite, int PieceType) {
-        return from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT | isWhite << COLOR_SHIFT | PieceType << PIECE_T_SHIFT;
+    public static int of(int from, int to, int flags) {
+        return from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT;
     }
     // getter methods
     public static int from(int move)  { return move & MOVE_MASK; }
     public static int to(int move)    { return (move >>> TO_MOVE_SHIFT) & MOVE_MASK; }
     public static int flags(int move) { return (move >>> FLAG_SHIFT) & FLAG_MASK; }
-    public static boolean color(int move) { return (((move >>> COLOR_SHIFT) & COLOR_MASK)) == 1L; }
-    public static int pieceType(int move) { return (move >>> PIECE_T_SHIFT) & PIECE_T_MASK; }
 
     public static boolean attackFromFlag(int flag){ return ((flag >>> 3) & 0x1) == 1L;}
     public static int baseFlag(int flag){ return (flag & 0x7);}
 
 
     // Shifts and masks
-    public static final int TO_MOVE_SHIFT = 6;
-    public static final int MOVE_MASK     = 0x3F;
+    private static final int TO_MOVE_SHIFT  = 6;
+    private static final int MOVE_MASK      = 0x3F;
 
-    public static final int FLAG_SHIFT = 12;
-    public static final int FLAG_MASK  = 0xF;
+    private static final int FLAG_SHIFT     = 12;
+    private static final int FLAG_MASK      = 0xF;
 
-    public static final int Piece_MASK = 0xF;
-
-    public static final int COLOR_SHIFT = 16;
-    public static final int COLOR_MASK  = 0x1;
-
-    public static final int PIECE_T_SHIFT = 17;
-    public static final int PIECE_T_MASK  = 0x7;
 
 
     // Flags (bit 0 -> attack bit); (bits 1-3 ->

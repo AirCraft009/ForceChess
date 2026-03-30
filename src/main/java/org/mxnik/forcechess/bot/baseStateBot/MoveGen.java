@@ -50,12 +50,12 @@ public class MoveGen {
         long enPassantL = (pos.WPawns << PositionEncoder.SIZE - 1) & pos.enPassant;
         long enPassantR = (pos.WPawns << PositionEncoder.SIZE + 1) & pos.enPassant;
 
-        offset = formatPawnMoves(singleP,     PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC,             Piece.WHITE, moves);
-        offset = formatPawnMoves(doubleP,     PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC,             Piece.WHITE, moves);
-        offset = formatPawnMoves(attackL,     PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE,     Piece.WHITE, moves);
-        offset = formatPawnMoves(attackR,     PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE,     Piece.WHITE, moves);
-        offset = formatPawnMoves(enPassantL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  Piece.WHITE, moves);
-        offset = formatPawnMoves(enPassantR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  Piece.WHITE, moves);
+        offset = formatPawnMoves(singleP,     PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC, moves);
+        offset = formatPawnMoves(doubleP,     PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, moves);
+        offset = formatPawnMoves(attackL,     PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE, moves);
+        offset = formatPawnMoves(attackR,     PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE, moves);
+        offset = formatPawnMoves(enPassantL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, moves);
+        offset = formatPawnMoves(enPassantR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, moves);
         //TODO: Promotion
 
         // Knights
@@ -63,7 +63,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(knights)) {
             int sq = Bitboard.lsb(knights);
             knights = Bitboard.popLsb(knights);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KNIGHT_LOOKUP[sq], sq, Piece.WHITE, Piece.KNIGHT, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KNIGHT_LOOKUP[sq], sq, Piece.WHITE, moves);
         }
 
         // Bishops
@@ -71,7 +71,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(bishops)) {
             int sq = Bitboard.lsb(bishops);
             bishops = Bitboard.popLsb(bishops);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, bishopMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, Piece.BISHOP, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, bishopMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, moves);
         }
 
         // Rooks
@@ -79,7 +79,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(rooks)) {
             int sq = Bitboard.lsb(rooks);
             rooks = Bitboard.popLsb(rooks);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, rookMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, Piece.ROOK, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, rookMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, moves);
         }
 
         // Queens
@@ -87,7 +87,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(queens)) {
             int sq = Bitboard.lsb(queens);
             queens = Bitboard.popLsb(queens);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, queenMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, Piece.QUEEN, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, queenMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, moves);
         }
 
         // King
@@ -96,7 +96,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(king)) {
             int sq = Bitboard.lsb(king);
             king = Bitboard.popLsb(king);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KING_LOOKUP[sq], sq, Piece.WHITE, Piece.KING, offset, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KING_LOOKUP[sq], sq, Piece.WHITE, moves);
         }
 
         return offset;
@@ -119,12 +119,12 @@ public class MoveGen {
         long enPassantL = (pos.BPawns << PositionEncoder.SIZE - 1) & pos.enPassant;
         long enPassantR = (pos.BPawns << PositionEncoder.SIZE + 1) & pos.enPassant;
 
-        offset = formatPawnMoves(singleP,     PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC,             Piece.BLACK, moves);
-        offset = formatPawnMoves(doubleP,     PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC,             Piece.BLACK, moves);
-        offset = formatPawnMoves(attackL,     PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE,     Piece.BLACK, moves);
-        offset = formatPawnMoves(attackR,     PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE,     Piece.BLACK, moves);
-        offset = formatPawnMoves(enPassantL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  Piece.BLACK, moves);
-        offset = formatPawnMoves(enPassantR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  Piece.BLACK, moves);
+        offset = formatPawnMoves(singleP,     PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC, moves);
+        offset = formatPawnMoves(doubleP,     PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC,           moves);
+        offset = formatPawnMoves(attackL,     PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE,     moves);
+        offset = formatPawnMoves(attackR,     PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE,      moves);
+        offset = formatPawnMoves(enPassantL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  moves);
+        offset = formatPawnMoves(enPassantR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  moves);
         //TODO: Promotion
 
         // Knights
@@ -132,7 +132,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(knights)) {
             int sq = Bitboard.lsb(knights);
             knights = Bitboard.popLsb(knights);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KNIGHT_LOOKUP[sq], sq, Piece.BLACK, Piece.KNIGHT, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KNIGHT_LOOKUP[sq], sq, Piece.BLACK, moves);
         }
 
         // Bishops
@@ -140,7 +140,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(bishops)) {
             int sq = Bitboard.lsb(bishops);
             bishops = Bitboard.popLsb(bishops);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, bishopMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, Piece.BISHOP, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, bishopMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, moves);
         }
 
         // Rooks
@@ -148,7 +148,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(rooks)) {
             int sq = Bitboard.lsb(rooks);
             rooks = Bitboard.popLsb(rooks);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, rookMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, Piece.ROOK, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, rookMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, moves);
         }
 
         // Queens
@@ -156,7 +156,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(queens)) {
             int sq = Bitboard.lsb(queens);
             queens = Bitboard.popLsb(queens);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, queenMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, Piece.QUEEN, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, queenMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, moves);
         }
 
         // King
@@ -165,7 +165,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(king)) {
             int sq = Bitboard.lsb(king);
             king = Bitboard.popLsb(king);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KING_LOOKUP[sq], sq, Piece.BLACK, Piece.KING, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KING_LOOKUP[sq], sq, Piece.BLACK, moves);
         }
 
         return offset;
@@ -233,8 +233,7 @@ public class MoveGen {
      * tagging each move as capture or quiet based on enemy occupancy.
      */
     private static int drainBitboard(long ownPieces, long enemyPieces, long endPositions,
-                                     int startSq, int color, int pieceType,
-                                     int offset, int[] moves) {
+                                     int startSq, int offset, int[] moves) {
         endPositions &= ~ownPieces; // never land on own pieces
 
         while (endPositions != 0L) {
@@ -245,7 +244,7 @@ public class MoveGen {
                 ? Move.FLAG_GENERIC_CAPTURE
                 : Move.FLAG_GENERIC;
 
-            moves[offset++] = Move.of(startSq, sq, flag, color, pieceType);
+            moves[offset++] = Move.of(startSq, sq, flag);
         }
         return offset;
     }
@@ -255,11 +254,11 @@ public class MoveGen {
      * The source square is recovered by subtracting the push offset.
      */
     private static int formatPawnMoves(long bitBoard, int moveOffset, int offset,
-                                       int flags, int color, int[] moves) {
+                                       int flags, int[] moves) {
         while (bitBoard != 0L) {
             int sq = Bitboard.lsb(bitBoard);
             bitBoard = Bitboard.popLsb(bitBoard);
-            moves[offset++] = Move.of(sq - moveOffset, sq, flags, color, Piece.PAWN);
+            moves[offset++] = Move.of(sq - moveOffset, sq, flags);
         }
         return offset;
     }
