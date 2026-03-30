@@ -256,8 +256,6 @@ public final class PositionEncoder {
             int from      = Move.from(move);
             int to        = Move.to(move);
             int moveType  = Move.flags(move);
-            boolean color = Move.color(move);
-            int pieceT    = Move.pieceType(move);
 
             movePiece(to, from);
 
@@ -304,7 +302,7 @@ public final class PositionEncoder {
 
                                 // Pawns only attack one square diagonal
                                 if (firstStep && type == Piece.PAWN) {
-                                    boolean pawnIsWhite = Move.color(p);
+                                    boolean pawnIsWhite = Piece.color(p);
                                     if (pawnIsWhite  && r < kingRow) return true;
                                     if (!pawnIsWhite && r > kingRow) return true;
                                 }
@@ -571,8 +569,8 @@ public final class PositionEncoder {
         int[] moves = new int[256];
         int actLen = MoveGen.generatePseudoMoves(pos, 0, true, moves);
         for (int i = 0; i < actLen; i++)
-            System.out.printf("Piece(%d) from: %d -> to: %d%n",
-                    Move.pieceType(moves[i]), Move.from(moves[i]), Move.to(moves[i]));
+            System.out.printf(" from: %d -> to: %d%n",
+                    Move.from(moves[i]), Move.to(moves[i]));
 
         System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
     }
