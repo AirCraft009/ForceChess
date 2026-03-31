@@ -35,7 +35,7 @@ public final class Move {
 
 
 
-    // Flags (bit 0 -> attack bit); (bits 1-3 ->
+    // Flags (bit 3 -> attack bit); (bits 0-2 ->
     public static final int CAPTURE_BIT     = 8;
 
     public static final int FLAG_GENERIC    = 0;
@@ -47,6 +47,7 @@ public final class Move {
     public static final int FLAG_PROMOTE_B  = 6;
     public static final int FLAG_PROMOTE_N  = 7;
 
+    // capture-moves
     public static final int FLAG_GENERIC_CAPTURE    = 8;
     public static final int FLAG_CASTLE_K_CAPTURE   = 9;   // illegal state only for checks
     public static final int FLAG_CASTLE_Q_CAPTURE   = 0xA; // illegal state only for checks
