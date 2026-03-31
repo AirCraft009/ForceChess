@@ -1,6 +1,6 @@
 package org.mxnik.forcechess.Util;
 
-import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.user.ChessLogic.Board;
 
 import static java.lang.Math.abs;
 

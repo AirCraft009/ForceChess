@@ -13,8 +13,8 @@ module org.mxnik.forcechess {
     requires annotations;
     requires java.desktop;
 
-    exports org.mxnik.forcechess.ChesGame.UI;
+    exports org.mxnik.forcechess.user.UI;
     exports org.mxnik.forcechess.Util;
-    exports org.mxnik.forcechess.ChesGame.UI.ChessControllView;
-    exports org.mxnik.forcechess.ChessLogic;
+    exports org.mxnik.forcechess.user.UI.ChessControllView;
+    exports org.mxnik.forcechess.user.ChessLogic;
 }

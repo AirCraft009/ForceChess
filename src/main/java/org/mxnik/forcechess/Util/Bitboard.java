@@ -1,12 +1,6 @@
 package org.mxnik.forcechess.Util;
 
-import org.mxnik.forcechess.ChessLogic.Notation.FenException;
-import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
-
 import java.util.function.IntConsumer;
-
-import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 
 /**
  * Bitboard with helper functions

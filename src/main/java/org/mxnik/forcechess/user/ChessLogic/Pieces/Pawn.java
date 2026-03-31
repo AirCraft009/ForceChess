@@ -1,0 +1,111 @@
+package org.mxnik.forcechess.user.ChessLogic.Pieces;
+
+import org.mxnik.forcechess.user.ChessLogic.Moves.MoveList;
+
+import java.util.Arrays;
+
+import static org.mxnik.forcechess.Util.Helper.*;
+import static org.mxnik.forcechess.user.ChessLogic.Moves.MoveOffsets.*;
+
+public class Pawn extends Piece{
+    public final static int dirCount = 3;
+    private static final byte[] moveSet = new byte[4];
+    private static final byte[] captureMoves = new byte[2];
+    static {
+        refreshMoveSet();
+    }
+
+    static void refreshMoveSet() {
+        moveSet[0] = UP.offset;
+        moveSet[1] = (byte) (UP.offset * 2);
+        moveSet[2] = UP_R.offset;
+        moveSet[3] = UP_L.offset;
+
+        captureMoves[0] = UP_R.offset;
+        captureMoves[1] = UP_L.offset;
+    }
+
+    public Pawn(boolean color, boolean hasMoved) {
+        super(PieceTypes.PAWN, color, hasMoved);
+    }
+
+    @Override
+    public int getMaxDir() {
+        return dirCount;
+    }
+
+    @Override
+    public boolean isValidMove(int from, int to){
+        if(!isInside(to)) return false;
+
+        int dir = color ? 1 : -1;
+
+        int rowFrom = getRow(from);
+        int rowTo = getRow(to);
+
+        int colFrom = getCol(from);
+        int colTo = getCol(to);
+
+        int rowDiff = rowTo - rowFrom;
+        int colDiff = Math.abs(colTo - colFrom);
+
+        // forward move
+        if(colDiff == 0 && rowDiff == dir)
+            return true;
+
+        // capture move
+        if(colDiff == 1 && rowDiff == dir)
+            return true;
+
+        return !hasMoved && colDiff == 0 && rowDiff == dir * 2;
+    }
+
+    @Override
+    public void getMoves(int pos, MoveList moveList){
+        moveList.startPiece();
+
+        moveList.startDirection();
+        int target = pos + UP.offset * ((color)? 1 : -1);
+        if (isValidMove(pos, target)) {
+            moveList.addMoves((byte) target);
+        }
+
+        target = pos + UP.offset * 2 * ((color)? 1 : -1);
+        if (!hasMoved && isValidMove(pos, target)) {
+            moveList.addMoves((byte) target);
+        }
+
+        for (byte moveOffset : captureMoves) {
+            target = pos + moveOffset * ((color)? 1 : -1);
+            if (!isValidMove(pos, target)) {
+                continue;
+            }
+
+            moveList.startDirection();
+            moveList.addMove((byte) target);
+        }
+    }
+
+    @Override
+    byte[] getMoveSet() {
+        return moveSet;
+    }
+
+    public static void main(String[] args) {
+        Pawn p = new Pawn(true, false);
+        Knight k = new Knight(true, false);
+        Rook r = new Rook(true, false);
+        Bishop b = new Bishop(true, false);
+        Piece[] pieces = new Piece[] {p, k, r, b};
+        int[] positions = new int[] {8, 28, 36, 36};
+
+        MoveList moveList = new MoveList(pieces.length, 24, 64);
+
+        for (int i = 0; i < pieces.length; i++) {
+            pieces[i].getMoves(positions[i], moveList);
+        }
+
+        System.out.println(Arrays.toString(moveList.getMovesArray()));
+    }
+
+}
