@@ -5,6 +5,8 @@ import org.mxnik.forcechess.Util.Helper;
 
 import javax.security.auth.login.CredentialException;
 
+import java.util.Arrays;
+
 import static org.mxnik.forcechess.RayDetection.*;
 import static org.mxnik.forcechess.RayDetection.KNIGHT_COL;
 
@@ -420,9 +422,8 @@ public final class PositionEncoder {
             MoveOnBoard(movedPiece, from, to);
 
             // Remove any captured piece from its bitboard
-            if (takenPiece != Piece.EMPTY_PIECE) {
-                clearOnBoard(takenPiece, to);
-            }
+            clearOnBoard(takenPiece, to);
+
 
             // Keep pieceMap in sync
             pieceMap[to]   = (byte) movedPiece;
@@ -625,10 +626,24 @@ public final class PositionEncoder {
 
         int[] moves = new int[256];
         int actLen = MoveGen.generatePseudoMoves(pos, 0, true, moves);
-        for (int i = 0; i < actLen; i++)
+
+
+        for (int i = 0; i < actLen; i++) {
             System.out.printf(" from: %d -> to: %d%n",
                     Move.from(moves[i]), Move.to(moves[i]));
+        }
 
+        pos.makeMove(moves[5]);
+        pos.makeMove(moves[14]);
+
+        int off = MoveGen.generatePseudoMoves(pos, 0, false, moves);
+        System.out.println("black");
+        for (int i = 0; i < off; i++) {
+            System.out.printf(" from: %d -> to: %d%n",
+                    Move.from(moves[i]), Move.to(moves[i]));
+        }
+        pos.makeMove(moves[4]);
         System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
+        System.out.println(Arrays.toString(pos.pieceMap));
     }
 }

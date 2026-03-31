@@ -8,13 +8,30 @@ public class MoveGen {
      * Generates all legal moves for the side to move.
      *
      *
-     * @param position current gamestate
+     * @param pos current game-state
      * @param offset   start index in the move array
      * @param moves    pre-allocated move array (max 256 * search depth)
+     * @param whiteToMove passed separately for testing purposes
      * @return new offset
      */
-    public static int generateMoves(PositionEncoder.Position position, int offset, boolean whiteToMove, int[] moves) {
-        int pseudoOffset = generatePseudoMoves(position, offset, whiteToMove, moves);
+    public static int generateMoves(PositionEncoder.Position pos, int offset, boolean whiteToMove, int[] moves) {
+        int pseudoOffset = generatePseudoMoves(pos, offset, whiteToMove, moves);
+        int place = 0;                                      // where next move should be places ( after illegal move -> rearrange moves)
+        for (int i = offset; i < pseudoOffset; i++) {
+            int undo = pos.makeMove(moves[i]);
+
+            if (pos.checkChess(whiteToMove)){
+                pseudoOffset --;                            // one less move
+                place = Math.max(0, place--);               // next move should be at same pos
+
+                pos.unmakeMove(undo);
+                continue;                                   // don't add move
+            }
+
+            moves[place] = moves[i];                        // place the move at the correct offset
+            place ++;
+            pos.unmakeMove(undo);
+        }
         return pseudoOffset;
     }
 
@@ -63,7 +80,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(knights)) {
             int sq = Bitboard.lsb(knights);
             knights = Bitboard.popLsb(knights);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KNIGHT_LOOKUP[sq], sq, Piece.WHITE, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KNIGHT_LOOKUP[sq], sq, offset, moves);
         }
 
         // Bishops
@@ -71,7 +88,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(bishops)) {
             int sq = Bitboard.lsb(bishops);
             bishops = Bitboard.popLsb(bishops);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, bishopMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, bishopMoves(sq, pos.Occupied, pos.WPieces), sq, offset, moves);
         }
 
         // Rooks
@@ -79,7 +96,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(rooks)) {
             int sq = Bitboard.lsb(rooks);
             rooks = Bitboard.popLsb(rooks);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, rookMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, rookMoves(sq, pos.Occupied, pos.WPieces), sq, offset, moves);
         }
 
         // Queens
@@ -87,7 +104,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(queens)) {
             int sq = Bitboard.lsb(queens);
             queens = Bitboard.popLsb(queens);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, queenMoves(sq, pos.Occupied, pos.WPieces), sq, Piece.WHITE, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, queenMoves(sq, pos.Occupied, pos.WPieces), sq, offset, moves);
         }
 
         // King
@@ -96,7 +113,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(king)) {
             int sq = Bitboard.lsb(king);
             king = Bitboard.popLsb(king);
-            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KING_LOOKUP[sq], sq, Piece.WHITE, moves);
+            offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KING_LOOKUP[sq], sq, offset, moves);
         }
 
         return offset;
@@ -132,7 +149,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(knights)) {
             int sq = Bitboard.lsb(knights);
             knights = Bitboard.popLsb(knights);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KNIGHT_LOOKUP[sq], sq, Piece.BLACK, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KNIGHT_LOOKUP[sq], sq, offset, moves);
         }
 
         // Bishops
@@ -140,7 +157,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(bishops)) {
             int sq = Bitboard.lsb(bishops);
             bishops = Bitboard.popLsb(bishops);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, bishopMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, bishopMoves(sq, pos.Occupied, pos.BPieces), sq, offset, moves);
         }
 
         // Rooks
@@ -148,7 +165,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(rooks)) {
             int sq = Bitboard.lsb(rooks);
             rooks = Bitboard.popLsb(rooks);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, rookMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, rookMoves(sq, pos.Occupied, pos.BPieces), sq, offset, moves);
         }
 
         // Queens
@@ -156,7 +173,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(queens)) {
             int sq = Bitboard.lsb(queens);
             queens = Bitboard.popLsb(queens);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, queenMoves(sq, pos.Occupied, pos.BPieces), sq, Piece.BLACK, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, queenMoves(sq, pos.Occupied, pos.BPieces), sq, offset, moves);
         }
 
         // King
@@ -165,7 +182,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(king)) {
             int sq = Bitboard.lsb(king);
             king = Bitboard.popLsb(king);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KING_LOOKUP[sq], sq, Piece.BLACK, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KING_LOOKUP[sq], sq, offset, moves);
         }
 
         return offset;
