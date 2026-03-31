@@ -3,6 +3,8 @@ package org.mxnik.forcechess.bot.baseStateBot;
 import org.mxnik.forcechess.Util.Bitboard;
 import org.mxnik.forcechess.Util.Helper;
 
+import javax.security.auth.login.CredentialException;
+
 import static org.mxnik.forcechess.RayDetection.*;
 import static org.mxnik.forcechess.RayDetection.KNIGHT_COL;
 
@@ -214,11 +216,18 @@ public final class PositionEncoder {
         // ---- Piece map: Color(1 bit) | PieceType(3 bits) per square ---------
         public byte[] pieceMap = new byte[64];
 
+
         // =====================================================================
         // Make / Unmake
         // =====================================================================
 
-        public int makeMove(int move) {
+        public int makeMove(int move){
+            int undo = makeMoveCore(move);
+            updateHelper();
+            return undo;
+        }
+
+        private int makeMoveCore(int move) {
             int from      = Move.from(move);
             int to        = Move.to(move);
             int moveType  = Move.flags(move);
@@ -231,20 +240,35 @@ public final class PositionEncoder {
                 case Move.FLAG_EN_PASSANT -> throw new IllegalStateException(
                         "En-Passant can't be a normal (non-capture): " + Integer.toBinaryString(moveType));
 
-                case Move.FLAG_CASTLE_K, Move.FLAG_CASTLE_Q -> {
+                case Move.FLAG_CASTLE_K-> {
+
+                    // rook in the corner -> one left of the kings new pos
+                    movePiece(from + (distRight(from)), to - 1);
                     movePiece(from, to);
+
                     return UndoMoveInfo.of(move, Piece.EMPTY_PIECE);
                 }
+                case Move.FLAG_CASTLE_Q -> {
+                    // rook in the corner -> one right of the kings new pos
+                    movePiece(from - (distLeft(from)), to + 1);
+                    movePiece(from, to);
 
+                    return UndoMoveInfo.of(move, Piece.EMPTY_PIECE);
+                }
                 case Move.FLAG_GENERIC_CAPTURE -> {
                     int takenPiece = pieceMap[to];
                     movePiece(from, to);
                     return UndoMoveInfo.of(move, takenPiece);
                 }
-
+                case Move.FLAG_EN_PASSANT_CAPTURE -> {
+                    // flip the lowest bit (color) because other piece is a pawn
+                    int takenPiece = pieceMap[from] ^ 1;
+                    movePiece(from, to);
+                    return UndoMoveInfo.of(move, takenPiece);
+                }
                 default -> {
                     // FLAG_GENERIC and anything else
-                    //TODO: handle Capture promotions and normal Promotions
+                    //TODO: handle Promotions
                     movePiece(from, to);
                     return UndoMoveInfo.of(move, Piece.EMPTY_PIECE);
                 }
@@ -255,12 +279,38 @@ public final class PositionEncoder {
             int move = UndoMoveInfo.move(undoInfo);
             int from      = Move.from(move);
             int to        = Move.to(move);
-            int moveType  = Move.flags(move);
+            int flags = Move.flags(move);
+
+            boolean fAttack = Move.attackFromFlag(flags);
+            int fType = Move.baseFlag(flags);
 
             movePiece(to, from);
 
             // first clears bit (does nothing no piece there) then sets it;
-            MoveOnBoard(UndoMoveInfo.takenPiece(undoInfo), to, to);
+            MoveOnBoard(UndoMoveInfo.takenPiece(undoInfo), to, to);     // sets takenPiece -> if emptyPiece nothing is done;
+
+            // only check baseType ignore attack bit
+            switch (fType){
+                case Move.FLAG_CASTLE_K -> {
+                    // rook left of the king -> to the corner
+                    movePiece(to - 1, from + (distRight(from)));
+                }
+                case Move.FLAG_CASTLE_Q -> {
+                    // rook one right of the king -> to the corner
+                    movePiece(to + 1, from - (distLeft(from)));
+                }
+                case Move.FLAG_EN_PASSANT -> {
+                    // get the offset to the pawnField
+                    int dir = Integer.compare(from, to) * 8;
+
+                    MoveOnBoard(UndoMoveInfo.takenPiece(undoInfo),to + dir, to + dir);
+                }
+                default -> {
+                    // TODO: Promotion
+                }
+            }
+
+            updateHelper();
         }
 
         // =====================================================================
@@ -292,7 +342,6 @@ public final class PositionEncoder {
                     if (p != Piece.EMPTY_PIECE) {
                         if (Piece.color(p) != kingColor) {
                             int type = Piece.pieceT(p);
-
                             if (dir < 4) {
                                 // straight rays Rook or Queen
                                 if (type == Piece.ROOK || type == Piece.QUEEN) return true;
@@ -354,6 +403,14 @@ public final class PositionEncoder {
         // =====================================================================
         // Internal helpers
         // =====================================================================
+
+        private int distLeft(int pos){
+            return pos % SIZE;
+        }
+
+        private int distRight(int pos){
+            return SIZE - ((pos % SIZE) + 1);
+        }
 
         private void movePiece(int from, int to) {
             int movedPiece = pieceMap[from];
