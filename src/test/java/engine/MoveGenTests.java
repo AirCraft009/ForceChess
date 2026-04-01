@@ -517,7 +517,7 @@ class MoveGenTest {
         void centerBishop13Moves() {
             var pos = emptyPosition();
             place(pos, true, Piece.BISHOP, sq(4, 4));
-            place(pos, true,  Piece.KING, sq(0, 0));
+            place(pos, true,  Piece.KING, sq(1, 0));    // move king out of way of
             place(pos, false, Piece.KING, sq(7, 7));
             assertEquals(13, countFrom(genPseudo(pos, true), sq(4,4)));
         }
@@ -527,7 +527,7 @@ class MoveGenTest {
         void cornerA1Bishop7Moves() {
             var pos = emptyPosition();
             place(pos, true, Piece.BISHOP, sq(0, 0));
-            place(pos, true,  Piece.KING, sq(7, 7));
+            place(pos, true,  Piece.KING, sq(6, 7));    // move king out of way
             place(pos, false, Piece.KING, sq(5, 6));
             assertEquals(7, countFrom(genPseudo(pos, true), sq(0,0)));
         }
@@ -688,7 +688,7 @@ class MoveGenTest {
         void centerQueen27Moves() {
             var pos = emptyPosition();
             place(pos, true, Piece.QUEEN, sq(4, 4));
-            place(pos, true,  Piece.KING, sq(0, 0));
+            place(pos, true,  Piece.KING, sq(1, 0));        // move King
             place(pos, false, Piece.KING, sq(7, 7));
             assertEquals(27, countFrom(genPseudo(pos, true), sq(4,4)));
         }
@@ -698,7 +698,7 @@ class MoveGenTest {
         void cornerA1Queen21Moves() {
             var pos = emptyPosition();
             place(pos, true, Piece.QUEEN, sq(0, 0));
-            place(pos, true,  Piece.KING, sq(7, 7));
+            place(pos, true,  Piece.KING, sq(6, 7));        // move King
             place(pos, false, Piece.KING, sq(5, 6));
             assertEquals(21, countFrom(genPseudo(pos, true), sq(0,0)));
         }
