@@ -95,10 +95,14 @@ public final class Move {
         for (int sq = 0; sq < 64; sq++) {
             long b = 1L << sq;
             KING_LOOKUP[sq] =
-                    ((b << 8) & ~ROW_1)                   // up 1
-                            | ((b >>> 8) & ~ROW_8)         // down 1
-                            | ((b << 1) & ~FILE_A)        // right 1
-                            | ((b >>> 1) & ~FILE_H);        // left 1
+                    ((b << 8) & ~ROW_1)                             // up
+                            | ((b >>> 8) & ~ROW_8)                  // down
+                            | ((b << 1) & ~FILE_A)                  // right
+                            | ((b >>> 1) & ~FILE_H)                 // left
+                            | ((b << 9) & ~(ROW_1 | FILE_A))        // up right
+                            | ((b << 7) & ~(ROW_1 | FILE_H))        // up left
+                            | ((b >>> 9) & ~(ROW_8 | FILE_A))       // down right
+                            | ((b >>> 7) & ~(ROW_8 | FILE_H));      // down left
         }
     }
 
