@@ -17,8 +17,8 @@ public final class Piece {
     public static final int PAWN   = 6;
 
     //helper
-    public static boolean color(int Piece){ return ((Piece) & 0x1) == 1L; }
-    public static int pieceT(int Piece){ return (Piece >>> 1) & 0x7;}
+    public static boolean color(int Piece){ return ((Piece >> 3) & 0x1) == 1L; }
+    public static int pieceT(int Piece){ return (Piece) & 0x7;}
     public static int of(boolean color, int PieceT){
         if (color){
             return PieceT;

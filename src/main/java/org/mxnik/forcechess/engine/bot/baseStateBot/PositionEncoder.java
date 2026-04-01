@@ -7,6 +7,7 @@ import java.util.Arrays;
 
 import static org.mxnik.forcechess.Util.RayDetection.*;
 import static org.mxnik.forcechess.Util.RayDetection.KNIGHT_COL;
+import static org.mxnik.forcechess.engine.bot.baseStateBot.PositionBuilder.*;
 
 /**
  * PositionEncoder
@@ -75,9 +76,7 @@ public final class PositionEncoder {
 
     private PositionEncoder() {}
 
-    // -------------------------------------------------------------------------
     // Public API
-    // -------------------------------------------------------------------------
 
     public static float[][][] encode(Position pos) {
         float[][][] tensor = new float[PLANES][SIZE][SIZE];
@@ -130,9 +129,7 @@ public final class PositionEncoder {
         fillPlane(tensor[PLANE_FIFTY], Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
     }
 
-    // -------------------------------------------------------------------------
     // Private helpers
-    // -------------------------------------------------------------------------
 
     private static void encodeBitboard(long bitboard, float[][] plane) {
         long b = bitboard;
@@ -155,9 +152,7 @@ public final class PositionEncoder {
                 java.util.Arrays.fill(row, 0.0f);
     }
 
-    // -------------------------------------------------------------------------
     // Position
-    // -------------------------------------------------------------------------
 
     /**
      * Position container — all bitboards are raw longs.
@@ -169,7 +164,7 @@ public final class PositionEncoder {
      */
     public static final class Position {
 
-        // ---- Piece bitboards (raw longs) ------------------------------------
+        //  Piece bitboards (raw longs)
         public long WPawns;
         public long WKnights;
         public long WBishops;
@@ -184,7 +179,7 @@ public final class PositionEncoder {
         public long BQueens;
         public long BKing;
 
-        // ---- Context bitboards ----------------------------------------------
+        //  Context bitboards
         public long WDoublePawnMove;
         public long BDoublePawnMove;
         public long enPassant;      // bitboard form (kept for ray use)
@@ -192,34 +187,32 @@ public final class PositionEncoder {
         public long WPieces;
         public long BPieces;
 
-        // ---- Castling permissions (may castle if rights arise) ---------------
+        //  Castling permissions (may castle if rights arise)
         public boolean WQueenCastlePerm;
         public boolean WKingCastlePerm;
         public boolean BQueenCastlePerm;
         public boolean BKingCastlePerm;
 
-        // ---- Castling rights (current game state) ---------------------------
+        //  Castling rights (current game state)
         public boolean WQueenCastle;
         public boolean WKingCastle;
         public boolean BQueenCastle;
         public boolean BKingCastle;
 
-        // ---- En passant: -1 if none, otherwise target square index ----------
+        //  En passant: -1 if none, otherwise target square index
         public int enPassantSquare = -1;
 
-        // ---- Side to move ---------------------------------------------------
+        // Side to move
         public boolean whiteToMove = true;
 
-        // ---- Fifty-move rule counter (0–100) --------------------------------
+        //  Fifty-move rule counter (0–100)
         public int fiftyMoveCounter = 0;
 
-        // ---- Piece map: Color(1 bit) | PieceType(3 bits) per square ---------
+        // Piece map: Color(1 bit) | PieceType(3 bits) per square
         public byte[] pieceMap = new byte[64];
 
 
-        // =====================================================================
         // Make / Unmake
-        // =====================================================================
 
         public int makeMove(int move){
             int undo = makeMoveCore(move);
@@ -313,9 +306,7 @@ public final class PositionEncoder {
             updateHelper();
         }
 
-        // =====================================================================
         // Check detection
-        // =====================================================================
 
         public boolean checkChess(boolean color) {
             return color
@@ -400,9 +391,7 @@ public final class PositionEncoder {
             return false;
         }
 
-        // =====================================================================
         // Internal helpers
-        // =====================================================================
 
         private int distLeft(int pos){
             return pos % SIZE;
@@ -493,9 +482,7 @@ public final class PositionEncoder {
             }
         }
 
-        // =====================================================================
         // Lookup helpers (return the long value, not a reference)
-        // =====================================================================
 
         /** Returns the current value of the bitboard for the given piece byte. */
         public long getLongFromPiece(int p) {
@@ -529,9 +516,7 @@ public final class PositionEncoder {
             }
         }
 
-        // =====================================================================
-        // Starting position
-        // =====================================================================
+        // default position
 
         public static Position StartingPosition() {
             Position p = new Position();
@@ -597,9 +582,19 @@ public final class PositionEncoder {
         }
     }
 
-    // -------------------------------------------------------------------------
-    // Smoke test
-    // -------------------------------------------------------------------------
+    public static void doublePushFromStart() {
+        var pos = new PositionBuilder()
+                .white(Piece.KING, E1).black(KING, E8)
+                .white(PAWN, E2)
+                .build();
+        int[] moves = new int[100];
+        int a = MoveGen.generateMoves(pos, 0, true, moves);
+        for (int i = 0; i < a; i++) {
+            System.out.printf("%d -> %d\n", Move.from(moves[i]), Move.to(moves[i]));
+        }
+        System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
+    }
+
 
     public static void main(String[] args) {
         Position pos = Position.StartingPosition();
@@ -643,5 +638,7 @@ public final class PositionEncoder {
         pos.makeMove(moves[4]);
         System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
         System.out.println(Arrays.toString(pos.pieceMap));
+
+        doublePushFromStart();
     }
 }
