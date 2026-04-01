@@ -127,18 +127,18 @@ public class MoveGen {
 
     private static int generateMovesB(PositionEncoder.Position pos, int offset, int[] moves) {
         // Pawn pushes — can't land on any occupied square
-        long singleP = (pos.BPawns >> PositionEncoder.SIZE) & ~pos.Occupied;
+        long singleP = (pos.BPawns >>> PositionEncoder.SIZE) & ~pos.Occupied;
         // log. and with single push because every double push has to also have a single push avail. if not then pawn + firstRank = blocked
-        long doubleP = (((pos.BPawns & pos.BDoublePawnMove) >> PositionEncoder.SIZE * 2) & ~pos.Occupied) & singleP >> PositionEncoder.SIZE;
+        long doubleP = (((pos.BPawns & pos.BDoublePawnMove) >>> PositionEncoder.SIZE * 2) & ~pos.Occupied) & singleP >>> PositionEncoder.SIZE;
 
 
         // Pawn attacks — must land on enemy square
-        long attackL = (pos.BPawns >> PositionEncoder.SIZE - 1) & pos.WPieces;
-        long attackR = (pos.BPawns >> PositionEncoder.SIZE + 1) & pos.WPieces;
+        long attackL = (pos.BPawns >>> PositionEncoder.SIZE - 1) & pos.WPieces;
+        long attackR = (pos.BPawns >>> PositionEncoder.SIZE + 1) & pos.WPieces;
 
         // En passant attacks
-        long enPassantL = (pos.BPawns >> PositionEncoder.SIZE - 1) & pos.enPassant;
-        long enPassantR = (pos.BPawns >> PositionEncoder.SIZE + 1) & pos.enPassant;
+        long enPassantL = (pos.BPawns >>> PositionEncoder.SIZE - 1) & pos.enPassant;
+        long enPassantR = (pos.BPawns >>> PositionEncoder.SIZE + 1) & pos.enPassant;
 
         offset = formatPawnMoves(singleP,     -PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC, moves);
         offset = formatPawnMoves(doubleP,     -PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, moves);

@@ -12,7 +12,7 @@ public final class UndoMoveInfo {
     public static int to(int info){return Move.to(move(info));}
     public static int flags(int info){return Move.flags(move(info));}
 
-    public static int takenPiece(int info){ return (info >> TAKEN_PIECE_SHIFT) & TAKEN_PIECE_MASK;}
+    public static int takenPiece(int info){ return (info >>> TAKEN_PIECE_SHIFT) & TAKEN_PIECE_MASK;}
 
     private final static int MOVE_MASK = 0x7FFF;
     private final static int TAKEN_PIECE_MASK = 0xF;

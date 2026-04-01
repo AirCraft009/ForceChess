@@ -67,7 +67,7 @@ public final class Move {
     // FILE_A and B
     static final long FILE_AB = FILE_A | (FILE_A << 1);
     //FILE_A and H
-    static final long FILE_GH = FILE_H | (FILE_H >> 1);
+    static final long FILE_GH = FILE_H | (FILE_H >>> 1);
 
     // Top-Border
     public static final long ROW_8 = 0xFF00000000000000L;
