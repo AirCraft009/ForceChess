@@ -22,7 +22,7 @@ public class MoveGen {
 
             if (pos.checkChess(whiteToMove)){
                 pseudoOffset --;                            // one less move
-                place = Math.max(0, place--);               // next move should be at same pos
+                place = Math.max(0, place-1);               // next move should be at same pos
 
                 pos.unmakeMove(undo);
                 continue;                                   // don't add move
@@ -57,7 +57,9 @@ public class MoveGen {
     private static int generateMovesW(PositionEncoder.Position pos, int offset, int[] moves) {
         // Pawn pushes — can't land on any occupied square
         long singleP = (pos.WPawns << PositionEncoder.SIZE) & ~pos.Occupied;
-        long doubleP = ((pos.WPawns & pos.WDoublePawnMove) << PositionEncoder.SIZE * 2) & ~pos.Occupied;
+        // log. and with single push because every double push has to also have a single push avail. if not then pawn + firstRank = blocked
+        long doubleP = (((pos.WPawns & pos.WDoublePawnMove) << PositionEncoder.SIZE * 2) & ~pos.Occupied) & singleP << PositionEncoder.SIZE;
+
 
         // Pawn attacks — must land on enemy square
         long attackL = (pos.WPawns << PositionEncoder.SIZE - 1) & pos.BPieces;
@@ -124,24 +126,26 @@ public class MoveGen {
     // -------------------------------------------------------------------------
 
     private static int generateMovesB(PositionEncoder.Position pos, int offset, int[] moves) {
-        // Pawn pushes
-        long singleP = (pos.BPawns << PositionEncoder.SIZE) & ~pos.Occupied;
-        long doubleP = ((pos.BPawns & pos.BDoublePawnMove) << PositionEncoder.SIZE * 2) & ~pos.Occupied;
+        // Pawn pushes — can't land on any occupied square
+        long singleP = (pos.BPawns >> PositionEncoder.SIZE) & ~pos.Occupied;
+        // log. and with single push because every double push has to also have a single push avail. if not then pawn + firstRank = blocked
+        long doubleP = (((pos.BPawns & pos.BDoublePawnMove) >> PositionEncoder.SIZE * 2) & ~pos.Occupied) & singleP >> PositionEncoder.SIZE;
 
-        // Pawn attacks
-        long attackL = (pos.BPawns << PositionEncoder.SIZE - 1) & pos.WPieces;
-        long attackR = (pos.BPawns << PositionEncoder.SIZE + 1) & pos.WPieces;
 
-        // En passant
-        long enPassantL = (pos.BPawns << PositionEncoder.SIZE - 1) & pos.enPassant;
-        long enPassantR = (pos.BPawns << PositionEncoder.SIZE + 1) & pos.enPassant;
+        // Pawn attacks — must land on enemy square
+        long attackL = (pos.BPawns >> PositionEncoder.SIZE - 1) & pos.WPieces;
+        long attackR = (pos.BPawns >> PositionEncoder.SIZE + 1) & pos.WPieces;
 
-        offset = formatPawnMoves(singleP,     PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC, moves);
-        offset = formatPawnMoves(doubleP,     PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC,           moves);
-        offset = formatPawnMoves(attackL,     PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE,     moves);
-        offset = formatPawnMoves(attackR,     PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE,      moves);
-        offset = formatPawnMoves(enPassantL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  moves);
-        offset = formatPawnMoves(enPassantR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE,  moves);
+        // En passant attacks
+        long enPassantL = (pos.BPawns >> PositionEncoder.SIZE - 1) & pos.enPassant;
+        long enPassantR = (pos.BPawns >> PositionEncoder.SIZE + 1) & pos.enPassant;
+
+        offset = formatPawnMoves(singleP,     -PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC, moves);
+        offset = formatPawnMoves(doubleP,     -PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, moves);
+        offset = formatPawnMoves(attackL,     -PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE, moves);
+        offset = formatPawnMoves(attackR,     -PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE, moves);
+        offset = formatPawnMoves(enPassantL,  -PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, moves);
+        offset = formatPawnMoves(enPassantR,  -PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, moves);
         //TODO: Promotion
 
         // Knights
@@ -149,7 +153,7 @@ public class MoveGen {
         while (!Bitboard.isEmpty(knights)) {
             int sq = Bitboard.lsb(knights);
             knights = Bitboard.popLsb(knights);
-            offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KNIGHT_LOOKUP[sq], sq, offset, moves);
+            offset = drainBitboard(pos.BPieces, pos.WPieces, rookMoves(sq, pos.Occupied, pos.BPieces), sq, offset, moves);
         }
 
         // Bishops
