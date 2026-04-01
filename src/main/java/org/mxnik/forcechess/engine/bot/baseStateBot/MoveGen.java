@@ -231,7 +231,12 @@ public class MoveGen {
         long b = 1L << square;
 
         while (true) {
-            b <<= delta;
+            if(delta > 0) {
+                b <<= delta;
+            }else {
+                // flip to positive and shift logically
+                b >>>= -delta;
+            }
             // check with inverted border
             b &= ~border;
             if (b == 0L) break;   // fell off the board
