@@ -86,19 +86,19 @@ public final class Move {
                             | ((b << 15) & ~FILE_H)         // up 2, left 1
                             | ((b << 10) & ~FILE_AB)        // up 1, right 2
                             | ((b <<  6) & ~FILE_GH)        // up 1, left 2
-                            | ((b >>  6) & ~FILE_AB)        // down 1, right 2
-                            | ((b >> 10) & ~FILE_GH)        // down 1, left 2
-                            | ((b >> 15) & ~FILE_A)         // down 2, right 1
-                            | ((b >> 17) & ~FILE_H);        // down 2, left 1
+                            | ((b >>>  6) & ~FILE_AB)        // down 1, right 2
+                            | ((b >>> 10) & ~FILE_GH)        // down 1, left 2
+                            | ((b >>> 15) & ~FILE_A)         // down 2, right 1
+                            | ((b >>> 17) & ~FILE_H);        // down 2, left 1
         }
 
         for (int sq = 0; sq < 64; sq++) {
             long b = 1L << sq;
             KING_LOOKUP[sq] =
                     ((b << 8) & ~ROW_1)                   // up 1
-                            | ((b >> 8) & ~ROW_8)         // down 1
+                            | ((b >>> 8) & ~ROW_8)         // down 1
                             | ((b << 1) & ~FILE_A)        // right 1
-                            | ((b >> 1) & ~FILE_H);        // left 1
+                            | ((b >>> 1) & ~FILE_H);        // left 1
         }
     }
 
