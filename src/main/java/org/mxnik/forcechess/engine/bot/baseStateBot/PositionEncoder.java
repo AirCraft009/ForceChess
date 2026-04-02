@@ -229,7 +229,6 @@ public final class PositionEncoder {
             int from      = Move.from(move);
             int to        = Move.to(move);
             int moveType  = Move.flags(move);
-            int takenPiece = Piece.EMPTY_PIECE;
 
             switch (moveType) {
                 case Move.FLAG_CASTLE_K_CAPTURE,
@@ -293,8 +292,9 @@ public final class PositionEncoder {
 
                 }
             }
+            byte currentPerms = castlePerms;
             updateCastlePerms(from, to);
-            return UndoMoveInfo.of(move, movePiece(from, to));
+            return UndoMoveInfo.of(move, movePiece(from, to), currentPerms);
         }
 
         public void unmakeMove(int undoInfo) {
@@ -302,13 +302,15 @@ public final class PositionEncoder {
             int from      = Move.from(move);
             int to        = Move.to(move);
             int flags = Move.flags(move);
-
             boolean fAttack = Move.attackFromFlag(flags);
             int fType = Move.baseFlag(flags);
+
+            int colorOfMovedPiece = Piece.colorInt(pieceMap[to]);
 
             movePiece(to, from);
 
             PlaceOnBoard(UndoMoveInfo.takenPiece(undoInfo), to);     // sets takenPiece -> if emptyPiece nothing is done;
+            pieceMap[to] = (byte) UndoMoveInfo.takenPiece(undoInfo);
 
             // only check baseType ignore attack bit
             switch (fType){
@@ -326,10 +328,14 @@ public final class PositionEncoder {
 
                     PlaceOnBoard(UndoMoveInfo.takenPiece(undoInfo),to + dir);
                 }
+                case Move.FLAG_PROMOTE_Q, Move.FLAG_PROMOTE_R, Move.FLAG_PROMOTE_B, Move.FLAG_PROMOTE_N  -> {
+                    PlaceOnBoard(Piece.of(colorOfMovedPiece, Piece.PAWN), to);
+                }
                 default -> {
-                    // TODO: Promotion
                 }
             }
+
+            castlePerms = UndoMoveInfo.castlePerms(undoInfo);
 
             updateHelper();
         }
