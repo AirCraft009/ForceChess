@@ -16,13 +16,14 @@ public class MoveGen {
      */
     public static int generateMoves(PositionEncoder.Position pos, int offset, boolean whiteToMove, int[] moves) {
         int pseudoOffset = generatePseudoMoves(pos, offset, whiteToMove, moves);
-        int place = 0;                                      // where next move should be places ( after illegal move -> rearrange moves)
+        int legalOffset = pseudoOffset;
+
+        int place = offset;                                 // where next move should be places ( after illegal move -> rearrange moves)
         for (int i = offset; i < pseudoOffset; i++) {
             int undo = pos.makeMove(moves[i]);
 
             if (pos.checkChess(whiteToMove)){
-                pseudoOffset --;                            // one less move
-                place = Math.max(0, place-1);               // next move should be at same pos
+                legalOffset --;                            // one less move
 
                 pos.unmakeMove(undo);
                 continue;                                   // don't add move
@@ -32,7 +33,7 @@ public class MoveGen {
             place ++;
             pos.unmakeMove(undo);
         }
-        return pseudoOffset;
+        return legalOffset;
     }
 
 
