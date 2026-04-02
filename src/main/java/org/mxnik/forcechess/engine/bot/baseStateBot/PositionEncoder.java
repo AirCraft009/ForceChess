@@ -251,6 +251,11 @@ public final class PositionEncoder {
                     int dir = Integer.compare(from, to) * 8;
                     int p = pieceMap[to+dir];
                     clearOnBoard(p, to+dir);
+
+                    byte currentPerms = castlePerms;
+                    movePiece(from, to);
+                    updateCastlePerms(from, to);
+                    return UndoMoveInfo.of(move, p, currentPerms);
                 }
                 case Move.FLAG_PROMOTE_Q, Move.FLAG_PROMOTE_Q_CAPTURE -> {
                     int p = pieceMap[from];                                 //  remove the pawn
@@ -304,13 +309,13 @@ public final class PositionEncoder {
             int flags = Move.flags(move);
             boolean fAttack = Move.attackFromFlag(flags);
             int fType = Move.baseFlag(flags);
-
+            int takenPiece = UndoMoveInfo.takenPiece(undoInfo);
             int colorOfMovedPiece = Piece.colorInt(pieceMap[to]);
 
             movePiece(to, from);
 
-            PlaceOnBoard(UndoMoveInfo.takenPiece(undoInfo), to);     // sets takenPiece -> if emptyPiece nothing is done;
-            pieceMap[to] = (byte) UndoMoveInfo.takenPiece(undoInfo);
+            PlaceOnBoard(takenPiece, to);     // sets takenPiece -> if emptyPiece nothing is done;
+            pieceMap[to] = (byte) takenPiece;
 
             // only check baseType ignore attack bit
             switch (fType){
@@ -325,8 +330,12 @@ public final class PositionEncoder {
                 case Move.FLAG_EN_PASSANT -> {
                     // get the offset to the pawnField
                     int dir = Integer.compare(from, to) * 8;
+                    PlaceOnBoard(takenPiece,to + dir);
+                    pieceMap[to+dir] = (byte) takenPiece;
 
-                    PlaceOnBoard(UndoMoveInfo.takenPiece(undoInfo),to + dir);
+                    // en-passant field was set as BPawn field
+                    pieceMap[to] = Piece.EMPTY_PIECE;       // reset the en-passant field to Empty
+                    clearOnBoard(takenPiece, to);
                 }
                 case Move.FLAG_PROMOTE_Q, Move.FLAG_PROMOTE_R, Move.FLAG_PROMOTE_B, Move.FLAG_PROMOTE_N  -> {
                     PlaceOnBoard(Piece.of(colorOfMovedPiece, Piece.PAWN), to);
@@ -449,7 +458,6 @@ public final class PositionEncoder {
 
             // Remove any captured piece from its bitboard
             clearOnBoard(takenPiece, to);
-
 
             // Keep pieceMap in sync
             pieceMap[to]   = (byte) movedPiece;
