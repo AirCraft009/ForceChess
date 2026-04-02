@@ -223,6 +223,7 @@ public final class PositionEncoder {
             int from      = Move.from(move);
             int to        = Move.to(move);
             int moveType  = Move.flags(move);
+            int takenPiece = Piece.EMPTY_PIECE;
 
             switch (moveType) {
                 case Move.FLAG_CASTLE_K_CAPTURE,
@@ -233,38 +234,60 @@ public final class PositionEncoder {
                         "En-Passant can't be a normal (non-capture): " + Integer.toBinaryString(moveType));
 
                 case Move.FLAG_CASTLE_K-> {
-
                     // rook in the corner -> one left of the kings new pos
                     movePiece(from + (distRight(from)), to - 1);
-                    movePiece(from, to);
-
-                    return UndoMoveInfo.of(move, Piece.EMPTY_PIECE);
                 }
                 case Move.FLAG_CASTLE_Q -> {
                     // rook in the corner -> one right of the kings new pos
                     movePiece(from - (distLeft(from)), to + 1);
-                    movePiece(from, to);
-
-                    return UndoMoveInfo.of(move, Piece.EMPTY_PIECE);
                 }
-                case Move.FLAG_GENERIC_CAPTURE -> {
-                    int takenPiece = pieceMap[to];
-                    movePiece(from, to);
-                    return UndoMoveInfo.of(move, takenPiece);
-                }
+                case Move.FLAG_GENERIC_CAPTURE -> {}
                 case Move.FLAG_EN_PASSANT_CAPTURE -> {
-                    // flip the lowest bit (color) because other piece is a pawn
-                    int takenPiece = pieceMap[from] ^ 1;
-                    movePiece(from, to);
-                    return UndoMoveInfo.of(move, takenPiece);
+                    int dir = Integer.compare(from, to) * 8;
+                    int p = pieceMap[to+dir];
+                    clearOnBoard(p, to+dir);
                 }
+                case Move.FLAG_PROMOTE_Q, Move.FLAG_PROMOTE_Q_CAPTURE -> {
+                    int p = pieceMap[from];                                 //  remove the pawn
+                    clearOnBoard(p, from);                                  // ------------------
+                    int placedP = Piece.of(Piece.colorInt(p), Piece.QUEEN);
+                    PlaceOnBoard(placedP, from);                            // place a Queen on the from-pos
+                    pieceMap[from] = (byte) placedP;                        // also replace it in the pieceMap so that after the move below the Queen is in the correct pos
+                    // example:
+                    // WPawn (b7); BRook (a8)
+                    // delete Pawn -> replace with Queen of same color
+                    // now the movePiece below will capture the Rook with the queen and the pos will be correct again.
+                }
+                case Move.FLAG_PROMOTE_R, Move.FLAG_PROMOTE_R_CAPTURE -> {
+                    //  remove the pawn
+                    int p = pieceMap[from];
+                    clearOnBoard(p, from);
+                    int placedP = Piece.of(Piece.colorInt(p), Piece.ROOK);
+                    PlaceOnBoard(placedP, from);
+                    pieceMap[from] = (byte) placedP;
+                }
+                case Move.FLAG_PROMOTE_B, Move.FLAG_PROMOTE_B_CAPTURE -> {
+                    //  remove the pawn
+                    int p = pieceMap[from];
+                    clearOnBoard(p, from);
+                    int placedP = Piece.of(Piece.colorInt(p), Piece.BISHOP);
+                    PlaceOnBoard(placedP, from);
+                    pieceMap[from] = (byte) placedP;
+                }
+                case Move.FLAG_PROMOTE_N, Move.FLAG_PROMOTE_N_CAPTURE -> {
+                    //  remove the pawn
+                    int p = pieceMap[from];
+                    clearOnBoard(p, from);
+                    int placedP = Piece.of(Piece.colorInt(p), Piece.KNIGHT);
+                    PlaceOnBoard(placedP, from);
+                    pieceMap[from] = (byte) placedP;
+                }
+
                 default -> {
-                    // FLAG_GENERIC and anything else
-                    //TODO: handle Promotions
-                    movePiece(from, to);
-                    return UndoMoveInfo.of(move, Piece.EMPTY_PIECE);
+
                 }
             }
+            return UndoMoveInfo.of(move, movePiece(from, to));
         }
 
         public void unmakeMove(int undoInfo) {
@@ -278,8 +301,7 @@ public final class PositionEncoder {
 
             movePiece(to, from);
 
-            // first clears bit (does nothing no piece there) then sets it;
-            MoveOnBoard(UndoMoveInfo.takenPiece(undoInfo), to, to);     // sets takenPiece -> if emptyPiece nothing is done;
+            PlaceOnBoard(UndoMoveInfo.takenPiece(undoInfo), to);     // sets takenPiece -> if emptyPiece nothing is done;
 
             // only check baseType ignore attack bit
             switch (fType){
@@ -295,7 +317,7 @@ public final class PositionEncoder {
                     // get the offset to the pawnField
                     int dir = Integer.compare(from, to) * 8;
 
-                    MoveOnBoard(UndoMoveInfo.takenPiece(undoInfo),to + dir, to + dir);
+                    PlaceOnBoard(UndoMoveInfo.takenPiece(undoInfo),to + dir);
                 }
                 default -> {
                     // TODO: Promotion
@@ -400,7 +422,13 @@ public final class PositionEncoder {
             return SIZE - ((pos % SIZE) + 1);
         }
 
-        private void movePiece(int from, int to) {
+        /**
+         * moves a piece and keeps the pieceMap in sync
+         * @param from start-location
+         * @param to end-location
+         * @return taken-piece (can be an Empty-piece)
+         */
+        private int movePiece(int from, int to) {
             int movedPiece = pieceMap[from];
             int takenPiece = pieceMap[to];
 
@@ -416,11 +444,49 @@ public final class PositionEncoder {
             pieceMap[from] = (byte) Piece.EMPTY_PIECE;
 
             updateHelper();
+            return takenPiece;
+        }
+
+        /**
+         * places a piece on a square at the bitboard level
+         * pieceMap isn't affected
+         * @param piece pieceT with color
+         * @param sq square to place on
+         */
+        private void PlaceOnBoard(int piece, int sq){
+            boolean color = Piece.color(piece);
+            int type      = Piece.pieceT(piece);
+
+            if (color) { // white
+                switch (type) {
+                    case Piece.EMPTY_PIECE -> {}
+                    case Piece.PAWN -> WPawns = Bitboard.set(WPawns, sq);
+                    case Piece.KNIGHT -> WKnights = Bitboard.set(WKnights, sq);
+                    case Piece.BISHOP -> WBishops = Bitboard.set(WBishops, sq);
+                    case Piece.ROOK -> WRooks = Bitboard.set(WRooks, sq);
+                    case Piece.QUEEN -> WQueens = Bitboard.set(WQueens, sq);
+                    case Piece.KING -> WKing = Bitboard.set(WKing, sq);
+                    default -> throw new InvalidPieceTypeException("PlaceOnBoard: unknown white piece type " + type);
+                }
+            }else {
+                switch (type) {
+                    case Piece.EMPTY_PIECE -> {}
+                    case Piece.PAWN -> BPawns = Bitboard.set(BPawns, sq);
+                    case Piece.KNIGHT -> BKnights = Bitboard.set(BKnights, sq);
+                    case Piece.BISHOP -> BBishops = Bitboard.set(BBishops, sq);
+                    case Piece.ROOK -> BRooks = Bitboard.set(BRooks, sq);
+                    case Piece.QUEEN -> BQueens = Bitboard.set(BQueens, sq);
+                    case Piece.KING -> BKing = Bitboard.set(BKing, sq);
+                    default -> throw new InvalidPieceTypeException("PlaceOnBoard: unknown white piece type " + type);
+                }
+            }
         }
 
         /**
          * Moves a piece on its corresponding bitboard (clear from, set to).
          * Looks up the board by piece byte and reassigns the field.
+         *
+         * doesn't affect pieceMap
          */
         private void MoveOnBoard(int piece, int from, int to) {
             boolean color = Piece.color(piece);
@@ -479,6 +545,7 @@ public final class PositionEncoder {
                     default -> throw new InvalidPieceTypeException("clearOnBoard: unknown black piece type " + type);
                 }
             }
+            pieceMap[sq] = 0;
         }
 
         // Lookup helpers (return the long value, not a reference)
