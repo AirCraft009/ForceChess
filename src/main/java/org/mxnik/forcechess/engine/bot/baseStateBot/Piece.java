@@ -20,7 +20,7 @@ public final class Piece {
     public static boolean color(int Piece){ return ((Piece >>> 3) & 0x1) == 1L; }
     public static int pieceT(int Piece){ return (Piece) & 0x7;}
     public static int of(boolean color, int PieceT){
-        if (color){
+        if (!color){
             return PieceT;
         }else {
             return PieceT | 1 << 3;
