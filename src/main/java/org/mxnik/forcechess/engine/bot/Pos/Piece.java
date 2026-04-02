@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.engine.bot.baseStateBot;
+package org.mxnik.forcechess.engine.bot.Pos;
 
 public final class Piece {
     // Color

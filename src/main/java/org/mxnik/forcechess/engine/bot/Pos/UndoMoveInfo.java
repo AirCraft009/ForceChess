@@ -1,7 +1,5 @@
-package org.mxnik.forcechess.engine.bot.baseStateBot;
+package org.mxnik.forcechess.engine.bot.Pos;
 
-
-import eu.hansolo.tilesfx.tools.PrettyListView;
 
 // Info to unmake a move packed into an int
 // bits 0  - 15 : Move (see bit desc. in Move class)

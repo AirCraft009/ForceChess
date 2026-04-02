@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.engine.bot.baseStateBot;
+package org.mxnik.forcechess.engine.bot.Pos;
 
 import org.mxnik.forcechess.Util.Bitboard;
 import org.mxnik.forcechess.Util.Helper;
@@ -7,45 +7,23 @@ import java.util.Arrays;
 
 import static org.mxnik.forcechess.Util.RayDetection.*;
 import static org.mxnik.forcechess.Util.RayDetection.KNIGHT_COL;
-import static org.mxnik.forcechess.engine.bot.baseStateBot.ChessSquares.*;
+import static org.mxnik.forcechess.engine.bot.ChessSquares.*;
 
 /**
  * PositionEncoder
- *
+ * <p>
  * Encodes a chess position into a float[21][8][8] tensor suitable
  * for feeding into an AlphaZero-style NN.
- *
- * Plane layout (21 planes total):
- *
- *  [0]  White pawns
- *  [1]  White knights
- *  [2]  White bishops
- *  [3]  White rooks
- *  [4]  White queens
- *  [5]  White king
- *  [6]  Black pawns
- *  [7]  Black knights
- *  [8]  Black bishops
- *  [9]  Black rooks
- *  [10] Black queens
- *  [11] Black king
- *  [12] White kingside castling right   (all 1s or all 0s)
- *  [13] White queenside castling right
- *  [14] Black kingside castling right
- *  [15] Black queenside castling right
- *  [16] White double pawn moves
- *  [17] Black double pawn moves
- *  [18] En passant target square        (single 1 on target square)
- *  [19] Side to move                    (all 1s = white, all 0s = black)
- *  [20] Fifty-move counter              (normalised to [0,1])
- *
+ * <p>
  * Coordinate convention:
  *   tensor[plane][rank][file]
  *   rank 0 = rank 1 (white's back rank), rank 7 = rank 8
  *   file 0 = a-file, file 7 = h-file
- *
+ * <p>
  * Bit index in each long:
  *   bit = rank * 8 + file
+ *   0 - 63
+ *
  */
 public final class PositionEncoder {
 
@@ -156,11 +134,17 @@ public final class PositionEncoder {
 
     /**
      * Position container — all bitboards are raw longs.
-     * Use the static Bitboard helpers (Bitboard.set, Bitboard.clear, etc.)
-     * to manipulate them; assign the returned value back to the field.
-     *
+     * Use the static Bitboard helpers (Bitboard.set, Bitboard.clear, etc.)to manipulate them;
+     * assign the returned value back to the field.
+     * <p>
+     *   example: <p>
      *   pos.WPawns = Bitboard.set(pos.WPawns, sq);
      *   pos.WPawns = Bitboard.clear(pos.WPawns, sq);
+     * <p>
+     * has a Public API for making moves, unmaking them, checking if the king is in danger.
+     * I don't know if this is the most efficient Java code possible,
+     * but it works and should be faster than any attempt using classes to model the state
+     *
      */
     public static final class Position {
 

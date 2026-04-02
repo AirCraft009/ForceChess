@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.engine.bot.baseStateBot;
+package org.mxnik.forcechess.engine.bot.Pos;
 
 // A move packed into one int:
 // bits 0  - 5 :  from square

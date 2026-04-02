@@ -1,6 +1,4 @@
 package org.mxnik.forcechess.engine.bot;
 
-public class ChessBot {
-
-
+public class AlphaNet {
 }
