@@ -71,13 +71,43 @@ public class MoveGen {
         long enPassantL = (pos.WPawns << PositionEncoder.SIZE - 1) & enPassant;
         long enPassantR = (pos.WPawns << PositionEncoder.SIZE + 1) & enPassant;
 
+        // Promotion
+        // currently only single pushes to promotion might add double later
+        long promotion = singleP & Move.ROW_8;                                      // any pawns landing on the last row can be promoted
+        long attackPromotionL = attackL & Move.ROW_8;
+        long attackPromotionR = attackR & Move.ROW_8;
+
+        // mask the normal pushes with 8'th row. can't choose to not promote
+        singleP &= ~Move.ROW_8;
+        doubleP &= ~Move.ROW_8;
+        attackL &= ~Move.ROW_8;
+        attackR &= ~Move.ROW_8;
+
+        // norm. moves
         offset = formatPawnMoves(singleP,     PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC, moves);
         offset = formatPawnMoves(doubleP,     PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, moves);
         offset = formatPawnMoves(attackL,     PositionEncoder.SIZE - 1, offset, Move.FLAG_GENERIC_CAPTURE, moves);
         offset = formatPawnMoves(attackR,     PositionEncoder.SIZE + 1, offset, Move.FLAG_GENERIC_CAPTURE, moves);
+        // en-passant
         offset = formatPawnMoves(enPassantL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, moves);
         offset = formatPawnMoves(enPassantR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_EN_PASSANT_CAPTURE, moves);
-        //TODO: Promotion
+        // promotions (no capture) 4 unique poss. Rook, Queen, Bishop, Knight
+        offset = formatPawnMoves(promotion,  PositionEncoder.SIZE, offset, Move.FLAG_PROMOTE_Q, moves);
+        offset = formatPawnMoves(promotion,  PositionEncoder.SIZE, offset, Move.FLAG_PROMOTE_R, moves);
+        offset = formatPawnMoves(promotion,  PositionEncoder.SIZE, offset, Move.FLAG_PROMOTE_B, moves);
+        offset = formatPawnMoves(promotion,  PositionEncoder.SIZE, offset, Move.FLAG_PROMOTE_N, moves);
+        // promotions (capture) 8 unique poss. (Rook, Queen, Bishop, Knight) both dir.
+        // left capture
+        offset = formatPawnMoves(attackPromotionL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_PROMOTE_Q_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_PROMOTE_R_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_PROMOTE_B_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionL,  PositionEncoder.SIZE - 1, offset, Move.FLAG_PROMOTE_N_CAPTURE, moves);
+        // right capture
+        offset = formatPawnMoves(attackPromotionR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_PROMOTE_Q_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_PROMOTE_R_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_PROMOTE_B_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionR,  PositionEncoder.SIZE + 1, offset, Move.FLAG_PROMOTE_N_CAPTURE, moves);
+
 
         // Knights
         long knights = pos.WKnights;
