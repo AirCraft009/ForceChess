@@ -153,9 +153,8 @@ public class MoveGen {
         return offset;
     }
 
-    // -------------------------------------------------------------------------
+
     // Black
-    // -------------------------------------------------------------------------
 
     private static int generateMovesB(PositionEncoder.Position pos, int offset, int[] moves) {
         // Pawn pushes — can't land on any occupied square
@@ -173,13 +172,40 @@ public class MoveGen {
         long enPassantL = (pos.BPawns >>> PositionEncoder.SIZE + 1) & enPassant;
         long enPassantR = (pos.BPawns >>> PositionEncoder.SIZE - 1) & enPassant;
 
+        // Promotion
+        // currently only single pushes to promotion might add double later
+        long promotion = singleP & Move.ROW_1;                                      // any pawns landing on the last row can be promoted
+        long attackPromotionL = attackL & Move.ROW_1;
+        long attackPromotionR = attackR & Move.ROW_1;
+
+        // mask the normal pushes with 8'th row. can't choose to not promote
+        singleP &= ~Move.ROW_1;
+        doubleP &= ~Move.ROW_1;
+        attackL &= ~Move.ROW_1;
+        attackR &= ~Move.ROW_1;
+
         offset = formatPawnMoves(singleP,     -PositionEncoder.SIZE,     offset, Move.FLAG_GENERIC, moves);
         offset = formatPawnMoves(doubleP,     -PositionEncoder.SIZE * 2, offset, Move.FLAG_GENERIC, moves);
         offset = formatPawnMoves(attackL,     -(PositionEncoder.SIZE + 1), offset, Move.FLAG_GENERIC_CAPTURE, moves);
         offset = formatPawnMoves(attackR,     -(PositionEncoder.SIZE - 1), offset, Move.FLAG_GENERIC_CAPTURE, moves);
         offset = formatPawnMoves(enPassantL,  -(PositionEncoder.SIZE + 1), offset, Move.FLAG_EN_PASSANT_CAPTURE, moves);
         offset = formatPawnMoves(enPassantR,  -(PositionEncoder.SIZE - 1), offset, Move.FLAG_EN_PASSANT_CAPTURE, moves);
-        //TODO: Promotion
+        // promotions (no capture) 4 unique poss. Rook, Queen, Bishop, Knight
+        offset = formatPawnMoves(promotion,  -PositionEncoder.SIZE, offset, Move.FLAG_PROMOTE_Q, moves);
+        offset = formatPawnMoves(promotion,  -PositionEncoder.SIZE, offset, Move.FLAG_PROMOTE_R, moves);
+        offset = formatPawnMoves(promotion,  -PositionEncoder.SIZE, offset, Move.FLAG_PROMOTE_B, moves);
+        offset = formatPawnMoves(promotion,  -PositionEncoder.SIZE, offset, Move.FLAG_PROMOTE_N, moves);
+        // promotions (capture) 8 unique poss. (Rook, Queen, Bishop, Knight) both dir.
+        // right capture
+        offset = formatPawnMoves(attackPromotionL,  -PositionEncoder.SIZE - 1, offset, Move.FLAG_PROMOTE_Q_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionL,  -PositionEncoder.SIZE - 1, offset, Move.FLAG_PROMOTE_R_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionL,  -PositionEncoder.SIZE - 1, offset, Move.FLAG_PROMOTE_B_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionL,  -PositionEncoder.SIZE - 1, offset, Move.FLAG_PROMOTE_N_CAPTURE, moves);
+        // left capture
+        offset = formatPawnMoves(attackPromotionR,  -PositionEncoder.SIZE + 1, offset, Move.FLAG_PROMOTE_Q_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionR,  -PositionEncoder.SIZE + 1, offset, Move.FLAG_PROMOTE_R_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionR,  -PositionEncoder.SIZE + 1, offset, Move.FLAG_PROMOTE_B_CAPTURE, moves);
+        offset = formatPawnMoves(attackPromotionR,  -PositionEncoder.SIZE + 1, offset, Move.FLAG_PROMOTE_N_CAPTURE, moves);
 
         // Knights
         long knights = pos.BKnights;
