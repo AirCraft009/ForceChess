@@ -989,7 +989,7 @@ class MoveGenTest {
             place(pos, false, Piece.KING, sq(7, 7));
             assertTrue(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
                     Move.from(mv) == sq(4,4) && Move.to(mv) == sq(3,5)
-                            && Move.baseFlag(Move.flags(mv)) == Move.FLAG_EN_PASSANT_CAPTURE));
+                            && Move.flags(mv) == Move.FLAG_EN_PASSANT_CAPTURE));
         }
 
         @Test
@@ -1003,7 +1003,7 @@ class MoveGenTest {
             place(pos, false, Piece.KING, sq(7, 7));
             assertTrue(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
                     Move.from(mv) == sq(4,4) && Move.to(mv) == sq(5,5)
-                            && Move.baseFlag(Move.flags(mv)) == Move.FLAG_EN_PASSANT_CAPTURE));
+                            && Move.flags(mv) == Move.FLAG_EN_PASSANT_CAPTURE));
         }
 
         @Test
@@ -1016,7 +1016,7 @@ class MoveGenTest {
             place(pos, true,  Piece.KING, sq(0, 0));
             place(pos, false, Piece.KING, sq(7, 7));
             assertFalse(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
-                    Move.baseFlag(Move.flags(mv)) == Move.FLAG_EN_PASSANT_CAPTURE));
+                    Move.flags(mv) == Move.FLAG_EN_PASSANT_CAPTURE));
         }
 
         @Test
@@ -1030,7 +1030,7 @@ class MoveGenTest {
             place(pos, false, Piece.KING, sq(7, 7));
             assertTrue(Arrays.stream(genPseudo(pos, false)).anyMatch(mv ->
                     Move.from(mv) == sq(4,3) && Move.to(mv) == sq(5,2)
-                            && Move.baseFlag(Move.flags(mv)) == Move.FLAG_EN_PASSANT_CAPTURE));
+                            && Move.flags(mv) == Move.FLAG_EN_PASSANT_CAPTURE));
         }
 
         @Test
@@ -1044,7 +1044,7 @@ class MoveGenTest {
             place(pos, false, Piece.KING, sq(7, 7));
             assertTrue(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
                     Move.from(mv) == sq(1,4) && Move.to(mv) == sq(0,5)
-                            && Move.baseFlag(Move.flags(mv)) == Move.FLAG_EN_PASSANT_CAPTURE));
+                            && Move.flags(mv) == Move.FLAG_EN_PASSANT_CAPTURE));
         }
 
         @Test
@@ -1058,7 +1058,7 @@ class MoveGenTest {
             place(pos, false, Piece.KING, sq(7, 7));
             assertTrue(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
                     Move.from(mv) == sq(6,4) && Move.to(mv) == sq(7,5)
-                            && Move.baseFlag(Move.flags(mv)) == Move.FLAG_EN_PASSANT_CAPTURE));
+                            && Move.flags(mv) == Move.FLAG_EN_PASSANT_CAPTURE));
         }
     }
 
@@ -1223,25 +1223,25 @@ class MoveGenTest {
         @Test
         @DisplayName("Starting position: white has exactly 20 legal moves")
         void startPosWhite20() {
-            assertEquals(20, genLegal(startPos(), true).length);
+            assertEquals(20, genLegal(PositionEncoder.Position.StartingPosition(), true).length);
         }
 
         @Test
         @DisplayName("Starting position: black has exactly 20 legal moves")
         void startPosBlack20() {
-            assertEquals(20, genLegal(startPos(), false).length);
+            assertEquals(20, genLegal(PositionEncoder.Position.StartingPosition(), false).length);
         }
 
         @Test
         @DisplayName("Perft depth 1 = 20")
         void perftD1() {
-            assertEquals(20, perft(startPos(), 1, true));
+            assertEquals(20, perft(PositionEncoder.Position.StartingPosition(), 1, true));
         }
 
         @Test
         @DisplayName("Perft depth 2 = 400")
         void perftD2() {
-            assertEquals(400, perft(startPos(), 2, true));
+            assertEquals(400, perft(PositionEncoder.Position.StartingPosition(), 2, true));
         }
 
         // Depth 3 (8902) and 4 (197281) — enable once the engine is fast enough.

@@ -182,7 +182,6 @@ public final class PositionEncoder {
         //  Context bitboards
         public long WDoublePawnMove;
         public long BDoublePawnMove;
-        public long enPassant;      // bitboard form (kept for ray use)
         public long Occupied;
         public long WPieces;
         public long BPieces;
@@ -537,7 +536,6 @@ public final class PositionEncoder {
 
             p.WDoublePawnMove = 0x000000000000FF00L; // rank 2
             p.BDoublePawnMove = 0x00FF000000000000L; // rank 7
-            p.enPassant       = 0L;
 
             p.Occupied = 0xFFFF00000000FFFFL;
             p.WPieces  = 0x000000000000FFFFL;
@@ -548,29 +546,33 @@ public final class PositionEncoder {
             p.BKingCastle  = false;
             p.BQueenCastle = false;
 
-            // White piece map
-            p.pieceMap[0]  = Piece.WHITE | (Piece.ROOK   << 1);
-            p.pieceMap[1]  = Piece.WHITE | (Piece.KNIGHT << 1);
-            p.pieceMap[2]  = Piece.WHITE | (Piece.BISHOP << 1);
-            p.pieceMap[3]  = Piece.WHITE | (Piece.QUEEN  << 1);
-            p.pieceMap[4]  = Piece.WHITE | (Piece.KING   << 1);
-            p.pieceMap[5]  = Piece.WHITE | (Piece.BISHOP << 1);
-            p.pieceMap[6]  = Piece.WHITE | (Piece.KNIGHT << 1);
-            p.pieceMap[7]  = Piece.WHITE | (Piece.ROOK   << 1);
-            for (int i = 8; i < 16; i++)
-                p.pieceMap[i] = Piece.WHITE | (Piece.PAWN << 1);
+            // White pieces
+            p.pieceMap[0] = (byte) Piece.of(Piece.WHITE, Piece.ROOK);
+            p.pieceMap[1] = (byte) Piece.of(Piece.WHITE, Piece.KNIGHT);
+            p.pieceMap[2] = (byte) Piece.of(Piece.WHITE, Piece.BISHOP);
+            p.pieceMap[3] = (byte) Piece.of(Piece.WHITE, Piece.QUEEN);
+            p.pieceMap[4] = (byte) Piece.of(Piece.WHITE, Piece.KING);
+            p.pieceMap[5] = (byte) Piece.of(Piece.WHITE, Piece.BISHOP);
+            p.pieceMap[6] = (byte) Piece.of(Piece.WHITE, Piece.KNIGHT);
+            p.pieceMap[7] = (byte) Piece.of(Piece.WHITE, Piece.ROOK);
 
-            // Black piece map
-            p.pieceMap[56] = Piece.BLACK | (Piece.ROOK   << 1);
-            p.pieceMap[57] = Piece.BLACK | (Piece.KNIGHT << 1);
-            p.pieceMap[58] = Piece.BLACK | (Piece.BISHOP << 1);
-            p.pieceMap[59] = Piece.BLACK | (Piece.KING   << 1); // NOTE: was QUEEN at 59 and KING at 60 — fixed to match bitboards (e8=60, d8=59)
-            p.pieceMap[60] = Piece.BLACK | (Piece.QUEEN  << 1);
-            p.pieceMap[61] = Piece.BLACK | (Piece.BISHOP << 1);
-            p.pieceMap[62] = Piece.BLACK | (Piece.KNIGHT << 1);
-            p.pieceMap[63] = Piece.BLACK | (Piece.ROOK   << 1);
-            for (int i = 48; i < 56; i++)
-                p.pieceMap[i] = Piece.BLACK | (Piece.PAWN << 1);
+            for (int i = 8; i < 16; i++) {
+                p.pieceMap[i] = (byte) Piece.of(Piece.WHITE, Piece.PAWN);
+            }
+
+            // Black pieces
+            p.pieceMap[56] = (byte) Piece.of(Piece.BLACK, Piece.ROOK);
+            p.pieceMap[57] = (byte) Piece.of(Piece.BLACK, Piece.KNIGHT);
+            p.pieceMap[58] = (byte) Piece.of(Piece.BLACK, Piece.BISHOP);
+            p.pieceMap[59] = (byte) Piece.of(Piece.BLACK, Piece.KING);   // d8
+            p.pieceMap[60] = (byte) Piece.of(Piece.BLACK, Piece.QUEEN);  // e8
+            p.pieceMap[61] = (byte) Piece.of(Piece.BLACK, Piece.BISHOP);
+            p.pieceMap[62] = (byte) Piece.of(Piece.BLACK, Piece.KNIGHT);
+            p.pieceMap[63] = (byte) Piece.of(Piece.BLACK, Piece.ROOK);
+
+            for (int i = 48; i < 56; i++) {
+                p.pieceMap[i] = (byte) Piece.of(Piece.BLACK, Piece.PAWN);
+            }
 
             return p;
         }
