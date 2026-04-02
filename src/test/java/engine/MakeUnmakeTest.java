@@ -12,20 +12,13 @@ import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * Tests for Position.makeMove() / Position.unmakeMove().
- *
- * Each test:
- *  1. Builds a position
- *  2. Calls makeMove → asserts the board changed correctly
- *  3. Calls unmakeMove → asserts the board is identical to the snapshot taken before makeMove
- *
- * Square constants (row 0 = rank 1, col 0 = a-file):
+ * Test for Make and unmake positions
  */
 @DisplayName("Make / Unmake")
 class MakeUnmakeTest {
 
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
+    // Helpers
 
     static PositionEncoder.Position emptyPosition() {
         var pos = new PositionEncoder.Position();
@@ -60,7 +53,9 @@ class MakeUnmakeTest {
         pos.Occupied |= bit;
     }
 
-    /** Snapshot every field of a Position so we can assert full restoration. */
+    /**
+     * Record to hold state of position so after unmake and the original can be compared
+     */
     record Snapshot(
             long WPawns, long WKnights, long WBishops, long WRooks, long WQueens, long WKing,
             long BPawns, long BKnights, long BBishops, long BRooks, long BQueens, long BKing,
@@ -107,12 +102,10 @@ class MakeUnmakeTest {
         }
     }
 
-    // =========================================================================
-    // 1. Quiet move (FLAG_GENERIC)
-    // =========================================================================
+
 
     @Nested
-    @DisplayName("Quiet move")
+    @DisplayName("Generic Flag")
     class QuietMoveTests {
 
         @Test
@@ -147,9 +140,7 @@ class MakeUnmakeTest {
         }
     }
 
-    // =========================================================================
     // 2. Generic capture (FLAG_GENERIC_CAPTURE)
-    // =========================================================================
 
     @Nested
     @DisplayName("Generic capture")
@@ -187,9 +178,7 @@ class MakeUnmakeTest {
         }
     }
 
-    // =========================================================================
     // 3. Kingside castle (FLAG_CASTLE_K)
-    // =========================================================================
 
     @Nested
     @DisplayName("Kingside castle")
@@ -227,9 +216,7 @@ class MakeUnmakeTest {
         }
     }
 
-    // =========================================================================
     // 4. Queenside castle (FLAG_CASTLE_Q)
-    // =========================================================================
 
     @Nested
     @DisplayName("Queenside castle")
@@ -267,9 +254,7 @@ class MakeUnmakeTest {
         }
     }
 
-    // =========================================================================
     // 5. En passant capture (FLAG_EN_PASSANT_CAPTURE)
-    // =========================================================================
 
     @Nested
     @DisplayName("En passant capture")
@@ -310,9 +295,7 @@ class MakeUnmakeTest {
         }
     }
 
-    // =========================================================================
     // 6. Promotions (quiet)
-    // =========================================================================
 
     @Nested
     @DisplayName("Promotion (quiet)")
@@ -391,9 +374,7 @@ class MakeUnmakeTest {
         }
     }
 
-    // =========================================================================
     // 7. Promotion captures
-    // =========================================================================
 
     @Nested
     @DisplayName("Promotion capture")
@@ -447,9 +428,7 @@ class MakeUnmakeTest {
         }
     }
 
-    // =========================================================================
     // 8. Make / unmake sequence (multiple moves)
-    // =========================================================================
 
     @Nested
     @DisplayName("Multi-move sequence")
