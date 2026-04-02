@@ -146,10 +146,6 @@ class MoveGenTest {
         d.BQueens  = src.BQueens;  d.BKing    = src.BKing;
         d.Occupied = src.Occupied; d.WPieces  = src.WPieces;
         d.BPieces  = src.BPieces;
-        d.WQueenCastlePerm = src.WQueenCastlePerm;
-        d.WKingCastlePerm  = src.WKingCastlePerm;
-        d.BQueenCastlePerm = src.BQueenCastlePerm;
-        d.BKingCastlePerm  = src.BKingCastlePerm;
         d.WQueenCastle = src.WQueenCastle; d.WKingCastle = src.WKingCastle;
         d.BQueenCastle = src.BQueenCastle; d.BKingCastle = src.BKingCastle;
         d.enPassantSquare  = src.enPassantSquare;
@@ -844,7 +840,6 @@ class MoveGenTest {
             place(pos, true, Piece.KING, sq(4, 0)); // e1
             place(pos, true, Piece.ROOK, sq(7, 0)); // h1
             place(pos, false, Piece.KING, sq(4, 7));
-            pos.WKingCastlePerm = true;
             pos.WKingCastle     = true;
             return pos;
         }
@@ -854,7 +849,6 @@ class MoveGenTest {
             place(pos, true, Piece.KING, sq(4, 0)); // e1
             place(pos, true, Piece.ROOK, sq(0, 0)); // a1
             place(pos, false, Piece.KING, sq(4, 7));
-            pos.WQueenCastlePerm = true;
             pos.WQueenCastle     = true;
             return pos;
         }
@@ -948,7 +942,6 @@ class MoveGenTest {
             place(pos, false, Piece.KING, sq(4, 7)); // e8
             place(pos, false, Piece.ROOK, sq(7, 7)); // h8
             place(pos, true,  Piece.KING, sq(4, 0));
-            pos.BKingCastlePerm = true;
             pos.BKingCastle     = true;
             assertTrue(Arrays.stream(genPseudo(pos, false)).anyMatch(mv ->
                     Move.from(mv) == sq(4,7) && Move.to(mv) == sq(6,7)
@@ -962,7 +955,6 @@ class MoveGenTest {
             place(pos, false, Piece.KING, sq(4, 7)); // e8
             place(pos, false, Piece.ROOK, sq(0, 7)); // a8
             place(pos, true,  Piece.KING, sq(4, 0));
-            pos.BQueenCastlePerm = true;
             pos.BQueenCastle     = true;
             assertTrue(Arrays.stream(genPseudo(pos, false)).anyMatch(mv ->
                     Move.from(mv) == sq(4,7) && Move.to(mv) == sq(2,7)
@@ -1184,29 +1176,6 @@ class MoveGenTest {
     @DisplayName("Integration / Perft")
     class IntegrationTests {
 
-        /** Standard chess starting position. */
-        static PositionEncoder.Position startPos() {
-            var pos = emptyPosition();
-            // White back rank
-            place(pos, true, Piece.ROOK,   sq(0,0)); place(pos, true, Piece.KNIGHT, sq(1,0));
-            place(pos, true, Piece.BISHOP, sq(2,0)); place(pos, true, Piece.QUEEN,  sq(3,0));
-            place(pos, true, Piece.KING,   sq(4,0)); place(pos, true, Piece.BISHOP, sq(5,0));
-            place(pos, true, Piece.KNIGHT, sq(6,0)); place(pos, true, Piece.ROOK,   sq(7,0));
-            for (int c = 0; c < 8; c++) place(pos, true, Piece.PAWN, sq(c,1));
-            // Black back rank
-            place(pos, false, Piece.ROOK,   sq(0,7)); place(pos, false, Piece.KNIGHT, sq(1,7));
-            place(pos, false, Piece.BISHOP, sq(2,7)); place(pos, false, Piece.QUEEN,  sq(3,7));
-            place(pos, false, Piece.KING,   sq(4,7)); place(pos, false, Piece.BISHOP, sq(5,7));
-            place(pos, false, Piece.KNIGHT, sq(6,7)); place(pos, false, Piece.ROOK,   sq(7,7));
-            for (int c = 0; c < 8; c++) place(pos, false, Piece.PAWN, sq(c,6));
-            // All castling rights
-            pos.WKingCastlePerm = true;  pos.WKingCastle  = true;
-            pos.WQueenCastlePerm = true; pos.WQueenCastle = true;
-            pos.BKingCastlePerm = true;  pos.BKingCastle  = true;
-            pos.BQueenCastlePerm = true; pos.BQueenCastle = true;
-            return pos;
-        }
-
         static long perft(PositionEncoder.Position pos, int depth, boolean white) {
             if (depth == 0) return 1;
             int[] buf = new int[256];
@@ -1253,7 +1222,7 @@ class MoveGenTest {
         @Test
         @DisplayName("No move has from == to in starting position")
         void noSelfMoves() {
-            for (int m : genPseudo(startPos(), true))
+            for (int m : genPseudo(PositionEncoder.Position.StartingPosition(), true))
                 assertNotEquals(Move.from(m), Move.to(m),
                         "from == to in move: " + Integer.toBinaryString(m));
         }
@@ -1261,7 +1230,7 @@ class MoveGenTest {
         @Test
         @DisplayName("All move squares are within [0, 63]")
         void squaresInBounds() {
-            for (int m : genPseudo(startPos(), true)) {
+            for (int m : genPseudo(PositionEncoder.Position.StartingPosition(), true)) {
                 assertTrue(Move.from(m) >= 0 && Move.from(m) < 64);
                 assertTrue(Move.to(m)   >= 0 && Move.to(m)   < 64);
             }
@@ -1270,14 +1239,14 @@ class MoveGenTest {
         @Test
         @DisplayName("Pseudo-move count >= legal move count in starting position")
         void pseudoGteqLegal() {
-            var pos = startPos();
+            var pos = PositionEncoder.Position.StartingPosition();
             assertTrue(genPseudo(pos, true).length >= genLegal(pos, true).length);
         }
 
         @Test
         @DisplayName("Offset parameter: moves are appended at the correct index")
         void offsetParameterRespected() {
-            var pos = startPos();
+            var pos = PositionEncoder.Position.StartingPosition();
             int[] buf = new int[512];
             int offset = 50;
             int newOffset = MoveGen.generatePseudoMoves(pos, offset, true, buf);

@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 import static org.mxnik.forcechess.Util.RayDetection.*;
 import static org.mxnik.forcechess.Util.RayDetection.KNIGHT_COL;
-import static org.mxnik.forcechess.engine.bot.baseStateBot.PositionBuilder.*;
+import static org.mxnik.forcechess.engine.bot.baseStateBot.ChessSquares.*;
 
 /**
  * PositionEncoder
@@ -186,11 +186,17 @@ public final class PositionEncoder {
         public long WPieces;
         public long BPieces;
 
-        //  Castling permissions (may castle if rights arise)
-        public boolean WQueenCastlePerm;
-        public boolean WKingCastlePerm;
-        public boolean BQueenCastlePerm;
-        public boolean BKingCastlePerm;
+        // Castling permissions (may castle if rights arise)
+        // bit 0 = WKingC
+        // bit 1 = WQueenC
+        // bit 2 = BKingC
+        // bit 3 = BQueenC
+        public byte castlePerms;
+
+        public static final byte W_KINGSIDE  = 0b0001;
+        public static final byte W_QUEENSIDE = 0b0010;
+        public static final byte B_KINGSIDE  = 0b0100;
+        public static final byte B_QUEENSIDE = 0b1000;
 
         //  Castling rights (current game state)
         public boolean WQueenCastle;
@@ -287,6 +293,7 @@ public final class PositionEncoder {
 
                 }
             }
+            updateCastlePerms(from, to);
             return UndoMoveInfo.of(move, movePiece(from, to));
         }
 
@@ -331,12 +338,11 @@ public final class PositionEncoder {
 
         public boolean checkChess(boolean color) {
             return color
-                    ? checkChess(WKing, true)
-                    : checkChess(BKing, false);
+                    ? checkChess(Bitboard.lsb(WKing), true)         // lsb returned das square
+                    : checkChess(Bitboard.lsb(BKing), false);
         }
 
-        private boolean checkChess(long kingBoard, boolean kingColor) {
-            int kingPos = Bitboard.lsb(kingBoard);
+        private boolean checkChess(int kingPos, boolean kingColor) {
             int kingRow = Helper.getRow(kingPos);
             int kingCol = Helper.getCol(kingPos);
 
@@ -582,6 +588,26 @@ public final class PositionEncoder {
             }
         }
 
+        // castle helpers
+
+        private void updateCastlePerms(int from, int to){
+            // these squares are fixed by the rules of chess
+            if (from == E1 || to == E1) castlePerms &= ~(W_KINGSIDE | W_QUEENSIDE);
+            if (from == H1 || to == H1) castlePerms &= ~W_KINGSIDE;
+            if (from == A1 || to == A1) castlePerms &= ~W_QUEENSIDE;
+            if (from == E8 || to == E8) castlePerms &= ~(B_KINGSIDE | B_QUEENSIDE);
+            if (from == H8 || to == H8) castlePerms &= ~B_KINGSIDE;
+            if (from == A8 || to == A8) castlePerms &= ~B_QUEENSIDE;
+        }
+
+        public void revoke(byte Perm){
+            castlePerms &= (byte) ~Perm;
+        }
+
+        public boolean queryPerms(byte Perm){
+            return (castlePerms & Perm) != 0;
+        }
+
         // default position
 
         public static Position StartingPosition() {
@@ -608,10 +634,14 @@ public final class PositionEncoder {
             p.WPieces  = 0x000000000000FFFFL;
             p.BPieces  = 0xFFFF000000000000L;
 
+            // game-state castling
             p.WKingCastle  = false;
             p.WQueenCastle = false;
             p.BKingCastle  = false;
             p.BQueenCastle = false;
+
+            // castle-perms all true
+            p.castlePerms = 0b1111;
 
             // White pieces
             p.pieceMap[0] = (byte) Piece.of(Piece.WHITE, Piece.ROOK);
@@ -649,19 +679,6 @@ public final class PositionEncoder {
             BPieces  = BPawns | BKnights | BBishops | BRooks | BQueens | BKing;
             Occupied = WPieces | BPieces;
         }
-    }
-
-    public static void doublePushFromStart() {
-        var pos = new PositionBuilder()
-                .white(Piece.KING, E1).black(KING, E8)
-                .white(PAWN, E2)
-                .build();
-        int[] moves = new int[100];
-        int a = MoveGen.generateMoves(pos, 0, true, moves);
-        for (int i = 0; i < a; i++) {
-            System.out.printf("%d -> %d\n", Move.from(moves[i]), Move.to(moves[i]));
-        }
-        System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
     }
 
 
@@ -708,6 +725,5 @@ public final class PositionEncoder {
         System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
         System.out.println(Arrays.toString(pos.pieceMap));
 
-        doublePushFromStart();
     }
 }

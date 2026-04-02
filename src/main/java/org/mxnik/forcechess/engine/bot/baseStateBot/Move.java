@@ -39,9 +39,9 @@ public final class Move {
     public static final int CAPTURE_BIT     = 8;
 
     public static final int FLAG_GENERIC    = 0;
-    public static final int FLAG_CASTLE_K   = 1;// no legal capture variant
-    public static final int FLAG_CASTLE_Q   = 2;// no legal capture variant
-    public static final int FLAG_EN_PASSANT = 3;// illegal state only for checks
+    public static final int FLAG_CASTLE_K   = 1;            // no legal capture variant
+    public static final int FLAG_CASTLE_Q   = 2;            // no legal capture variant
+    public static final int FLAG_EN_PASSANT = 3;            // illegal state only for checks
     public static final int FLAG_PROMOTE_Q  = 4;
     public static final int FLAG_PROMOTE_R  = 5;
     public static final int FLAG_PROMOTE_B  = 6;
@@ -49,9 +49,9 @@ public final class Move {
 
     // capture-moves
     public static final int FLAG_GENERIC_CAPTURE    = 8;
-    public static final int FLAG_CASTLE_K_CAPTURE   = 9;   // illegal state only for checks
-    public static final int FLAG_CASTLE_Q_CAPTURE   = 0xA; // illegal state only for checks
-    public static final int FLAG_EN_PASSANT_CAPTURE = 0xB; // legal variant of en-passant
+    public static final int FLAG_CASTLE_K_CAPTURE   = 9;    // illegal state only for checks
+    public static final int FLAG_CASTLE_Q_CAPTURE   = 0xA;  // illegal state only for checks
+    public static final int FLAG_EN_PASSANT_CAPTURE = 0xB;  // legal variant of en-passant
     public static final int FLAG_PROMOTE_Q_CAPTURE  = 0xC;
     public static final int FLAG_PROMOTE_R_CAPTURE  = 0xD;
     public static final int FLAG_PROMOTE_B_CAPTURE  = 0xE;
