@@ -101,8 +101,8 @@ public final class Move {
                             | ((b >>> 1) & ~FILE_H)                 // left
                             | ((b << 9) & ~(ROW_1 | FILE_A))        // up right
                             | ((b << 7) & ~(ROW_1 | FILE_H))        // up left
-                            | ((b >>> 9) & ~(ROW_8 | FILE_A))       // down right
-                            | ((b >>> 7) & ~(ROW_8 | FILE_H));      // down left
+                            | ((b >>> 7) & ~(ROW_8 | FILE_A))       // down right
+                            | ((b >>> 9) & ~(ROW_8 | FILE_H));      // down left
         }
     }
 
