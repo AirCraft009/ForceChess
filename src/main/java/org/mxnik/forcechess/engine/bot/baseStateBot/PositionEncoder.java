@@ -312,35 +312,42 @@ public final class PositionEncoder {
             int takenPiece = UndoMoveInfo.takenPiece(undoInfo);
             int colorOfMovedPiece = Piece.colorInt(pieceMap[to]);
 
-            movePiece(to, from);
-
-            PlaceOnBoard(takenPiece, to);     // sets takenPiece -> if emptyPiece nothing is done;
-            pieceMap[to] = (byte) takenPiece;
-
             // only check baseType ignore attack bit
             switch (fType){
                 case Move.FLAG_CASTLE_K -> {
+                    // move King back
+                    movePiece(to, from);
                     // rook left of the king -> to the corner
                     movePiece(to - 1, from + (distRight(from)));
                 }
                 case Move.FLAG_CASTLE_Q -> {
+                    // move King back
+                    movePiece(to, from);
                     // rook one right of the king -> to the corner
                     movePiece(to + 1, from - (distLeft(from)));
                 }
                 case Move.FLAG_EN_PASSANT -> {
+                    // returned taking-pawn to orig. pos
+                    movePiece(to, from);
+
                     // get the offset to the pawnField
                     int dir = Integer.compare(from, to) * 8;
                     PlaceOnBoard(takenPiece,to + dir);
                     pieceMap[to+dir] = (byte) takenPiece;
 
-                    // en-passant field was set as BPawn field
-                    pieceMap[to] = Piece.EMPTY_PIECE;       // reset the en-passant field to Empty
-                    clearOnBoard(takenPiece, to);
                 }
                 case Move.FLAG_PROMOTE_Q, Move.FLAG_PROMOTE_R, Move.FLAG_PROMOTE_B, Move.FLAG_PROMOTE_N  -> {
-                    PlaceOnBoard(Piece.of(colorOfMovedPiece, Piece.PAWN), to);
+                    clearOnBoard(pieceMap[to], to);                                 // remove the promoted piece
+                    int pawn = Piece.of(colorOfMovedPiece, Piece.PAWN);
+                    PlaceOnBoard(pawn , from);                                      // place the original pawn
+                    PlaceOnBoard(takenPiece, to);                                   // place the TakenPiece
+                    pieceMap[to] = (byte) takenPiece;
+                    pieceMap[from] = (byte) pawn;
                 }
-                default -> {
+                case Move.FLAG_GENERIC -> {
+                    movePiece(to, from);
+                    PlaceOnBoard(takenPiece, to);     // sets takenPiece -> if emptyPiece nothing is done;
+                    pieceMap[to] = (byte) takenPiece;
                 }
             }
 
@@ -537,7 +544,12 @@ public final class PositionEncoder {
             }
         }
 
-        /** Clears a square on the bitboard corresponding to the given piece byte. */
+        /**
+         * Clears a square on the bitboard corresponding to the given piece byte. <p>
+         * Also clears the pieceMap
+         * @param piece pieceT and color
+         * @param sq square
+         */
         private void clearOnBoard(int piece, int sq) {
             boolean color = Piece.color(piece);
             int type      = Piece.pieceT(piece);
