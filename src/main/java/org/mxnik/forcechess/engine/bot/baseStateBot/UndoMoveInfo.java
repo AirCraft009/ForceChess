@@ -4,9 +4,9 @@ package org.mxnik.forcechess.engine.bot.baseStateBot;
 import eu.hansolo.tilesfx.tools.PrettyListView;
 
 // Info to unmake a move packed into an int
-// bits 0  - 14 : Move (see bit desc. in Move class)
-// bits 15 - 18 : TakenPiece (Type and Color of the taken piece -> Empty Piece if none were taken
-// bits 19 - 22 : Prev. Castle-perms (defined in the Position class)
+// bits 0  - 15 : Move (see bit desc. in Move class)
+// bits 16 - 19 : TakenPiece (Type and Color of the taken piece -> Empty Piece if none were taken
+// bits 20 - 23 : Prev. Castle-perms (defined in the Position class)
 public final class UndoMoveInfo {
 
     public static int of(int move, int takenPiece, byte castlePerms){return move | takenPiece << TAKEN_PIECE_SHIFT | castlePerms << CASTLE_PERM_SHIFT;}
@@ -20,7 +20,19 @@ public final class UndoMoveInfo {
     private final static int TAKEN_PIECE_MASK = 0xF;
     private final static int CASTLE_PERM_MASK = 0xF;
 
-    private final static int TAKEN_PIECE_SHIFT = 15;
-    private final static int CASTLE_PERM_SHIFT = 19;
+    private final static int TAKEN_PIECE_SHIFT = 16;
+    private final static int CASTLE_PERM_SHIFT = 20;
+
+
+    public static void main(String[] args) {
+        int move = 0b111111111111111;
+        int takenP = Piece.of(Piece.BLACK, Piece.PAWN);
+        byte perms = 0b1111;
+
+        int Undo =  UndoMoveInfo.of(move, takenP, perms);
+        System.out.println(Integer.toBinaryString(UndoMoveInfo.move(Undo)));
+        System.out.println(Integer.toBinaryString(UndoMoveInfo.takenPiece(Undo)));
+        System.out.println(Integer.toBinaryString(UndoMoveInfo.castlePerms(Undo)));
+    }
 
 }
