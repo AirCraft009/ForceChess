@@ -1,8 +1,6 @@
 package engine;
 
 import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mxnik.forcechess.Util.Bitboard;
 import org.mxnik.forcechess.engine.bot.baseStateBot.Move;
 import org.mxnik.forcechess.engine.bot.baseStateBot.MoveGen;
