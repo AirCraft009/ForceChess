@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.engine.bot.Pos;
+package org.mxnik.forcechess.engine.Pos;
 
 import org.mxnik.forcechess.Util.Bitboard;
 import org.mxnik.forcechess.Util.Helper;
@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 import static org.mxnik.forcechess.Util.RayDetection.*;
 import static org.mxnik.forcechess.Util.RayDetection.KNIGHT_COL;
-import static org.mxnik.forcechess.engine.bot.ChessSquares.*;
+import static org.mxnik.forcechess.engine.ChessSquares.*;
 
 /**
  * PositionEncoder

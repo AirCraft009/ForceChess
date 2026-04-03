@@ -2,10 +2,10 @@ package engine;
 
 import org.junit.jupiter.api.*;
 import org.mxnik.forcechess.Util.Bitboard;
-import org.mxnik.forcechess.engine.bot.Pos.Move;
-import org.mxnik.forcechess.engine.bot.Pos.Piece;
-import org.mxnik.forcechess.engine.bot.Pos.PositionEncoder;
-import static org.mxnik.forcechess.engine.bot.ChessSquares.*;
+import org.mxnik.forcechess.engine.Pos.Move;
+import org.mxnik.forcechess.engine.Pos.Piece;
+import org.mxnik.forcechess.engine.Pos.PositionEncoder;
+import static org.mxnik.forcechess.engine.ChessSquares.*;
 
 import java.util.Arrays;
 

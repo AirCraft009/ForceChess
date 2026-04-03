@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.engine.bot.Pos;
+package org.mxnik.forcechess.engine.Pos;
 
 
 // Info to unmake a move packed into an int

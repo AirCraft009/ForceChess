@@ -1,5 +1,7 @@
 https://www.youtube.com/watch?v=UXW2yZndl7U
 https://www.chessprogramming.org/AlphaZero#Network_Architecture
+https://arxiv.org/pdf/2012.11045
+https://www.youtube.com/watch?v=NjeYgIbPMmg&t=87s
 
 
 ## Reasons for the Mcts - Layout
