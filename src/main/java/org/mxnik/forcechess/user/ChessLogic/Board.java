@@ -31,6 +31,7 @@ public class Board {
     public int teamBMaterial;
     private int kingWPos;
     private int kingBPos;
+    private int enPassantPos;
 
     int maxMoves = 0;
 
@@ -270,8 +271,9 @@ public class Board {
 
                     if (board[i].getType() == PieceTypes.PAWN) {
                         if (Helper.isDiagonalMove(i, square)) {
-                            if (board[square].getColor() != board[i].getColor()
-                                    && board[square] != EmptyPiece.EMPTY_PIECE) {
+                            if ((board[square].getColor() != board[i].getColor()
+                                    && board[square] != EmptyPiece.EMPTY_PIECE)
+                                    || square == enPassantPos) {
                                 legalMoveSection[ptr] = square;
                                 ptr++;
                             }
@@ -328,6 +330,23 @@ public class Board {
     private MoveTypes castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
         if (board[from] == EmptyPiece.EMPTY_PIECE) {
             return MoveTypes.KingMove;
+        }
+        if(moved) {
+            int pawnDir = (board[from].getColor())? 1:-1;
+            if(board[from].getType() == PieceTypes.PAWN && Helper.isDiagonalMove(from, to) && to == enPassantPos){
+                //En Passant take
+                board[to + MoveOffsets.DOWN.offset*pawnDir] = EmptyPiece.EMPTY_PIECE;
+                amountPieces -= 1;
+            }
+            if (board[from].getType() == PieceTypes.PAWN
+                    && Helper.rowDiff(from, to) > 1) {
+                //En Passant will be possible next move
+                enPassantPos = from + MoveOffsets.UP.offset*pawnDir;
+                System.out.println(enPassantPos);
+            } else {
+                //En Passant no longer possible
+                enPassantPos = -1;
+            }
         }
         if (board[to] != EmptyPiece.EMPTY_PIECE) {
             amountPieces -= 1;
