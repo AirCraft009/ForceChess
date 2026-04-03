@@ -1,6 +1,6 @@
 package org.mxnik.forcechess.Util;
 
-import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.user.ChessLogic.Board;
 
 import static java.lang.Math.abs;
 
@@ -24,7 +24,7 @@ public class Helper {
      * get the distance to the left border;
      */
     public static int distanceLeftB(int pos){
-        return ((distanceRightB(pos) - Board.sideLen) + 1) * -1;
+        return (getCol(pos));
     }
 
     /**
