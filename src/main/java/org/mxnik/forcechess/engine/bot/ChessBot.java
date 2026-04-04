@@ -33,7 +33,8 @@ public class ChessBot {
      * gets all possible moves and then adds them to the current node as children
      */
     public void addNodes() {
-        movePtrStack[cDepth] = MoveGen.generateMoves(pos, movePtrStack[cDepth], pos.whiteToMove, moves);
+        // cDepth - 1 to get the last offset
+        movePtrStack[cDepth] = MoveGen.generateMoves(pos, movePtrStack[cDepth-1], pos.whiteToMove, moves);
         // iterate over all moves in curr pos.
         for (int i = movePtrStack[cDepth - 1]; i < movePtrStack[cDepth]; i++) {
             tree.addNewChild(currentNode, moves[i]);
@@ -43,22 +44,66 @@ public class ChessBot {
     /**
      * handles a leaf node and returns the values up the tree
      * @param nodeIdx index of the node value;
-     * @param NNPass function of the Neural-Net taking a position and returning a value(rating of pos) and policy vector
      */
-    public void handleLeafNode(int nodeIdx, Function<PositionEncoder.Position, DiversePair<Float, float[]>> NNPass){
-        DiversePair<Float, float[]> output = NNPass.apply(pos);
+    public void handleLeafNode(int nodeIdx){
+        DiversePair<Float, float[]> output = AlphaNet.runNet(pos, tree.move[nodeIdx]);
         float value = output.first();
         float[] policyV = output.second();
+        tree.p[nodeIdx] = policyV[0];           // select correct values from policy vector
 
-        tree.w[nodeIdx] = value;
-        tree.p[nodeIdx] = policyV[nodeIdx];                     // shouldn't be nodeIdx
-        tree.n[nodeIdx] += 1;
+        for (int i = 0; i < cDepth; i++) {
+            tree.w[nodeIdx] += value;
+            tree.n[nodeIdx] += 1;
+
+            nodeIdx = tree.parentIdx[nodeIdx];
+        }
+    }
+
+    public void doIters(int iter){
+        // ensure base state
+        currentNode = 0;
+        cDepth = 1;
+        for (int i = 0; i < iter; i++) {
+            traverseTree();
+        }
+    }
+
+    /**
+     * traverses the tree starting at the currentNode
+     * <p>
+     * It is expected that the currentNode has childNodes
+     */
+    public void traverseTree(){
+        while(true) {
+            if (tree.firstChild[currentNode] == 0)       // no children yet
+                addNodes();
+
+            int child = tree.findBestChild(currentNode);
+            if (tree.n[child] == 0) {         // first time visiting/is a leaf node
+                handleLeafNode(child);
+                // go back to root after passing values back up
+                currentNode = 0;
+                unmakeAll();
+                cDepth = 1;
+                return;
+            }
+            currentNode = child;
+            undoInfoStack[cDepth-1] = pos.makeMove(tree.move[currentNode]);
+            cDepth++;
+        }
+    }
+
+    public void unmakeAll(){
+        while (cDepth > 0) {
+            cDepth--;   // set the depth pointer to be the ptr
+            pos.unmakeMove(undoInfoStack[cDepth]);
+        }
     }
 
 
     public static void main(String[] args) {
         ChessBot bot = new ChessBot();
-        bot.addNodes();
+        bot.doIters(MAX_SEARCH_DEPTH);
         //System.out.println(Arrays.toString(Arrays.copyOf(bot.moves, 40)));
         //System.out.println(bot.movePtrStack[1]);
     }
