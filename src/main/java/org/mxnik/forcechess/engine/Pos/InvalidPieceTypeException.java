@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.engine.bot.Pos;
+package org.mxnik.forcechess.engine.Pos;
 
 public class InvalidPieceTypeException extends RuntimeException {
     public InvalidPieceTypeException(String message) {

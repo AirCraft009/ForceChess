@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.engine.bot;
+package org.mxnik.forcechess.engine;
 
 public class ChessSquares {
     public static final int

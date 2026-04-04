@@ -342,7 +342,7 @@ public class Board {
                     && Helper.rowDiff(from, to) > 1) {
                 //En Passant will be possible next move
                 enPassantPos = from + MoveOffsets.UP.offset*pawnDir;
-                System.out.println(enPassantPos);
+                //System.out.println(enPassantPos);
             } else {
                 //En Passant no longer possible
                 enPassantPos = -1;

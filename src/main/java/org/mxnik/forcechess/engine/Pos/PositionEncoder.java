@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.engine.bot.Pos;
+package org.mxnik.forcechess.engine.Pos;
 
 import org.mxnik.forcechess.Util.Bitboard;
 import org.mxnik.forcechess.Util.Helper;
@@ -7,7 +7,7 @@ import java.util.Arrays;
 
 import static org.mxnik.forcechess.Util.RayDetection.*;
 import static org.mxnik.forcechess.Util.RayDetection.KNIGHT_COL;
-import static org.mxnik.forcechess.engine.bot.ChessSquares.*;
+import static org.mxnik.forcechess.engine.ChessSquares.*;
 
 /**
  * PositionEncoder
@@ -205,6 +205,7 @@ public final class PositionEncoder {
 
         public int makeMove(int move){
             int undo = makeMoveCore(move);
+            whiteToMove = !whiteToMove;
             updateHelper();
             return undo;
         }
@@ -338,6 +339,7 @@ public final class PositionEncoder {
             castlePerms = UndoMoveInfo.castlePerms(undoInfo);
 
             updateHelper();
+            whiteToMove = !whiteToMove;
         }
 
         // Check detection
@@ -694,6 +696,7 @@ public final class PositionEncoder {
 
     public static void main(String[] args) {
         Position pos = Position.StartingPosition();
+        System.out.println(pos.Occupied);
         float[][][] tensor = encode(pos);
 
         System.out.println("=== Plane 0: White pawns ===");
