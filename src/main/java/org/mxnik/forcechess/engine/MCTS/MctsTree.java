@@ -14,6 +14,7 @@ public final class MctsTree {
     public final float[] w            = new float[POOL_SIZE];
     public final float[] p            = new float[POOL_SIZE];
     public final int[]   n            = new int[POOL_SIZE];
+    // the mean score q can be calculated with w[x] / n[x]
 
     public int nextFree = 1; // 0 = root
     public int globalVisits; // total number of visits over all nodes.
@@ -23,12 +24,13 @@ public final class MctsTree {
      * @param index the node to add the child to
      * @param move the move this node repr
      */
-    public void addNewChild(int index, int move){
+    public int addNewChild(int index, int move){
         int newNode = nextFree++;
         parentIdx[newNode]   = index;
         this.move[newNode]        = move;
         nextSibling[newNode] = firstChild[index]; // prepend to list
         firstChild[index]        = newNode;
+        return newNode;
     }
 
     public int findBestChild(int nodeIdx){
