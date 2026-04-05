@@ -33,6 +33,23 @@ public final class MctsTree {
         return newNode;
     }
 
+    /**
+     * returns the move under root with the most visits / best move
+     */
+    public int highestVisitNode(){
+        int node = firstChild[0];
+        int maxNNode = -1;
+        int maxN = -1;
+        while (node != 0){
+            if(n[node] > maxN){
+                maxN = n[node];
+                maxNNode = node;
+            }
+            node = nextSibling[node];
+        }
+        return maxNNode;
+    }
+
     public int findBestChild(int nodeIdx){
         int bestChild = -1;
         float bestScore = Float.NEGATIVE_INFINITY;      // start with the lowest score
