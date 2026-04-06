@@ -12,6 +12,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>5.12.1</junit.version>
+    <dl4j.version>1.0.0-M2.1</dl4j.version>
   </properties>
 
 <!-- unused import
@@ -94,7 +95,8 @@
           <artifactId>*</artifactId>
         </exclusion>
       </exclusions>
-    </dependency><dependency>
+    </dependency>
+      <dependency>
       <groupId>com.github.almasb</groupId>
       <artifactId>fxgl</artifactId>
       <version>17.3</version>
@@ -105,6 +107,21 @@
         </exclusion>
       </exclusions>
     </dependency>
+
+
+
+      <!-- core network API -->
+      <dependency>
+          <groupId>org.deeplearning4j</groupId>
+          <artifactId>deeplearning4j-core</artifactId>
+          <version>${dl4j.version}</version>
+      </dependency>
+      <!-- CPU backend — provides actual tensor math -->
+      <dependency>
+          <groupId>org.nd4j</groupId>
+          <artifactId>nd4j-native-platform</artifactId>
+          <version>${dl4j.version}</version>
+      </dependency>
 <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
