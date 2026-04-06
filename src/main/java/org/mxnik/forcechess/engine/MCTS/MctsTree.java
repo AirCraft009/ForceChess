@@ -1,5 +1,7 @@
 package org.mxnik.forcechess.engine.MCTS;
 
+import java.util.Arrays;
+
 public final class MctsTree {
     // balances exploitation with exploration
     public static final int C_PUCT = 2;
@@ -36,8 +38,8 @@ public final class MctsTree {
     /**
      * returns the move under root with the most visits / best move
      */
-    public int highestVisitNode(){
-        int node = firstChild[0];
+    public int highestVisitNode(int rootNode){
+        int node = firstChild[rootNode];
         int maxNNode = -1;
         int maxN = -1;
         while (node != 0){
@@ -56,6 +58,7 @@ public final class MctsTree {
         int child = firstChild[nodeIdx];
         float sqrtN = (float) Math.sqrt(n[nodeIdx]);
 
+
         while (child != 0) {
             float q = n[child] == 0 ? 0f : w[child] / n[child];             // evaluation
             float score = q + C_PUCT * p[child] * sqrtN / (1 + n[child]);   // get the PUCT score
@@ -69,6 +72,13 @@ public final class MctsTree {
     }
 
     public void reset(){
+        // reset arrays to 0 up until the nextFree node
+        Arrays.fill(parentIdx, 0, nextFree, 0);
+        Arrays.fill(nextSibling, 0, nextFree, 0);
+        Arrays.fill(firstChild,0, nextFree, 0);
+        Arrays.fill(w,0, nextFree, 0);
+        Arrays.fill(n,0, nextFree, 0);
+        // p gets set directly
         nextFree = 1;       // set the ptr back to the start of the list
     }
     
