@@ -6,18 +6,13 @@ import org.mxnik.forcechess.engine.Pos.PositionEncoder;
 import java.util.Random;
 
 /**
- * connects
+ * The neural net used for evaluating position and returning the bestMove
  */
-public class AlphaNet {
-    static Random r = new Random();
-
-    /**
-     * takes a state and action set and runs it through the network
-     * currently a stub
-     * @param state the current chessboard position
-     * @return A rating of a pos. and a policy vector
-     */
-    public static DiversePair<Float, float[]> runNet(PositionEncoder.Position state){
-        return new DiversePair<>(r.nextFloat(-10,10), new float[256]);
+public class AlphaNet implements Evaluator{
+    @Override
+    public Result evaluate(PositionEncoder.Position pos) {
+        return null;
     }
+
+
 }

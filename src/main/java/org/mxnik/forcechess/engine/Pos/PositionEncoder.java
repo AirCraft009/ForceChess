@@ -170,6 +170,9 @@ public final class PositionEncoder {
         public long WPieces;
         public long BPieces;
 
+        // pieceVals
+        public static final int[] pieceVals = {0, 1, 3, 3, 0, 9, 1};        // king can't get taken so 0 since both sides always have one
+
         // Castling permissions (may castle if rights arise)
         // bit 0 = WKingC
         // bit 1 = WQueenC
@@ -200,6 +203,9 @@ public final class PositionEncoder {
         // Piece map: Color(1 bit) | PieceType(3 bits) per square
         public byte[] pieceMap = new byte[64];
 
+        public int whiteMaterial;
+        public int blackMaterial;
+
 
         // Make / Unmake
 
@@ -207,6 +213,7 @@ public final class PositionEncoder {
             int undo = makeMoveCore(move);
             whiteToMove = !whiteToMove;
             updateHelper();
+            calcMat();
             return undo;
         }
 
@@ -339,6 +346,7 @@ public final class PositionEncoder {
             castlePerms = UndoMoveInfo.castlePerms(undoInfo);
 
             updateHelper();
+            calcMat();
             whiteToMove = !whiteToMove;
         }
 
@@ -600,6 +608,30 @@ public final class PositionEncoder {
             }
         }
 
+        public void updateHelper() {
+            WPieces  = WPawns | WKnights | WBishops | WRooks | WQueens | WKing;
+            BPieces  = BPawns | BKnights | BBishops | BRooks | BQueens | BKing;
+            Occupied = WPieces | BPieces;
+        }
+
+        public void calcMat() {
+            whiteMaterial =
+                            Long.bitCount(WPawns)   * pieceVals[Piece.PAWN]
+                            + Long.bitCount(WKnights) * pieceVals[Piece.KNIGHT]
+                            + Long.bitCount(WBishops) * pieceVals[Piece.BISHOP]
+                            + Long.bitCount(WRooks)   * pieceVals[Piece.ROOK]
+                            + Long.bitCount(WQueens)  * pieceVals[Piece.QUEEN]
+                            + Long.bitCount(WKing)    * pieceVals[Piece.KING];
+
+            blackMaterial =
+                            Long.bitCount(BPawns)   * pieceVals[Piece.PAWN]
+                            + Long.bitCount(BKnights) * pieceVals[Piece.KNIGHT]
+                            + Long.bitCount(BBishops) * pieceVals[Piece.BISHOP]
+                            + Long.bitCount(BRooks)   * pieceVals[Piece.ROOK]
+                            + Long.bitCount(BQueens)  * pieceVals[Piece.QUEEN]
+                            + Long.bitCount(BKing)    * pieceVals[Piece.KING];
+        }
+
         // castle helpers
 
         private void updateCastlePerms(int from, int to){
@@ -646,6 +678,9 @@ public final class PositionEncoder {
             p.WPieces  = 0x000000000000FFFFL;
             p.BPieces  = 0xFFFF000000000000L;
 
+            // materials
+            p.whiteMaterial =  39;
+
             // game-state castling
             p.WKingCastle  = false;
             p.WQueenCastle = false;
@@ -684,12 +719,6 @@ public final class PositionEncoder {
             }
 
             return p;
-        }
-
-        public void updateHelper() {
-            WPieces  = WPawns | WKnights | WBishops | WRooks | WQueens | WKing;
-            BPieces  = BPawns | BKnights | BBishops | BRooks | BQueens | BKing;
-            Occupied = WPieces | BPieces;
         }
     }
 

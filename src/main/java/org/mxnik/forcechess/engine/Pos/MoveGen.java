@@ -1,8 +1,23 @@
 package org.mxnik.forcechess.engine.Pos;
 
 import org.mxnik.forcechess.Util.Bitboard;
+import org.mxnik.forcechess.Util.DiversePair;
+import org.mxnik.forcechess.user.ChessLogic.GameState;
 
 public class MoveGen {
+
+    public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, int offset, boolean whiteToMove, int[] moves) {
+        int newOff = generateMoves(pos, offset, whiteToMove, moves);
+        if(newOff == offset){                                       // no new moves
+            boolean check = pos.checkChess(!whiteToMove);
+            if (check){
+                return new DiversePair<>(newOff, GameState.CheckMate);
+            }else {
+                return new DiversePair<>(newOff, GameState.StaleMate);
+            }
+        }
+        return new DiversePair<>(newOff, GameState.Continue);
+    }
 
     /**
      * Generates all legal moves for the side to move.

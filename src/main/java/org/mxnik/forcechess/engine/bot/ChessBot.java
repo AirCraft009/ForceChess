@@ -6,6 +6,7 @@ import org.mxnik.forcechess.engine.MCTS.MctsTree;
 import org.mxnik.forcechess.engine.Pos.Move;
 import org.mxnik.forcechess.engine.Pos.MoveGen;
 import org.mxnik.forcechess.engine.Pos.PositionEncoder;
+import org.mxnik.forcechess.user.ChessLogic.GameState;
 
 import java.util.Arrays;
 
@@ -63,6 +64,13 @@ public class ChessBot {
         depth = 1;
 
         while (true) {
+            if(depth == MAX_SEARCH_DEPTH){
+                Evaluator.Result v = evaluator.evaluate(pos);
+                tree.n[node]++;
+                tree.w[node] += v.value();
+                return node;
+            }
+
             if (tree.firstChild[node] == 0) {
                 Evaluator.Result v = evaluator.evaluate(pos);
                 expand(node, depth, v.policyV());               // add all moves to the end
@@ -84,7 +92,13 @@ public class ChessBot {
      */
     private void expand(int node, int depth, float[] policyV) {
         // cDepth - 1 to get the last offset
-        movePtrStack[depth] = MoveGen.generateMoves(pos, movePtrStack[depth-1], pos.whiteToMove, moves);
+        var out = MoveGen.generateMovesAndResult(pos, movePtrStack[depth-1], pos.whiteToMove, moves);
+        movePtrStack[depth] = out.first();
+
+        if(out.second() != GameState.Continue){     // don't expand if the game has ended
+            return;
+        }
+
         // iterate over all moves in curr pos.
         for (int i = movePtrStack[depth - 1]; i < movePtrStack[depth]; i++) {
             int child = tree.addNewChild(node, moves[i]);
@@ -111,7 +125,16 @@ public class ChessBot {
         for (int i = 0; i < n; i++) {
             simulate();
         }
-        return tree.move[tree.highestVisitNode()];
+        return tree.move[tree.highestVisitNode(0)];
+    }
+
+    /**
+     * simulates a whole iteration n times
+     */
+    public void run(int n){
+        for (int i = 0; i < n; i++) {
+            simulate();
+        }
     }
 
     /**
@@ -124,5 +147,48 @@ public class ChessBot {
             node = tree.nextSibling[node];
         }
         return moveDist;
+    }
+
+
+    /**
+     * resets values so that a new position can be sent to the tree
+     */
+    public void resetCore(){
+        tree.reset();
+        depth = 1;
+    }
+
+
+    /**
+     * sims a game and outputs to the screen
+     * every move will have n rounds in the tree
+     */
+    public void simGame(int n){
+        int epoch = 0;
+        while (true){
+            int move = 0;
+            try {
+                move = bestMove(n);
+            }catch (ArrayIndexOutOfBoundsException e){
+                System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
+                System.out.println(Bitboard.lsb(pos.WKing));
+                System.out.println(Bitboard.lsb(pos.BKing));
+
+                var o = MoveGen.generateMovesAndResult(pos, 0, pos.whiteToMove, new int[256]);
+                System.out.println( o.second());
+                System.out.println( o.first());
+                break;
+            }
+            epoch++;
+            pos.makeMove(move);
+            System.out.println(pos.whiteMaterial);
+            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+            resetCore();
+        }
+    }
+
+
+    public static void main(String[] args) {
+        ChessBot bot = new ChessBot(new Evaluator.StubEvaluator());
     }
 }
