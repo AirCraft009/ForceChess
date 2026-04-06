@@ -12,6 +12,8 @@ module org.mxnik.forcechess {
     requires javafx.graphics;
     requires annotations;
     requires java.desktop;
+    requires nd4j.api;
+    requires deeplearning4j.nn;
 
     exports org.mxnik.forcechess.user.UI;
     exports org.mxnik.forcechess.Util;

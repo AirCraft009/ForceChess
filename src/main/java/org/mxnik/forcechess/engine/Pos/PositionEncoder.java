@@ -29,6 +29,7 @@ public final class PositionEncoder {
 
     public static final int PLANES = 21;
     public static final int SIZE   = 8;
+    public static final int PLANE_SIZE = 64;
 
     private static final int PLANE_WP         = 0;
     private static final int PLANE_WN         = 1;
@@ -61,6 +62,57 @@ public final class PositionEncoder {
         encode(pos, tensor);
         return tensor;
     }
+
+    public static float[] encodeFlat(Position pos) {
+        float[] tensor = new float[PLANES * PLANE_SIZE];
+        encode(pos, tensor);
+        return tensor;
+    }
+
+    /**
+     * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
+     */
+    public static void encode(Position pos, float[] tensor) {
+        Arrays.fill(tensor, 0);
+
+        // Piece planes 0–11
+        encodeBitboard(pos.WPawns, PLANE_WP * PLANE_SIZE,  tensor);
+        encodeBitboard(pos.WKnights, PLANE_WN * PLANE_SIZE,tensor);
+        encodeBitboard(pos.WBishops, PLANE_WB * PLANE_SIZE,tensor);
+        encodeBitboard(pos.WRooks,   PLANE_WR * PLANE_SIZE,tensor);
+        encodeBitboard(pos.WQueens,  PLANE_WQ * PLANE_SIZE,tensor);
+        encodeBitboard(pos.WKing,    PLANE_WK * PLANE_SIZE,tensor);
+
+        encodeBitboard(pos.BPawns, PLANE_BP * PLANE_SIZE,  tensor);
+        encodeBitboard(pos.BKnights, PLANE_BN * PLANE_SIZE,tensor);
+        encodeBitboard(pos.BBishops, PLANE_BB * PLANE_SIZE,tensor);
+        encodeBitboard(pos.BRooks,   PLANE_BR * PLANE_SIZE,tensor);
+        encodeBitboard(pos.BQueens,  PLANE_BQ * PLANE_SIZE,tensor);
+        encodeBitboard(pos.BKing,    PLANE_BK * PLANE_SIZE,tensor);
+
+        // Castling rights — uniform planes
+        if (pos.WKingCastle)  Arrays.fill(tensor, PLANE_CASTLE_WK * PLANE_SIZE, PLANE_CASTLE_WQ * PLANE_SIZE, 1.0f);
+        if (pos.WQueenCastle) Arrays.fill(tensor, PLANE_CASTLE_WQ * PLANE_SIZE, PLANE_CASTLE_BK * PLANE_SIZE, 1.0f);
+        if (pos.BKingCastle)  Arrays.fill(tensor, PLANE_CASTLE_BK * PLANE_SIZE, PLANE_CASTLE_BQ * PLANE_SIZE, 1.0f);
+        if (pos.BQueenCastle) Arrays.fill(tensor, PLANE_CASTLE_BQ * PLANE_SIZE, PLANE_DOUBLE_PW * PLANE_SIZE, 1.0f);
+
+        // Double pawn move planes
+        encodeBitboard(pos.WDoublePawnMove, PLANE_DOUBLE_PW * PLANE_SIZE, tensor);
+        encodeBitboard(pos.BDoublePawnMove, PLANE_DOUBLE_PB * PLANE_SIZE, tensor);
+
+        // En passant — single square
+        if (pos.enPassantSquare >= 0) {
+            tensor[PLANE_EN_PASSANT + pos.enPassantSquare] = 1.0f;
+        }
+
+        // Side to move
+        if (pos.whiteToMove) Arrays.fill(tensor, PLANE_SIDE * PLANE_SIZE, PLANE_FIFTY, 1.0f);
+
+        // Fifty-move rule
+        Arrays.fill(tensor, PLANE_FIFTY * PLANE_SIZE, tensor.length, Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
+    }
+
+
 
     /**
      * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
@@ -120,6 +172,17 @@ public final class PositionEncoder {
         }
     }
 
+    private static void encodeBitboard(long bitboard, int offset, float[] plane) {
+        long b = bitboard;
+        while (b != 0L) {
+            int sq   = Bitboard.lsb(b);
+            int rank = sq >>> 3;
+            int file = sq & 7;
+            plane[offset + (rank * SIZE + file)] = 1.0f;
+            b = Bitboard.popLsb(b); // returns board with LSB cleared
+        }
+    }
+
     private static void fillPlane(float[][] plane, float value) {
         for (float[] row : plane) java.util.Arrays.fill(row, value);
     }
@@ -129,6 +192,8 @@ public final class PositionEncoder {
             for (float[] row : plane)
                 java.util.Arrays.fill(row, 0.0f);
     }
+
+
 
     // Position
 
