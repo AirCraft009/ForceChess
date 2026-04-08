@@ -9,12 +9,8 @@ public class MoveGen {
     public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, int offset, boolean whiteToMove, int[] moves) {
         int newOff = generateMoves(pos, offset, whiteToMove, moves);
         if(newOff == offset){                                       // no new moves
-            boolean check = pos.checkChess(!whiteToMove);
-            if (check){
-                return new DiversePair<>(newOff, GameState.CheckMate);
-            }else {
-                return new DiversePair<>(newOff, GameState.StaleMate);
-            }
+            boolean check = pos.checkChess(!whiteToMove);           // other colored king still in chack
+            return check ? new DiversePair<>(newOff, GameState.CheckMate) : new DiversePair<>(newOff, GameState.StaleMate);
         }
         return new DiversePair<>(newOff, GameState.Continue);
     }
