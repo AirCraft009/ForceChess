@@ -91,7 +91,7 @@ public class ChessBot {
      * sets the policy and move of the child-node
      */
     private void expand(int node, int depth, float[] policyV) {
-        // cDepth - 1 to get the last offset
+        // depth - 1 to get the last offset
         var out = MoveGen.generateMovesAndResult(pos, movePtrStack[depth-1], pos.whiteToMove, moves);
         movePtrStack[depth] = out.first();
 
