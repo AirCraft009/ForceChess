@@ -21,15 +21,20 @@ public final class AlphaNet implements Evaluator{
     private final ComputationGraph model;
     private float[] flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
 
+    /**
+     * Net Evaluator
+     * @param model uninitialized model
+     */
     public AlphaNet(ComputationGraph model) {
         this.model = model;
+        model.init();
     }
 
     @Override
     public Result evaluate(PositionEncoder.Position pos) {
         // encode position in flat array
         PositionEncoder.encode(pos, flat);
-        INDArray input = Nd4j.create(new int[]{1, 19, 8, 8}, flat);
+        INDArray input = Nd4j.create(flat, new int[]{1, PositionEncoder.PLANES, 8, 8});
         INDArray[] out = model.output(input);
         float[] policy = out[0].toFloatVector();
         float positionRating = out[1].getFloat(0);
