@@ -9,21 +9,13 @@
   <version>1.0-SNAPSHOT</version>
   <name>ForceChess</name>
 
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <junit.version>5.12.1</junit.version>
     <dl4j.version>1.0.0-M2.1</dl4j.version>
   </properties>
 
-<!-- unused import
-<repositories>-->
-<!--      <repository>-->
-<!--          <id>github</id>-->
-<!--          <name>jstockfish</name>-->
-<!--          <url>https://github.com/AirCraft009/JStockfish</url>-->
-<!--      </repository>-->
-
-<!--  </repositories>-->
 
   <dependencies>
     <dependency>
@@ -52,6 +44,11 @@
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-swing</artifactId>
         <version>21.0.6</version>
+      </dependency>
+      <dependency>
+          <groupId>org.nd4j</groupId>
+          <artifactId>nd4j-native-platform</artifactId>
+          <version>1.0.0-M2.1</version>
       </dependency>
 <dependency>
       <groupId>org.openjfx</groupId>
@@ -117,11 +114,7 @@
           <version>${dl4j.version}</version>
       </dependency>
       <!-- CPU backend — provides actual tensor math -->
-      <dependency>
-          <groupId>org.nd4j</groupId>
-          <artifactId>nd4j-native-platform</artifactId>
-          <version>${dl4j.version}</version>
-      </dependency>
+
 <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>

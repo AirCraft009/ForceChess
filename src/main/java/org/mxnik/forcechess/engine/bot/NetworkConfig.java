@@ -4,6 +4,7 @@ import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
 import org.deeplearning4j.nn.conf.layers.*;
+import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.mxnik.forcechess.engine.Pos.Move;
 import org.mxnik.forcechess.engine.Pos.PositionEncoder;
@@ -33,11 +34,11 @@ public final class NetworkConfig{
     private static final String batch1 = RES_BASE + "-bn1-";           // first batch normalisation
     private static final String batch2 = RES_BASE + "-bn2-";           // batch normalisation
     private static final String act = RES_BASE + "-activation";         // activation layer (RELU)
-    private static final String addition = RES_BASE + "-activation";     // Vertex for adding x; F(x) + x, F(x) = H(x) - x
+    private static final String addition = RES_BASE + "-addition";     // Vertex for adding x; F(x) + x, F(x) = H(x) - x
     private static final String out = RES_BASE + "-out";                // output
 
 
-    public static ComputationGraphConfiguration buildNet(){
+    public static ComputationGraph buildNet(){
         org.deeplearning4j.nn.conf.ComputationGraphConfiguration.GraphBuilder graphBuilder;
 
         NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
@@ -71,13 +72,18 @@ public final class NetworkConfig{
                 .addLayer("policyV-bn", new BatchNormalization.Builder().nOut(2).build(), "policyV-conv")
                 .addLayer("policyV-act", new ActivationLayer(USED_ACTIVATION), "policyV-bn")
                 // 2 * 8 * 8 layers to flat 128 vectors
-                .addLayer("policyV-flat", new DenseLayer.Builder().nIn(128).nOut(128)   // denseLayer = every node connected to the one before
-                        .activation(Activation.IDENTITY).build(), "policyV-act")
+                .addLayer("policyV-pool",
+                        new GlobalPoolingLayer.Builder()
+                                .poolingType(PoolingType.AVG)
+                                .build(),
+                        "policyV-act")
+                .addLayer("policyV-flat", new DenseLayer.Builder().nIn(2).nOut(128)   // denseLayer = every node connected to the one before
+                        .activation(Activation.IDENTITY).build(), "policyV-pool")
                 .addLayer("policyV",
                         new OutputLayer.Builder(USED_LOSS_F_POLICY)
                                 .nIn(128).nOut(Move.MOVE_POSSIBILITIES)
                                 .activation(Activation.SOFTMAX)
-                                .build(), "policyV-act");
+                                .build(), "policyV-flat");
 
         // VALUE(game-rating),
         // 256 channels to 1
@@ -87,18 +93,23 @@ public final class NetworkConfig{
                         .build(), resOut)
                 .addLayer("val-bn", new BatchNormalization.Builder().nOut(1).build(), "val-conv")
                 .addLayer("val-act", new ActivationLayer(Activation.RELU), "val-bn")
-                // flatten 1 * 8 * 8 to 64 values
-                .addLayer("val-flat", new DenseLayer.Builder().nIn(64).nOut(256)
-                        .activation(USED_ACTIVATION).build(), "val-act")
+                // flatten 1 * 8 * 8 to 64 values#
+                .addLayer("val-pool",
+                        new GlobalPoolingLayer.Builder()
+                                .poolingType(PoolingType.AVG)
+                                .build(),
+                        "val-act")
+                .addLayer("val-flat", new DenseLayer.Builder().nIn(1).nOut(256)
+                        .activation(USED_ACTIVATION).build(), "val-pool")
                 .addLayer("value", new OutputLayer.Builder(USED_LOSS_F_VALUE)
                         .nIn(256).nOut(1)
                         .activation(Activation.TANH)
                         .build(), "val-flat");
 
         // OUTPUTS
-        return graphBuilder
+        return new ComputationGraph(graphBuilder
                 .setOutputs("policyV", "value")                                            // policy vector(each move), single value rating position
-                .build();
+                .build());
     }
 
     /**
@@ -111,25 +122,25 @@ public final class NetworkConfig{
     public static String addResNetBlocks(org.deeplearning4j.nn.conf.ComputationGraphConfiguration.GraphBuilder gb, int n, String prevLayerName){
         String inputLayer = prevLayerName;
         for (int i = 0; i < n; i++) {
-            gb.addLayer(conv1 + n, new ConvolutionLayer.Builder(3,3)
+            gb.addLayer(conv1 + i, new ConvolutionLayer.Builder(3,3)
                             .nIn(256).nOut(256).padding(1,1)
                             .activation(Activation.IDENTITY).hasBias(false)
                             .build(), inputLayer)
-                    .addLayer(batch1 + n, new BatchNormalization.Builder().nOut(256).build(), conv1 + n)
-                    .addLayer(act + n, new ActivationLayer(USED_ACTIVATION), batch1)
-                    .addLayer(conv2 + n, new ConvolutionLayer.Builder(3,3)
+                    .addLayer(batch1 + i, new BatchNormalization.Builder().nOut(256).build(), conv1 + i)
+                    .addLayer(act + i, new ActivationLayer(USED_ACTIVATION), batch1 + i)
+                    .addLayer(conv2 + i, new ConvolutionLayer.Builder(3,3)
                             .nIn(256).nOut(256).padding(1,1)
                             .activation(Activation.IDENTITY).hasBias(false)
-                            .build(), act + n)
-                    .addLayer(batch2+n, new BatchNormalization.Builder().nOut(256).build(), conv2)
+                            .build(), act + i)
+                    .addLayer(batch2 + i, new BatchNormalization.Builder().nOut(256).build(), conv2 + i)
 
                     // Vertex to add x back ( residual net)
                     // y = F(x) + x;
-                    .addVertex(addition + n, new ElementWiseVertex(ElementWiseVertex.Op.Add),
-                            inputLayer,batch2+n)
-                    .addLayer(out+n, new ActivationLayer(USED_ACTIVATION), addition + n);
+                    .addVertex(addition + i, new ElementWiseVertex(ElementWiseVertex.Op.Add),
+                            inputLayer,batch2 + i)
+                    .addLayer(out + i, new ActivationLayer(USED_ACTIVATION), addition + i);
 
-            inputLayer = out+n;
+            inputLayer = out + i;
         }
         return inputLayer;
     }

@@ -102,11 +102,11 @@ public final class PositionEncoder {
 
         // En passant — single square
         if (pos.enPassantSquare >= 0) {
-            tensor[PLANE_EN_PASSANT + pos.enPassantSquare] = 1.0f;
+            tensor[PLANE_EN_PASSANT * PLANE_SIZE + pos.enPassantSquare] = 1.0f;
         }
 
         // Side to move
-        if (pos.whiteToMove) Arrays.fill(tensor, PLANE_SIDE * PLANE_SIZE, PLANE_FIFTY, 1.0f);
+        if (pos.whiteToMove) Arrays.fill(tensor, PLANE_SIDE * PLANE_SIZE, PLANE_FIFTY * PLANE_SIZE, 1.0f);
 
         // Fifty-move rule
         Arrays.fill(tensor, PLANE_FIFTY * PLANE_SIZE, tensor.length, Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
