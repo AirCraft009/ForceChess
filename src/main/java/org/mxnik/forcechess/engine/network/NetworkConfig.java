@@ -1,6 +1,5 @@
-package org.mxnik.forcechess.engine.bot;
+package org.mxnik.forcechess.engine.network;
 
-import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
 import org.deeplearning4j.nn.conf.layers.*;

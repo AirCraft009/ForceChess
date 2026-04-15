@@ -1,14 +1,13 @@
 package org.mxnik.forcechess.engine.bot;
 
 import org.mxnik.forcechess.Util.Bitboard;
-import org.mxnik.forcechess.Util.DiversePair;
 import org.mxnik.forcechess.engine.MCTS.MctsTree;
 import org.mxnik.forcechess.engine.Pos.Move;
 import org.mxnik.forcechess.engine.Pos.MoveGen;
 import org.mxnik.forcechess.engine.Pos.PositionEncoder;
+import org.mxnik.forcechess.engine.network.AlphaNet;
+import org.mxnik.forcechess.engine.network.NetworkConfig;
 import org.mxnik.forcechess.user.ChessLogic.GameState;
-
-import java.util.Arrays;
 
 /**
  * Final class connecting all classes from Pos to the NN
@@ -102,7 +101,7 @@ public class ChessBot {
         // iterate over all moves in curr pos.
         for (int i = movePtrStack[depth - 1]; i < movePtrStack[depth]; i++) {
             int child = tree.addNewChild(node, moves[i]);
-            tree.p[child] = policyV[i-movePtrStack[depth-1]];    // add a new node and set the policy vector
+            tree.p[child] = policyV[moves[i]];    // add a new node and set the policy vector
             tree.move[child] = moves[i];
         }
     }
@@ -127,6 +126,8 @@ public class ChessBot {
         }
         return tree.move[tree.highestVisitNode(0)];
     }
+
+
 
     /**
      * simulates a whole iteration n times
@@ -181,7 +182,6 @@ public class ChessBot {
             }
             epoch++;
             pos.makeMove(move);
-            System.out.println(pos.whiteMaterial);
             System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
         }
@@ -189,6 +189,7 @@ public class ChessBot {
 
 
     public static void main(String[] args) {
-        ChessBot bot = new ChessBot(new Evaluator.StubEvaluator());
+        ChessBot bot = new ChessBot(new AlphaNet(NetworkConfig.buildNet()));
+        bot.simGame(1);
     }
 }

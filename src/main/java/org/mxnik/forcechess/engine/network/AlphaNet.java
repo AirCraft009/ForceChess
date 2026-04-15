@@ -1,23 +1,15 @@
-package org.mxnik.forcechess.engine.bot;
+package org.mxnik.forcechess.engine.network;
 
-import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
-import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
-import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
-import org.deeplearning4j.nn.conf.layers.*;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.deeplearning4j.nn.weights.WeightInit;
-import org.mxnik.forcechess.engine.Pos.Move;
 import org.mxnik.forcechess.engine.Pos.PositionEncoder;
-import org.nd4j.linalg.activations.Activation;
+import org.mxnik.forcechess.engine.bot.Evaluator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-import org.nd4j.linalg.learning.config.Adam;
-import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 /**
  * The neural net used for evaluating position and returning the bestMove
  */
-public final class AlphaNet implements Evaluator{
+public final class AlphaNet implements Evaluator {
     private final ComputationGraph model;
     private float[] flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
 
@@ -34,8 +26,8 @@ public final class AlphaNet implements Evaluator{
     public Result evaluate(PositionEncoder.Position pos) {
         // encode position in flat array
         PositionEncoder.encode(pos, flat);
-        INDArray input = Nd4j.create(flat, new int[]{1, PositionEncoder.PLANES, 8, 8});
-        INDArray[] out = model.output(input);
+        INDArray input = Nd4j.create(flat, new int[]{1, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE});
+        INDArray[] out = model.output(false, input);
         float[] policy = out[0].toFloatVector();
         float positionRating = out[1].getFloat(0);
         for (INDArray o : out){
@@ -44,6 +36,13 @@ public final class AlphaNet implements Evaluator{
         input.close();
         return new Result(policy, positionRating);
     }
+
+    // because flat is still filled after evaluate and needed as input for TrainingSamples
+    public float[] getFlatCopy(){
+        return flat.clone();
+    }
+
+
 
 
 }
