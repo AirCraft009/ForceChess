@@ -62,9 +62,7 @@ public class MoveGen {
         return generateMovesB(position, offset, moves);
     }
 
-    // -------------------------------------------------------------------------
     // White
-    // -------------------------------------------------------------------------
 
     private static int generateMovesW(PositionEncoder.Position pos, int offset, int[] moves) {
         // Pawn pushes — can't land on any occupied square
@@ -262,23 +260,21 @@ public class MoveGen {
         return offset;
     }
 
-    // -------------------------------------------------------------------------
     // Slide move helpers
-    // -------------------------------------------------------------------------
 
-    private static long queenMoves(int square, long occupied, long ownPieces) {
+    static long queenMoves(int square, long occupied, long ownPieces) {
         return rookMoves(square, occupied, ownPieces)
              | bishopMoves(square, occupied, ownPieces);
     }
 
-    private static long rookMoves(int square, long occupied, long ownPieces) {
+    static long rookMoves(int square, long occupied, long ownPieces) {
         return slideAttacks(square,  PositionEncoder.SIZE, occupied, ownPieces, Move.ROW_1)  // up
              | slideAttacks(square, -PositionEncoder.SIZE, occupied, ownPieces, Move.ROW_8)  // down
              | slideAttacks(square, -1, occupied, ownPieces, Move.FILE_H)              // left
              | slideAttacks(square,  1, occupied, ownPieces, Move.FILE_A);             // right
     }
 
-    private static long bishopMoves(int square, long occupied, long ownPieces) {
+    static long bishopMoves(int square, long occupied, long ownPieces) {
         return slideAttacks(square,  PositionEncoder.SIZE + 1, occupied, ownPieces, Move.FILE_A | Move.ROW_1)  // right-up
              | slideAttacks(square,  PositionEncoder.SIZE - 1, occupied, ownPieces, Move.FILE_H | Move.ROW_1)  // left-up
              | slideAttacks(square, -PositionEncoder.SIZE + 1, occupied, ownPieces, Move.FILE_A | Move.ROW_8)  // right-down
@@ -320,9 +316,7 @@ public class MoveGen {
         return attack;
     }
 
-    // -------------------------------------------------------------------------
     // Move array helpers
-    // -------------------------------------------------------------------------
 
     /**
      * Drains a bitboard of end-squares into the move array,
@@ -347,7 +341,7 @@ public class MoveGen {
 
     /**
      * Converts a bitboard of pawn destination squares into move entries.
-     * The source square is recovered by subtracting the push offset.
+     * The source square is recovered by subtracting the move offset.
      */
     private static int formatPawnMoves(long bitBoard, int moveOffset, int offset,
                                        int flags, int[] moves) {

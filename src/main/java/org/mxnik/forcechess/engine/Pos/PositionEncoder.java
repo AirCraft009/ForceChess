@@ -416,6 +416,23 @@ public final class PositionEncoder {
             updateHelper();
             calcMat();
             whiteToMove = !whiteToMove;
+            fiftyMoveCounter --;
+        }
+
+        public GameState getState(boolean color){
+            boolean isChecked = checkChess(color);
+            boolean hasMoves = color ? Check.WhiteHasMoves(this) : Check.BlackHasMoves(this);
+
+            if (isChecked){
+                if(hasMoves){
+                    return GameState.Continue;
+                }
+                return GameState.CheckMate;
+            }
+            if(hasMoves){
+                return GameState.Continue;
+            }
+            return GameState.StaleMate;
         }
 
         // Check detection

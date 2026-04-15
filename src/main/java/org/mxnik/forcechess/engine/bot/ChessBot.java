@@ -72,7 +72,7 @@ public class ChessBot {
 
             if (tree.firstChild[node] == 0) {
                 Evaluator.Result v = evaluator.evaluate(pos);
-                expand(node, depth, v.policyV());               // add all moves to the end
+                GameState g = expand(node, depth, v.policyV());               // add all moves to the end
                 tree.n[node]++;
                 tree.w[node] += v.value();
                 return node;
@@ -89,13 +89,13 @@ public class ChessBot {
      * <p>
      * sets the policy and move of the child-node
      */
-    private void expand(int node, int depth, float[] policyV) {
+    private GameState expand(int node, int depth, float[] policyV) {
         // depth - 1 to get the last offset
         var out = MoveGen.generateMovesAndResult(pos, movePtrStack[depth-1], pos.whiteToMove, moves);
         movePtrStack[depth] = out.first();
 
         if(out.second() != GameState.Continue){     // don't expand if the game has ended
-            return;
+            return out.second();
         }
 
         // iterate over all moves in curr pos.
@@ -104,6 +104,7 @@ public class ChessBot {
             tree.p[child] = policyV[moves[i]];    // add a new node and set the policy vector
             tree.move[child] = moves[i];
         }
+        return GameState.Continue;
     }
 
     private void backProp(int node, float val){
