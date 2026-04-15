@@ -45,6 +45,22 @@ public class Board {
         MoveOffsets.calculateOffset(sideLen);
     }
 
+    public void calcMaterial(){
+        teamBMaterial = 0;
+        teamWMaterial = 0;
+
+        for (Piece p : board){
+            if (p == EmptyPiece.EMPTY_PIECE)
+                continue;
+
+            if(p.getColor()){
+                teamWMaterial += p.getType().value;
+            }else {
+                teamBMaterial += p.getType().value;
+            }
+        }
+    }
+
     /**
      * Board per Fen String aufbauen
      * @param fenStr Der String im Fen format
