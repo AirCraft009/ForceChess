@@ -2,6 +2,7 @@ package org.mxnik.forcechess.engine.Pos;
 
 import org.mxnik.forcechess.Util.Bitboard;
 import org.mxnik.forcechess.Util.Helper;
+import org.mxnik.forcechess.user.ChessLogic.GameState;
 
 import java.util.Arrays;
 
@@ -279,8 +280,10 @@ public final class PositionEncoder {
             whiteToMove = !whiteToMove;
             updateHelper();
             calcMat();
+            fiftyMoveCounter ++;
             return undo;
         }
+
 
         private int makeMoveCore(int move) {
             int from      = Move.from(move);
