@@ -256,32 +256,37 @@ public class ChessBot {
      * sims a game and outputs to the screen
      * every move will have n rounds in the tree
      */
-    public void selfPlayGame(int n, SampleBuffer buffer){
-        float[] flat = PositionEncoder.encodeFlat(pos);
+    public int selfPlayGame(int n, int startoffset, int end, SampleBuffer buffer){
 
-        GameState g = pos.getState(pos.whiteToMove);
-        int move;
         float z = 0;
-        while (g == GameState.Continue){
+        float[] flat;
+        int startPtr = buffer.getPtr();
+        GameState g = pos.getState(pos.whiteToMove);
+
+        System.out.println("startGame");
+        int move;
+        while (g == GameState.Continue && startoffset < end){
+
+            flat = PositionEncoder.encodeFlat(pos);
             move = bestMove(n);
+            buffer.addSample(flat, moveDist.clone(), z);
             pos.makeMove(move);
-            resetCore();
             System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+            resetCore();
             g = pos.getState(pos.whiteToMove);
+            startoffset ++;
         }
 
-        if(g == GameState.CheckMate){
-            z = pos.whiteToMove ? 1 : -1;
-        }
-
-        buffer.addSample(flat, moveDist, z);
+        z = pos.whiteToMove && g == GameState.CheckMate ? 1 : -1;
+        buffer.updateZ(startPtr, z);
+        return startoffset;
     }
 
 
     public static void main(String[] args) {
         ChessBot bot = new ChessBot(new AlphaNet(NetworkConfig.buildNet()));
-        SampleBuffer buffer = new SampleBuffer(1);
-        bot.selfPlayGame(1, buffer);
+        SampleBuffer buffer = new SampleBuffer(1, "");
+        bot.selfPlayGame(1, 0,1, buffer);
         System.out.println(buffer.sample());
     }
 }
