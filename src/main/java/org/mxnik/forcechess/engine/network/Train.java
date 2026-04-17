@@ -18,13 +18,17 @@ public class Train {
     private ChessBot bot;
     private AlphaNet network;
     private String fullPath;
+    private int checkPointC = 0;
     public final static String basePath = "boardsNBots/bots/";
 
+    /**
+     * Read the configured AI-model from the file specified (no file ending)
+     */
     public Train(String fileName) throws IOException {
-        this(fileName, false);
+        this(fileName, true);
     }
 
-    public Train(String fileName, boolean read) throws IOException {
+    private Train(String fileName, boolean read) throws IOException {
         fullPath = basePath + fileName;
         if (!read) {
             network = new AlphaNet(NetworkConfig.buildNet());
@@ -39,9 +43,17 @@ public class Train {
         bot  = new ChessBot(network);
     }
 
-    public Train(AlphaNet net){
+    /**
+     * creates a Train instances with the given network that will be saved to fileName
+     */
+    public Train(AlphaNet net, String fileName) {
+        fullPath = basePath + fileName;
         network = net;
         bot = new ChessBot(net);
+    }
+
+    public void saveCheckPoint(){
+        String checkPath = fullPath + "_" + checkPointC + "_checkPoint.zip";
     }
 
     /**
