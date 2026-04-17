@@ -31,6 +31,7 @@ public final class PositionEncoder {
     public static final int PLANES = 21;
     public static final int SIZE   = 8;
     public static final int PLANE_SIZE = 64;
+    public static final int TENSOR_SIZE = PLANE_SIZE * SIZE * SIZE;
 
     private static final int PLANE_WP         = 0;
     private static final int PLANE_WN         = 1;
@@ -72,45 +73,82 @@ public final class PositionEncoder {
 
     /**
      * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
+     * - starting at the given offset
      */
-    public static void encode(Position pos, float[] tensor) {
-        Arrays.fill(tensor, 0);
+    public static int encode(int offset, Position pos, float[] tensor) {
+        // Only clear this slice, not the whole tensor
+        Arrays.fill(tensor, offset, offset + TENSOR_SIZE, 0);
 
         // Piece planes 0–11
-        encodeBitboard(pos.WPawns, PLANE_WP * PLANE_SIZE,  tensor);
-        encodeBitboard(pos.WKnights, PLANE_WN * PLANE_SIZE,tensor);
-        encodeBitboard(pos.WBishops, PLANE_WB * PLANE_SIZE,tensor);
-        encodeBitboard(pos.WRooks,   PLANE_WR * PLANE_SIZE,tensor);
-        encodeBitboard(pos.WQueens,  PLANE_WQ * PLANE_SIZE,tensor);
-        encodeBitboard(pos.WKing,    PLANE_WK * PLANE_SIZE,tensor);
+        encodeBitboard(pos.WPawns,   offset + PLANE_WP * PLANE_SIZE, tensor);
+        encodeBitboard(pos.WKnights, offset + PLANE_WN * PLANE_SIZE, tensor);
+        encodeBitboard(pos.WBishops, offset + PLANE_WB * PLANE_SIZE, tensor);
+        encodeBitboard(pos.WRooks,   offset + PLANE_WR * PLANE_SIZE, tensor);
+        encodeBitboard(pos.WQueens,  offset + PLANE_WQ * PLANE_SIZE, tensor);
+        encodeBitboard(pos.WKing,    offset + PLANE_WK * PLANE_SIZE, tensor);
 
-        encodeBitboard(pos.BPawns, PLANE_BP * PLANE_SIZE,  tensor);
-        encodeBitboard(pos.BKnights, PLANE_BN * PLANE_SIZE,tensor);
-        encodeBitboard(pos.BBishops, PLANE_BB * PLANE_SIZE,tensor);
-        encodeBitboard(pos.BRooks,   PLANE_BR * PLANE_SIZE,tensor);
-        encodeBitboard(pos.BQueens,  PLANE_BQ * PLANE_SIZE,tensor);
-        encodeBitboard(pos.BKing,    PLANE_BK * PLANE_SIZE,tensor);
+        encodeBitboard(pos.BPawns,   offset + PLANE_BP * PLANE_SIZE, tensor);
+        encodeBitboard(pos.BKnights, offset + PLANE_BN * PLANE_SIZE, tensor);
+        encodeBitboard(pos.BBishops, offset + PLANE_BB * PLANE_SIZE, tensor);
+        encodeBitboard(pos.BRooks,   offset + PLANE_BR * PLANE_SIZE, tensor);
+        encodeBitboard(pos.BQueens,  offset + PLANE_BQ * PLANE_SIZE, tensor);
+        encodeBitboard(pos.BKing,    offset + PLANE_BK * PLANE_SIZE, tensor);
 
         // Castling rights — uniform planes
-        if (pos.WKingCastle)  Arrays.fill(tensor, PLANE_CASTLE_WK * PLANE_SIZE, PLANE_CASTLE_WQ * PLANE_SIZE, 1.0f);
-        if (pos.WQueenCastle) Arrays.fill(tensor, PLANE_CASTLE_WQ * PLANE_SIZE, PLANE_CASTLE_BK * PLANE_SIZE, 1.0f);
-        if (pos.BKingCastle)  Arrays.fill(tensor, PLANE_CASTLE_BK * PLANE_SIZE, PLANE_CASTLE_BQ * PLANE_SIZE, 1.0f);
-        if (pos.BQueenCastle) Arrays.fill(tensor, PLANE_CASTLE_BQ * PLANE_SIZE, PLANE_DOUBLE_PW * PLANE_SIZE, 1.0f);
+        if (pos.WKingCastle)
+            Arrays.fill(tensor,
+                    offset + PLANE_CASTLE_WK * PLANE_SIZE,
+                    offset + PLANE_CASTLE_WQ * PLANE_SIZE,
+                    1.0f);
+
+        if (pos.WQueenCastle)
+            Arrays.fill(tensor,
+                    offset + PLANE_CASTLE_WQ * PLANE_SIZE,
+                    offset + PLANE_CASTLE_BK * PLANE_SIZE,
+                    1.0f);
+
+        if (pos.BKingCastle)
+            Arrays.fill(tensor,
+                    offset + PLANE_CASTLE_BK * PLANE_SIZE,
+                    offset + PLANE_CASTLE_BQ * PLANE_SIZE,
+                    1.0f);
+
+        if (pos.BQueenCastle)
+            Arrays.fill(tensor,
+                    offset + PLANE_CASTLE_BQ * PLANE_SIZE,
+                    offset + PLANE_DOUBLE_PW * PLANE_SIZE,
+                    1.0f);
 
         // Double pawn move planes
-        encodeBitboard(pos.WDoublePawnMove, PLANE_DOUBLE_PW * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BDoublePawnMove, PLANE_DOUBLE_PB * PLANE_SIZE, tensor);
+        encodeBitboard(pos.WDoublePawnMove, offset + PLANE_DOUBLE_PW * PLANE_SIZE, tensor);
+        encodeBitboard(pos.BDoublePawnMove, offset + PLANE_DOUBLE_PB * PLANE_SIZE, tensor);
 
         // En passant — single square
         if (pos.enPassantSquare >= 0) {
-            tensor[PLANE_EN_PASSANT * PLANE_SIZE + pos.enPassantSquare] = 1.0f;
+            tensor[offset + PLANE_EN_PASSANT * PLANE_SIZE + pos.enPassantSquare] = 1.0f;
         }
 
         // Side to move
-        if (pos.whiteToMove) Arrays.fill(tensor, PLANE_SIDE * PLANE_SIZE, PLANE_FIFTY * PLANE_SIZE, 1.0f);
+        if (pos.whiteToMove)
+            Arrays.fill(tensor,
+                    offset + PLANE_SIDE * PLANE_SIZE,
+                    offset + PLANE_FIFTY * PLANE_SIZE,
+                    1.0f);
 
         // Fifty-move rule
-        Arrays.fill(tensor, PLANE_FIFTY * PLANE_SIZE, tensor.length, Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
+        Arrays.fill(tensor,
+                offset + PLANE_FIFTY * PLANE_SIZE,
+                offset + TENSOR_SIZE,
+                Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
+
+        return offset + TENSOR_SIZE;
+    }
+
+    /**
+     * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
+     */
+    public static void encode(Position pos, float[] tensor) {
+        encode(0, pos, tensor);
     }
 
 
@@ -419,9 +457,18 @@ public final class PositionEncoder {
             fiftyMoveCounter --;
         }
 
+        /**
+         * checks if the called color is in checkmate
+         * <p>
+         * if called with white (true) and white is in Checkmate it will return GameState.Checkmate
+         */
         public GameState getState(boolean color){
             boolean isChecked = checkChess(color);
             boolean hasMoves = color ? Check.WhiteHasMoves(this) : Check.BlackHasMoves(this);
+
+            if(fiftyMoveCounter > 100){
+                return GameState.FiftyMove;
+            }
 
             if (isChecked){
                 if(hasMoves){

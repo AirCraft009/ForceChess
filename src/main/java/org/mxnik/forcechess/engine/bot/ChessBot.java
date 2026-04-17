@@ -1,12 +1,13 @@
 package org.mxnik.forcechess.engine.bot;
 
-import org.mxnik.forcechess.Util.Bitboard;
+import org.mxnik.forcechess.Util.FlatArray;
 import org.mxnik.forcechess.engine.MCTS.MctsTree;
 import org.mxnik.forcechess.engine.Pos.Move;
 import org.mxnik.forcechess.engine.Pos.MoveGen;
 import org.mxnik.forcechess.engine.Pos.PositionEncoder;
 import org.mxnik.forcechess.engine.network.AlphaNet;
 import org.mxnik.forcechess.engine.network.NetworkConfig;
+import org.mxnik.forcechess.engine.network.SampleBuffer;
 import org.mxnik.forcechess.user.ChessLogic.GameState;
 
 /**
@@ -15,14 +16,21 @@ import org.mxnik.forcechess.user.ChessLogic.GameState;
 public class ChessBot {
     public static final int MAX_SEARCH_DEPTH = 64;
     public static final int MAX_MOVES_IN_POS = 256;
+    public static final int BATCH_SIZE = 32;
+    public static final float VIRTUAL_LOSS = 1F;
 
-    public final PositionEncoder.Position pos;                                  // state
-    public final MctsTree tree;                                                 // eval the states and chose with PUCT
-    public final int[] moves = new int[MAX_MOVES_IN_POS * MAX_SEARCH_DEPTH];    // pre-allocated move array to max search depth to avoid rapid allocs. and deallocs. in train-loop
-    private final int[] movePtrStack = new int[MAX_SEARCH_DEPTH + 1];           // contains the ptr to one above the last entry. Has a 0 entry on 0 idx for simplicity purp. (example: segment 1: 0 - 12; movePtrStack[0] = 13
-    public final int[] undoInfoStack = new int[MAX_SEARCH_DEPTH];               // all undoInformation in a stack so it can be accessed easily; access[cDepth - 1]
-    public final float[] moveDist = new float[Move.MOVE_POSSIBILITIES];         // will hold the distributions for all the most likely moves;
-    public final Evaluator evaluator;
+
+    private final PositionEncoder.Position pos;                                  // state
+    private final MctsTree tree;                                                 // eval the states and chose with PUCT
+    private final int[] moves = new int[MAX_MOVES_IN_POS * MAX_SEARCH_DEPTH];    // pre-allocated move array to max search depth to avoid rapid allocs. and deallocs. in train-loop
+    private final int[] movePtrStack = new int[MAX_SEARCH_DEPTH + 1];            // contains the ptr to one above the last entry. Has a 0 entry on 0 idx for simplicity purp. (example: segment 1: 0 - 12; movePtrStack[0] = 13
+    private final int[] undoInfoStack = new int[MAX_SEARCH_DEPTH];               // all undoInformation in a stack so it can be accessed easily; access[cDepth - 1]
+    private final float[] moveDist = new float[Move.MOVE_POSSIBILITIES];         // will hold the distributions for all the most likely moves;
+    // there to remove virtualLoss and virtualVisitCount
+    private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE * MAX_SEARCH_DEPTH];          // there can be at most this amount of nodes effected by virtualLoss
+    private final FlatArray batchedInputs = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
+
+    private final Evaluator evaluator;
     private int depth = 1;                                                      // depth = 1 da root immer existiert
 
 
@@ -33,10 +41,10 @@ public class ChessBot {
     }
 
     /**
-     * simulate one full round;
+     * simulate one full round(batched);
      * <p>
-     * walk to a leafNode,
-     * expand it,
+     * walk to Batchsize leafNodes,
+     * expand them,
      * backpropagate the values up,
      * unmake all moves
      */
@@ -46,6 +54,25 @@ public class ChessBot {
         unmakeAll();
     }
 
+    /**
+     * simulate one full round;
+     * <p>
+     * walk to a leafNode,
+     * expand it,
+     * backpropagate the values up,
+     * unmake all moves
+     */
+    public void simulateBatched(){
+        walkNodesBatched();
+        expandBatched();
+        backPropBatched();
+        unmakeAll();
+    }
+
+
+    /**
+     * unmake all moves made up until now back to S0
+     */
     private void unmakeAll(){
         depth -= 2;        // remove leftover depth and set it to point at value not above
         for (int i = depth; i  >= 0 ; i--) {
@@ -72,7 +99,7 @@ public class ChessBot {
 
             if (tree.firstChild[node] == 0) {
                 Evaluator.Result v = evaluator.evaluate(pos);
-                GameState g = expand(node, depth, v.policyV());               // add all moves to the end
+                expand(node, depth, v.policyV());               // add all moves to the end
                 tree.n[node]++;
                 tree.w[node] += v.value();
                 return node;
@@ -85,26 +112,77 @@ public class ChessBot {
     }
 
     /**
+     * walks down from root till a leaf node is hit.
+     * then applies virtual loss.
+     * then goes back up till a batch of leafNodes is found
+     * expands them all at once
+     */
+    private void walkNodesBatched(){
+        int nodeCount = 0;
+        int node = 0;
+        depth = 1;
+
+        while (nodeCount < BATCH_SIZE) {
+            if(depth == MAX_SEARCH_DEPTH){
+                tree.globalVisits++;
+                tree.n[node]++;
+                tree.w[node] -= VIRTUAL_LOSS;
+                backProp(node, -VIRTUAL_LOSS);
+                virtuallyAffectedNodes[nodeCount] = node;
+                PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);
+
+                nodeCount++;
+                unmakeAll();
+                resetCore();
+                continue;
+            }
+
+            if (tree.firstChild[node] == 0) {
+                tree.globalVisits++;
+                tree.n[node]++;
+                tree.w[node] -= VIRTUAL_LOSS;           // apply virtual loss
+                backProp(node, -VIRTUAL_LOSS);          // backpropagate virtual-loss back up
+                virtuallyAffectedNodes[nodeCount] = node;
+                PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);            // save the position for later eval
+
+                // reset the tree so another batch run can be started
+                nodeCount++;
+                unmakeAll();
+                resetCore();
+                continue;
+            }
+            int bestC = tree.findBestChild(node);
+            undoInfoStack[depth-1] = pos.makeMove(tree.move[bestC]);
+            depth++;
+            node = bestC;
+        }
+    }
+
+    private void expandBatched(){
+        for (int i = 0; i < virtuallyAffectedNodes.length; i++) {
+            int node = virtuallyAffectedNodes[i];
+            if(tree.firstChild[node] != 0)
+                continue;
+
+
+        }
+    }
+
+    /**
      * gets all possible moves and then adds them to the current-node as children
      * <p>
      * sets the policy and move of the child-node
      */
-    private GameState expand(int node, int depth, float[] policyV) {
+    private void expand(int node, int depth, float[] policyV) {
         // depth - 1 to get the last offset
         var out = MoveGen.generateMovesAndResult(pos, movePtrStack[depth-1], pos.whiteToMove, moves);
         movePtrStack[depth] = out.first();
-
-        if(out.second() != GameState.Continue){     // don't expand if the game has ended
-            return out.second();
-        }
 
         // iterate over all moves in curr pos.
         for (int i = movePtrStack[depth - 1]; i < movePtrStack[depth]; i++) {
             int child = tree.addNewChild(node, moves[i]);
             tree.p[child] = policyV[moves[i]];    // add a new node and set the policy vector
-            tree.move[child] = moves[i];
         }
-        return GameState.Continue;
     }
 
     private void backProp(int node, float val){
@@ -115,6 +193,19 @@ public class ChessBot {
             tree.w[node] += val;
             val = -val;                 // flip val because one move is done by black the other by white (alternating)
             node = tree.parentIdx[node];
+        }
+    }
+
+    private void backPropBatched(){
+        for (int virtuallyAffectedNode : virtuallyAffectedNodes) {
+            int node = virtuallyAffectedNode;
+            float val = tree.w[node];
+            while (node != 0) {
+                tree.n[node]++;
+                tree.w[node] += val;
+                val = -val;                 // flip val because one move is done by black the other by white (alternating)
+                node = tree.parentIdx[node];
+            }
         }
     }
 
@@ -142,7 +233,7 @@ public class ChessBot {
     /**
      * returns the probability dist. over root children
      */
-    public float[] policyHead(){
+    public float[] moveDist(){
         int node = tree.firstChild[0];
         while (node != 0){
             moveDist[tree.move[node]] = (float) tree.n[node] / tree.globalVisits;
@@ -165,32 +256,32 @@ public class ChessBot {
      * sims a game and outputs to the screen
      * every move will have n rounds in the tree
      */
-    public void simGame(int n){
-        int epoch = 0;
-        while (true){
-            int move = 0;
-            try {
-                move = bestMove(n);
-            }catch (ArrayIndexOutOfBoundsException e){
-                System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
-                System.out.println(Bitboard.lsb(pos.WKing));
-                System.out.println(Bitboard.lsb(pos.BKing));
+    public void selfPlayGame(int n, SampleBuffer buffer){
+        float[] flat = PositionEncoder.encodeFlat(pos);
 
-                var o = MoveGen.generateMovesAndResult(pos, 0, pos.whiteToMove, new int[256]);
-                System.out.println( o.second());
-                System.out.println( o.first());
-                break;
-            }
-            epoch++;
+        GameState g = pos.getState(pos.whiteToMove);
+        int move;
+        float z = 0;
+        while (g == GameState.Continue){
+            move = bestMove(n);
             pos.makeMove(move);
-            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
+            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+            g = pos.getState(pos.whiteToMove);
         }
+
+        if(g == GameState.CheckMate){
+            z = pos.whiteToMove ? 1 : -1;
+        }
+
+        buffer.addSample(flat, moveDist, z);
     }
 
 
     public static void main(String[] args) {
         ChessBot bot = new ChessBot(new AlphaNet(NetworkConfig.buildNet()));
-        bot.simGame(1);
+        SampleBuffer buffer = new SampleBuffer(1);
+        bot.selfPlayGame(1, buffer);
+        System.out.println(buffer.sample());
     }
 }
