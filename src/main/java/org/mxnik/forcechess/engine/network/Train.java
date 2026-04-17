@@ -52,8 +52,10 @@ public class Train {
         bot = new ChessBot(net);
     }
 
-    public void saveCheckPoint(){
+    public void saveCheckPoint() throws IOException {
         String checkPath = fullPath + "_" + checkPointC + "_checkPoint.zip";
+        ModelSerializer.writeModel(network.getModel(), new File(checkPath), true);
+        checkPointC++;
     }
 
     /**
@@ -109,7 +111,7 @@ public class Train {
     }
 
     public static void main(String[] args) {
-        Train train = new Train(new AlphaNet(NetworkConfig.buildNet()));
+        Train train = new Train(new AlphaNet(NetworkConfig.buildNet()), "aa");
         train.train(10);
     }
 }
