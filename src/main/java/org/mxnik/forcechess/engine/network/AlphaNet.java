@@ -22,6 +22,10 @@ public final class AlphaNet implements Evaluator {
         model.init();
     }
 
+    public ComputationGraph getModel(){
+        return model;
+    }
+
     @Override
     public Result evaluate(PositionEncoder.Position pos) {
         // encode position in flat array

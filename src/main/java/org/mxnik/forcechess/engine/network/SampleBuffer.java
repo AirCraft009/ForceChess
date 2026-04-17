@@ -8,7 +8,7 @@ public class SampleBuffer {
     public final int lenght;
     private int ptr;
     private TrainingSample[] samples;
-    private Random random = new Random();
+    private final Random random = new Random();
 
     public SampleBuffer(int lenght){
         int tempLenght = 1;

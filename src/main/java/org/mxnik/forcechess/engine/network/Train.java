@@ -7,6 +7,8 @@ import org.mxnik.forcechess.engine.Pos.Move;
 import org.mxnik.forcechess.engine.Pos.PositionEncoder;
 import org.mxnik.forcechess.engine.bot.ChessBot;
 import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.MultiDataSet;
+import org.nd4j.linalg.dataset.api.DataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.File;
@@ -46,11 +48,13 @@ public class Train {
      * trains a NeuralNetwork
      * @param size amount of moves played in total over all games
      * @param moveDepth how often the MCTS-Loop is run for each move
-     * @param checkPoint how many batches have to be played till a checkpoint is saved <p></p>
-     *                   - checkpoints are set as filename_n_checkPoint.zip
      */
-    public SampleBuffer fillBuffer(int size, int moveDepth, int checkPoint) {
-        return  new SampleBuffer(1);
+    public SampleBuffer selfPlayGames(int size, int moveDepth) {
+        SampleBuffer buffer = new SampleBuffer(size);
+        for (int i = 0; i < size; i++) {
+            bot.selfPlayGame(moveDepth, buffer);
+        }
+        return buffer;
     }
 
     private void trainFromBuffer(int batchSize, SampleBuffer buffer){
@@ -68,9 +72,32 @@ public class Train {
 
         for (int i = 0; i < batchSize; i++) {
             TrainingSample s = buffer.sample();
-            inputs.putRow(i, Nd4j.create(s.tensor(), new int[]{1, 19, 8, 8}, 'c'));
+            inputs.putSlice(i, Nd4j.create(s.tensor(), new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c'));
             piTargets.putRow(i, Nd4j.create(s.pi()));
             zTargets.putRow(i, Nd4j.create(new float[]{s.z()}));
         }
+
+        network.getModel().fit(new MultiDataSet(
+                new INDArray[] {inputs},
+                new INDArray[] {piTargets, zTargets}
+        ));
+
+        double scores = network.getModel().score();
+        System.out.printf("policy loss: %.4f\n",
+                scores);
+    }
+
+    /**
+     * @param checkPoint how many batches have to be played till a checkpoint is saved <p></p>
+     *                   - checkpoints are set as filename_n_checkPoint.zip
+     */
+    public void train(int checkPoint){
+        SampleBuffer b = selfPlayGames(1, 300);
+        trainFromBuffer(10, b);
+    }
+
+    public static void main(String[] args) {
+        Train train = new Train(new AlphaNet(NetworkConfig.buildNet()));
+        train.train(10);
     }
 }

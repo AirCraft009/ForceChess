@@ -94,6 +94,11 @@
       </exclusions>
     </dependency>
       <dependency>
+          <groupId>org.nd4j</groupId>
+          <artifactId>nd4j-cuda-11.6-platform</artifactId>
+          <version>1.0.0-M2.1</version>
+      </dependency>
+      <dependency>
       <groupId>com.github.almasb</groupId>
       <artifactId>fxgl</artifactId>
       <version>17.3</version>
