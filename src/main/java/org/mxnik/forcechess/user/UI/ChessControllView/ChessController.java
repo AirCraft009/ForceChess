@@ -3,11 +3,17 @@ package org.mxnik.forcechess.user.UI.ChessControllView;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import org.deeplearning4j.util.ModelSerializer;
+import org.mxnik.forcechess.engine.bot.ChessBot;
+import org.mxnik.forcechess.engine.network.AlphaNet;
 import org.mxnik.forcechess.user.ChessLogic.Board;
 import org.mxnik.forcechess.user.ChessLogic.GameState;
 import org.mxnik.forcechess.user.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.Util.DiversePair;
 import org.mxnik.forcechess.Util.Helper;
+
+import java.io.File;
+import java.io.IOException;
 
 
 public class ChessController implements EventHandler<Event> {
@@ -22,7 +28,7 @@ public class ChessController implements EventHandler<Event> {
     private byte[] currPieceMoves;
 
 
-    public ChessController(ChessScene chess, String startFen) throws CloneNotSupportedException {
+    public ChessController(ChessScene chess, String startFen) throws CloneNotSupportedException, IOException {
         chessScene = chess;
         board = new Board(startFen);
         chessScene.drawPieces(board.getBoard());
@@ -76,8 +82,18 @@ public class ChessController implements EventHandler<Event> {
             }
             currPieceMoves = moves;
             chessScene.drawPieces(board.getBoard());
+
+
         }
     }
+
+    public void resetToDefault(){
+        firstClick = -1;
+        secondClick = -1;
+        pieceSelected = false;
+    }
+
+
 
     /**
      * set all squares held in the move array to active
