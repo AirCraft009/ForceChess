@@ -47,3 +47,14 @@ Des Weiteren können unterschiedlich trainierte KIs gespeichert sowie genutzt we
   - Statische Positionsanalyse 
   - Bester Zug in Position 
   - Falls Stockfish schnell genug evaluieren kann     
+
+
+## Run - Project
+
+### Run the Main Javafx application
+
+- ```mvn javafx:run```
+
+### Run FCC the command-line tool for training
+
+- ```mvn exec:java "-Dexec.mainClass=org.mxnik.forcechess.engine.FCC"```

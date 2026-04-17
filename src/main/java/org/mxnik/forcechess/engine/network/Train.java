@@ -70,10 +70,10 @@ public class Train {
      * @param size amount of moves played in total over all games
      * @param moveDepth how often the MCTS-Loop is run for each move
      */
-    public SampleBuffer selfPlayGames(int size, int moveDepth) {
+    public SampleBuffer selfPlayGames(int size, int intermediate, int moveDepth) {
         SampleBuffer buffer = new SampleBuffer(size, fileName + "_buffer");
         for (int i = 0; i < size; i++) {
-            i = bot.selfPlayGame(moveDepth, i, size, buffer);
+            i = bot.selfPlayGame(moveDepth, i, size, intermediate, buffer);
         }
         System.out.println("Finished self play");
         return buffer;
@@ -105,8 +105,7 @@ public class Train {
         ));
 
         double scores = network.getModel().score();
-        System.out.printf("policy loss: %.4f\n",
-                scores);
+        System.out.printf("policy loss: %.4f\n", scores);
     }
 
     /**
@@ -120,8 +119,8 @@ public class Train {
      * @param checkPoint how many batches have to be played till a checkpoint is saved <p></p>
      *                   - checkpoints are set as filename_n_checkPoint.zip
      */
-    public void train(int batchSize, int SampleBufferSize, int n, int epoch, int checkPoint) throws IOException {
-        SampleBuffer b = selfPlayGames(SampleBufferSize, n);
+    public void train(int batchSize, int SampleBufferSize, int n, int epoch, int sampleCheckPoint, int checkPoint) throws IOException {
+        SampleBuffer b = selfPlayGames(SampleBufferSize, sampleCheckPoint, n);
         train(batchSize, b, epoch, checkPoint);
     }
 
@@ -145,7 +144,8 @@ public class Train {
 
 
     public static void main(String[] args) throws IOException {
-        Train train = new Train(new AlphaNet(NetworkConfig.buildNet()), "D300_T1");
-        train.train(32, 1600, 300, 100, 10);
+        Train train = new Train(new AlphaNet(NetworkConfig.buildNet()), "D250_T1");
+        train.train(32, 1600, 250, 300,100, 10);
+        train.saveNet();
     }
 }

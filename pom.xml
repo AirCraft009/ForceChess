@@ -159,7 +159,7 @@
             <!-- Default configuration for running with: mvn clean javafx:run -->
             <id>default-cli</id>
             <configuration>
-              <mainClass>org.mxnik.forcechess/org.mxnik.forcechess.HelloApplication</mainClass>
+              <mainClass>org.mxnik.forcechess.user.UI.ChessControllView.ChessApplication</mainClass>
               <launcher>app</launcher>
               <jlinkZipName>app</jlinkZipName>
               <jlinkImageName>app</jlinkImageName>
@@ -170,6 +170,11 @@
           </execution>
         </executions>
       </plugin>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>3.1.0</version>
+        </plugin>
     </plugins>
   </build>
 </project>
