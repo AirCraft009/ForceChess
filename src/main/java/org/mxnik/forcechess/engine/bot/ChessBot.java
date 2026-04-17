@@ -1,5 +1,7 @@
 package org.mxnik.forcechess.engine.bot;
 
+import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.util.ModelSerializer;
 import org.mxnik.forcechess.Util.FlatArray;
 import org.mxnik.forcechess.engine.MCTS.MctsTree;
 import org.mxnik.forcechess.engine.Pos.Move;
@@ -9,6 +11,9 @@ import org.mxnik.forcechess.engine.network.AlphaNet;
 import org.mxnik.forcechess.engine.network.NetworkConfig;
 import org.mxnik.forcechess.engine.network.SampleBuffer;
 import org.mxnik.forcechess.user.ChessLogic.GameState;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Final class connecting all classes from Pos to the NN
@@ -256,7 +261,7 @@ public class ChessBot {
      * sims a game and outputs to the screen
      * every move will have n rounds in the tree
      */
-    public int selfPlayGame(int n, int startoffset, int end, SampleBuffer buffer){
+    public int selfPlayGame(int n, int startoffset, int end, int check, SampleBuffer buffer){
 
         float z = 0;
         float[] flat;
@@ -266,6 +271,14 @@ public class ChessBot {
         System.out.println("startGame");
         int move;
         while (g == GameState.Continue && startoffset < end){
+
+            if(check > 1 && startoffset % check == 0){
+                try {
+                    buffer.writeSamples();
+                } catch (IOException e) {
+                    System.err.println("Error when writing SampleBuffer as intermediates ");
+                }
+            }
 
             flat = PositionEncoder.encodeFlat(pos);
             move = bestMove(n);
@@ -282,11 +295,30 @@ public class ChessBot {
         return startoffset;
     }
 
+    public void selfPlayGame(int n){
 
-    public static void main(String[] args) {
-        ChessBot bot = new ChessBot(new AlphaNet(NetworkConfig.buildNet()));
-        SampleBuffer buffer = new SampleBuffer(1, "");
-        bot.selfPlayGame(1, 0,1, buffer);
-        System.out.println(buffer.sample());
+        GameState g = pos.getState(pos.whiteToMove);
+
+        System.out.println("startGame");
+        int move;
+        while (g == GameState.Continue){
+
+            move = bestMove(n);
+            pos.makeMove(move);
+            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+            resetCore();
+            g = pos.getState(pos.whiteToMove);
+        }
+
+    }
+
+
+
+
+    public static void main(String[] args) throws IOException {
+        ChessBot bot = new ChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(
+                new File("boardsNBots/bots/networks/D250_T1.zip"), true
+        )));
+        bot.selfPlayGame(300);
     }
 }
