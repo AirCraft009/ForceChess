@@ -1,8 +1,10 @@
 package org.mxnik.forcechess.engine.network;
 
+import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
 import org.deeplearning4j.nn.conf.layers.*;
+import org.deeplearning4j.nn.conf.preprocessor.CnnToFeedForwardPreProcessor;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.mxnik.forcechess.engine.Pos.Move;
@@ -11,136 +13,204 @@ import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
-/**
- * The neural net used for evaluating position and returning the bestMove
- */
-public final class NetworkConfig{
-    private static final int CONV_LAYER_SIZE = 3;
-    private static final int CONV_OUT = 256;                // higher dim. channels (maybe lower, if it takes too long)
-    private static final int PADDING = 1;                 // how spacial layers will be changed (1 = no change = 8x8 layers)
-    private static final Activation USED_ACTIVATION = Activation.RELU;
-    private static final LossFunctions.LossFunction USED_LOSS_F_POLICY = LossFunctions.LossFunction.MCXENT;    // used in other resNets as well (image classification etc.)
-    private static final LossFunctions.LossFunction USED_LOSS_F_VALUE = LossFunctions.LossFunction.MSE;    // used in other resNets as well (image classification etc.)
-    private static final boolean HAS_BIAS = false;           // bias useless with batch-normalization (why not have easier control tho)
-    private static final double LEARNING_RATE = 1e-3;
-    private static final int SEED = 67;
+public final class NetworkConfig {
+
+    // --- Architecture constants ---
+    private static final int KERNEL        = 3;
+    private static final int CONV_OUT      = 256;
+    private static final int PAD           = 1;
+    private static final int RES_BLOCKS    = 20;
+
+    // Policy head
+    private static final int POL_CHANNELS  = 32;
+    private static final int POL_HIDDEN    = 128;
+
+    // Value head
+    private static final int VAL_HIDDEN    = 64;
+
+    // Training
+    private static final double LR         = 1e-3;
+    private static final int    SEED       = 41;
+
+    // Activations / losses
+    private static final Activation                 ACT        = Activation.RELU;
+    private static final LossFunctions.LossFunction POL_LOSS = LossFunctions.LossFunction.MCXENT;
+    private static final LossFunctions.LossFunction VAL_LOSS = LossFunctions.LossFunction.MSE;
+
+    // ResBlock layer-name prefixes
+    private static final String C1  = "rb-c1-";
+    private static final String C2  = "rb-c2-";
+    private static final String BN1 = "rb-bn1-";
+    private static final String BN2 = "rb-bn2-";
+    private static final String A1  = "rb-act1-";
+    private static final String ADD = "rb-add-";
+    private static final String OUT = "rb-out-";
 
 
-    // ResNet Layer names
-    private static final String RES_BASE = "resBlock";
-    private static final String conv1 = RES_BASE + "-conv1-";        // first convolutional layer
-    private static final String conv2 = RES_BASE + "-conv2-";        // second conv layer in resNet
-    private static final String batch1 = RES_BASE + "-bn1-";           // first batch normalisation
-    private static final String batch2 = RES_BASE + "-bn2-";           // batch normalisation
-    private static final String act = RES_BASE + "-activation";         // activation layer (RELU)
-    private static final String addition = RES_BASE + "-addition";     // Vertex for adding x; F(x) + x, F(x) = H(x) - x
-    private static final String out = RES_BASE + "-out";                // output
+    public static ComputationGraph buildNet() {
+
+        ComputationGraphConfiguration.GraphBuilder g =
+                new NeuralNetConfiguration.Builder()
+                        .seed(SEED)
+                        .updater(new Adam(LR))
+                        .weightInit(WeightInit.RELU)          // He init for hidden layers
+                        .graphBuilder();
 
 
-    public static ComputationGraph buildNet(){
-        org.deeplearning4j.nn.conf.ComputationGraphConfiguration.GraphBuilder graphBuilder;
+        g.addInputs("board")
 
-        NeuralNetConfiguration.Builder confBuilder = new NeuralNetConfiguration.Builder()
-                .seed(SEED)                                                     // seed for random values
-                .updater(new Adam(LEARNING_RATE))                               // how updates are applied Adam updater takes learningRate
-                .weightInit(WeightInit.RELU);                                   // helps with vanishing gradient
-        graphBuilder = confBuilder.graphBuilder();
-
-        graphBuilder.addInputs("board")                              // position tensor.
-                .addLayer("conv-base",
-                        new ConvolutionLayer.Builder(CONV_LAYER_SIZE, CONV_LAYER_SIZE)  // 3x3 conv layer
-                                .nIn(PositionEncoder.PLANES).nOut(CONV_OUT)                 // layer input and throughput
-                                .padding(PADDING, PADDING)                                  // how spacial dim changes
+                .addLayer("stem-conv",
+                        new ConvolutionLayer.Builder(KERNEL, KERNEL)
+                                .nIn(PositionEncoder.PLANES).nOut(CONV_OUT)
+                                .padding(PAD, PAD)
                                 .activation(Activation.IDENTITY)
-                                .hasBias(HAS_BIAS)
-                                .build(), "board")                                          // gets input from board
-                .addLayer("batch-normalization-base",
-                        new BatchNormalization.Builder().nOut(CONV_OUT).build(), "conv-base")    //input inherited from base layer same output just norm.
-                .addLayer("activation-base",
-                        new ActivationLayer(USED_ACTIVATION), "batch-normalization-base");        // add RELU activation layer (inputs = batch norm.)
+                                .hasBias(false)
+                                .build(), "board")
 
-        // add deep resnet blocks
-        String resOut = addResNetBlocks(graphBuilder, 20, "activation-base");
+                .addLayer("stem-bn",
+                        new BatchNormalization.Builder().nOut(CONV_OUT).build(), "stem-conv")
 
-        // POLICY-VECTOR Output-head
-        // 1 x 1 kernel to inspect every single field
-        graphBuilder.addLayer("policyV-conv", new ConvolutionLayer.Builder(1,1)
-                        .nIn(256).nOut(2)
-                        .activation(Activation.IDENTITY).hasBias(false)
-                        .build(), resOut)
-                .addLayer("policyV-bn", new BatchNormalization.Builder().nOut(2).build(), "policyV-conv")
-                .addLayer("policyV-act", new ActivationLayer(USED_ACTIVATION), "policyV-bn")
-                // 2 * 8 * 8 layers to flat 128 vectors
-                .addLayer("policyV-pool",
-                        new GlobalPoolingLayer.Builder()
-                                .poolingType(PoolingType.AVG)
-                                .build(),
-                        "policyV-act")
-                .addLayer("policyV-flat", new DenseLayer.Builder().nIn(2).nOut(128)   // denseLayer = every node connected to the one before
-                        .activation(Activation.IDENTITY).build(), "policyV-pool")
-                .addLayer("policyV",
-                        new OutputLayer.Builder(USED_LOSS_F_POLICY)
-                                .nIn(128).nOut(Move.MOVE_POSSIBILITIES)
+                .addLayer("stem-act",
+                        new ActivationLayer(ACT), "stem-bn");
+
+        // residual blocks
+        String towerOut = addResBlocks(g, RES_BLOCKS, "stem-act");
+
+        // Policy Vector output
+        //
+        //  towerOut -> conv(1×1, 256→32) → BN → ReLU
+        //           -> [CnnToFF preprocessor] → dense(2048→128) → softmax(MOVE_POSSIBILITIES)
+        //
+        g.inputPreProcessor("pol-flat", new CnnToFeedForwardPreProcessor(8, 8, POL_CHANNELS))
+
+                .addLayer("pol-conv",
+                        new ConvolutionLayer.Builder(1, 1)
+                                .nIn(CONV_OUT).nOut(POL_CHANNELS)
+                                .activation(Activation.IDENTITY).hasBias(false)
+                                .build(), towerOut)
+
+                .addLayer("pol-bn",
+                        new BatchNormalization.Builder().nOut(POL_CHANNELS).build(), "pol-conv")
+
+                .addLayer("pol-act",
+                        new ActivationLayer(ACT), "pol-bn")
+
+                // flatten here via inputPreProcessor registered above
+                .addLayer("pol-flat",
+                        new DenseLayer.Builder()
+                                .nIn((long) POL_CHANNELS * 8 * 8).nOut(POL_HIDDEN)
+                                .weightInit(WeightInit.XAVIER)       // Xavier for the dense bridge
+                                .activation(ACT)
+                                .hasBias(true)
+                                .build(), "pol-act")
+
+                .addLayer("policy",
+                        new OutputLayer.Builder(POL_LOSS)
+                                .nIn(POL_HIDDEN).nOut(Move.MOVE_POSSIBILITIES)
+                                .weightInit(WeightInit.XAVIER)       // Xavier on output — avoids softmax collapse
                                 .activation(Activation.SOFTMAX)
-                                .build(), "policyV-flat");
+                                .hasBias(true)
+                                .build(), "pol-flat");
 
-        // VALUE(game-rating),
-        // 256 channels to 1
-        graphBuilder.addLayer("val-conv", new ConvolutionLayer.Builder(1,1)
-                        .nIn(256).nOut(1)
-                        .activation(Activation.IDENTITY).hasBias(false)
-                        .build(), resOut)
-                .addLayer("val-bn", new BatchNormalization.Builder().nOut(1).build(), "val-conv")
-                .addLayer("val-act", new ActivationLayer(Activation.RELU), "val-bn")
-                // flatten 1 * 8 * 8 to 64 values#
+        // Value Head
+
+        //  towerOut -> conv(1×1, 256→1) -> BN -> ReLU
+        //           -> GlobalAvgPool (1) -> dense(1→64) -> dense(64→1) -> tanh
+
+        g.addLayer("val-conv",
+                        new ConvolutionLayer.Builder(1, 1)
+                                .nIn(CONV_OUT).nOut(1)
+                                .activation(Activation.IDENTITY).hasBias(false)
+                                .build(), towerOut)
+
+                .addLayer("val-bn",
+                        new BatchNormalization.Builder().nOut(1).build(), "val-conv")
+
+                .addLayer("val-act",
+                        new ActivationLayer(ACT), "val-bn")
+
                 .addLayer("val-pool",
                         new GlobalPoolingLayer.Builder()
                                 .poolingType(PoolingType.AVG)
-                                .build(),
-                        "val-act")
-                .addLayer("val-flat", new DenseLayer.Builder().nIn(1).nOut(256)
-                        .activation(USED_ACTIVATION).build(), "val-pool")
-                .addLayer("value", new OutputLayer.Builder(USED_LOSS_F_VALUE)
-                        .nIn(256).nOut(1)
-                        .activation(Activation.TANH)
-                        .build(), "val-flat");
+                                .build(), "val-act")
 
-        // OUTPUTS
-        return new ComputationGraph(graphBuilder
-                .setOutputs("policyV", "value")                                            // policy vector(each move), single value rating position
-                .build());
+                // scalar (1) → small hidden → output
+                // hasBias=true + Xavier prevents tanh saturation at init
+                .addLayer("val-dense",
+                        new DenseLayer.Builder()
+                                .nIn(1).nOut(VAL_HIDDEN)
+                                .weightInit(WeightInit.XAVIER)
+                                .activation(ACT)
+                                .hasBias(true)
+                                .build(), "val-pool")
+
+                .addLayer("value",
+                        new OutputLayer.Builder(VAL_LOSS)
+                                .nIn(VAL_HIDDEN).nOut(1)
+                                .weightInit(WeightInit.XAVIER)
+                                .activation(Activation.TANH)
+                                .hasBias(true)
+                                .build(), "val-dense");
+
+        // Outputs
+        ComputationGraphConfiguration conf = g
+                .setOutputs("policy", "value")
+                .build();
+
+        return new ComputationGraph(conf);
     }
 
+
     /**
-     * adds the ResNet blocks (conv, bn, activation, conv2, bn2, addition vertex (F(x) + x), activation (output))
-     * @param gb graph builder to add the blocks to
-     * @param n amount of blocks added
-     * @param prevLayerName name of input layer to the first block
-     * @return the name of the last output layer
+     * Appends {@code n} residual blocks to {@code gb}.
+     * Each block: Conv->BN->ReLU->Conv->BN -> add(skip) → ReLU
+     *
+     * @param gb            graph builder
+     * @param n             number of blocks
+     * @param prevLayer     name of the layer feeding into block 0
+     * @return              name of the last output layer
      */
-    public static String addResNetBlocks(org.deeplearning4j.nn.conf.ComputationGraphConfiguration.GraphBuilder gb, int n, String prevLayerName){
-        String inputLayer = prevLayerName;
+    public static String addResBlocks(
+            ComputationGraphConfiguration.GraphBuilder gb,
+            int n,
+            String prevLayer) {
+
+        String input = prevLayer;
+
         for (int i = 0; i < n; i++) {
-            gb.addLayer(conv1 + i, new ConvolutionLayer.Builder(3,3)
-                            .nIn(256).nOut(256).padding(1,1)
-                            .activation(Activation.IDENTITY).hasBias(false)
-                            .build(), inputLayer)
-                    .addLayer(batch1 + i, new BatchNormalization.Builder().nOut(256).build(), conv1 + i)
-                    .addLayer(act + i, new ActivationLayer(USED_ACTIVATION), batch1 + i)
-                    .addLayer(conv2 + i, new ConvolutionLayer.Builder(3,3)
-                            .nIn(256).nOut(256).padding(1,1)
-                            .activation(Activation.IDENTITY).hasBias(false)
-                            .build(), act + i)
-                    .addLayer(batch2 + i, new BatchNormalization.Builder().nOut(256).build(), conv2 + i)
 
-                    // Vertex to add x back ( residual net)
-                    // y = F(x) + x;
-                    .addVertex(addition + i, new ElementWiseVertex(ElementWiseVertex.Op.Add),
-                            inputLayer,batch2 + i)
-                    .addLayer(out + i, new ActivationLayer(USED_ACTIVATION), addition + i);
+            gb.addLayer(C1 + i,
+                            new ConvolutionLayer.Builder(KERNEL, KERNEL)
+                                    .nIn(CONV_OUT).nOut(CONV_OUT).padding(PAD, PAD)
+                                    .activation(Activation.IDENTITY).hasBias(false)
+                                    .build(), input)
 
-            inputLayer = out + i;
+                    .addLayer(BN1 + i,
+                            new BatchNormalization.Builder().nOut(CONV_OUT).build(), C1 + i)
+
+                    .addLayer(A1 + i,
+                            new ActivationLayer(ACT), BN1 + i)
+
+                    .addLayer(C2 + i,
+                            new ConvolutionLayer.Builder(KERNEL, KERNEL)
+                                    .nIn(CONV_OUT).nOut(CONV_OUT).padding(PAD, PAD)
+                                    .activation(Activation.IDENTITY).hasBias(false)
+                                    .build(), A1 + i)
+
+                    .addLayer(BN2 + i,
+                            new BatchNormalization.Builder().nOut(CONV_OUT).build(), C2 + i)
+
+                    // F(x) + x
+                    .addVertex(ADD + i,
+                            new ElementWiseVertex(ElementWiseVertex.Op.Add),
+                            input, BN2 + i)
+
+                    .addLayer(OUT + i,
+                            new ActivationLayer(ACT), ADD + i);
+
+            input = OUT + i;
         }
-        return inputLayer;
+
+        return input;
     }
 }
