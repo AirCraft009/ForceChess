@@ -31,7 +31,7 @@ public final class PositionEncoder {
     public static final int PLANES = 21;
     public static final int SIZE   = 8;
     public static final int PLANE_SIZE = 64;
-    public static final int TENSOR_SIZE = PLANE_SIZE * SIZE * SIZE;
+    public static final int TENSOR_SIZE = PLANES * SIZE * SIZE;
 
     private static final int PLANE_WP         = 0;
     private static final int PLANE_WN         = 1;
@@ -66,7 +66,7 @@ public final class PositionEncoder {
     }
 
     public static float[] encodeFlat(Position pos) {
-        float[] tensor = new float[PLANES * PLANE_SIZE];
+        float[] tensor = new float[TENSOR_SIZE];
         encode(pos, tensor);
         return tensor;
     }
@@ -77,7 +77,7 @@ public final class PositionEncoder {
      */
     public static int encode(int offset, Position pos, float[] tensor) {
         // Only clear this slice, not the whole tensor
-        Arrays.fill(tensor, offset, offset + TENSOR_SIZE, 0);
+        Arrays.fill(tensor, offset, offset + TENSOR_SIZE - 1, 0);
 
         // Piece planes 0–11
         encodeBitboard(pos.WPawns,   offset + PLANE_WP * PLANE_SIZE, tensor);
@@ -138,7 +138,7 @@ public final class PositionEncoder {
         // Fifty-move rule
         Arrays.fill(tensor,
                 offset + PLANE_FIFTY * PLANE_SIZE,
-                offset + TENSOR_SIZE,
+                offset + TENSOR_SIZE-1,
                 Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
 
         return offset + TENSOR_SIZE;
