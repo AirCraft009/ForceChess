@@ -70,8 +70,7 @@ public class Train {
      * @param size amount of moves played in total over all games
      * @param moveDepth how often the MCTS-Loop is run for each move
      */
-    public SampleBuffer selfPlayGames(int size, int intermediate, int moveDepth) {
-        SampleBuffer buffer = new SampleBuffer(size, fileName + "_buffer");
+    public SampleBuffer selfPlayGames(int size, int intermediate, int moveDepth, SampleBuffer buffer) {
         for (int i = 0; i < size; i++) {
             i = bot.selfPlayGame(moveDepth, i, size, intermediate, buffer);
         }
@@ -120,8 +119,29 @@ public class Train {
      *                   - checkpoints are set as filename_n_checkPoint.zip
      */
     public void train(int batchSize, int SampleBufferSize, int n, int epoch, int sampleCheckPoint, int checkPoint) throws IOException {
-        SampleBuffer b = selfPlayGames(SampleBufferSize, sampleCheckPoint, n);
+        SampleBuffer buffer = new SampleBuffer(SampleBufferSize, fileName + "_buffer");
+        SampleBuffer b = selfPlayGames(SampleBufferSize, sampleCheckPoint, n, buffer);
         train(batchSize, b, epoch, checkPoint);
+    }
+
+    /**
+     * Trains the AI-model with a given SampleBuffer that is then expanded
+     *
+     * @param batchSize how big the batch is that the training is used on
+     * @param size how big the sample buffer should be in the end
+     * @param buffer the buffer used to train with
+     * @param epoch how many times the net will be trained (uses the same sample buffer)
+     * @param checkPoint how many batches have to be played till a checkpoint is saved <p></p>
+     *                   - checkpoints are set as filename_n_checkPoint.zip
+     */
+    public void train(int batchSize, int size, int n, int sampleCheckpoint, int epoch, int checkPoint, SampleBuffer buffer) throws IOException {
+        selfPlayGames(size, sampleCheckpoint, n, buffer);
+        for (int i = 1; i < epoch + 1; i++) {
+            trainFromBuffer(batchSize, buffer);
+            if(i % checkPoint == 0){
+                saveCheckPoint();
+            }
+        }
     }
 
     /**
@@ -144,8 +164,8 @@ public class Train {
 
 
     public static void main(String[] args) throws IOException {
-        Train train = new Train(new AlphaNet(NetworkConfig.buildNet()), "D250_T1");
-        train.train(32, 1600, 250, 300,100, 10);
+        Train train = new Train(new AlphaNet(NetworkConfig.buildNet()), "D300_D250_T0");
+        train.train(100, 10000, 300, 1000,1000, 100);
         train.saveNet();
     }
 }
