@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 public final class MctsTree {
     // balances exploitation with exploration
-    public static final int C_PUCT = 2;
+    public static final float C_PUCT = 3.5F;
     // max amount of MctsNodes
     public static final int POOL_SIZE = 500000;
     public static final int ROOT = 0;

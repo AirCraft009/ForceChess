@@ -70,8 +70,7 @@ public class BatchChessBot extends ChessBot{
             if(depth == MAX_SEARCH_DEPTH){
                 tree.globalVisits++;
                 tree.n[node]++;
-                tree.w[node] -= VIRTUAL_LOSS;
-                backProp(node, -VIRTUAL_LOSS);
+                updateVirtual(node);
                 virtuallyAffectedNodes[nodeCount] = node;
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);
 
@@ -87,8 +86,7 @@ public class BatchChessBot extends ChessBot{
             if (tree.firstChild[node] == 0) {
                 tree.globalVisits++;
                 tree.n[node]++;
-                tree.w[node] -= VIRTUAL_LOSS;           // apply virtual loss
-                backProp(node, -VIRTUAL_LOSS);          // backpropagate virtual-loss back up
+                updateVirtual(node);
                 virtuallyAffectedNodes[nodeCount] = node;
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);            // save the position for later eval
 
@@ -125,7 +123,7 @@ public class BatchChessBot extends ChessBot{
             backProp(node, results[i].value());
 
 
-            if(tree.firstChild[node] != 0){
+            if(tree.firstChild[node] == 0){
                 var out = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, moves);
 
                 // don't add after game end
@@ -138,6 +136,15 @@ public class BatchChessBot extends ChessBot{
                     tree.p[child] = results[i].policyV()[moves[j]];
                 }
             }
+        }
+    }
+
+    private void updateVirtual(int node){
+        while (node != 0) {
+            // don't add to n it was alr incremented during the batching process to make the node look worse
+
+            tree.w[node] -= VIRTUAL_LOSS;
+            node = tree.parentIdx[node];
         }
     }
 
