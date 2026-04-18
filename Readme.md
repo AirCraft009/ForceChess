@@ -57,4 +57,4 @@ Des Weiteren können unterschiedlich trainierte KIs gespeichert sowie genutzt we
 
 ### Run FCC the command-line tool for training
 
-- ```mvn exec:java "-Dexec.mainClass=org.mxnik.forcechess.engine.FCC"```
+- ```mvn exec:java "-Dexec.mainClass=org.mxnik.forcechess.FCC"```
