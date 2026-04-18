@@ -7,6 +7,7 @@ public final class MctsTree {
     public static final int C_PUCT = 2;
     // max amount of MctsNodes
     public static final int POOL_SIZE = 500000;
+    public static final int ROOT = 0;
 
     // parallel arrays — one slot per node
     public final int[]   parentIdx    = new int[POOL_SIZE]; // index of node above

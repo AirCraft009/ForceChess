@@ -6,9 +6,9 @@ import org.mxnik.forcechess.GameState;
 
 public class MoveGen {
 
-    public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, int offset, boolean whiteToMove, int[] moves) {
-        int newOff = generateMoves(pos, offset, whiteToMove, moves);
-        if(newOff == offset){                                       // no new moves
+    public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, boolean whiteToMove, int[] moves) {
+        int newOff = generateMoves(pos, 0, whiteToMove, moves);
+        if(newOff == 0){                                       // no new moves
             boolean check = pos.checkChess(!whiteToMove);           // other colored king still in chack
             return check ? new DiversePair<>(newOff, GameState.CheckMate) : new DiversePair<>(newOff, GameState.StaleMate);
         }
