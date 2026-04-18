@@ -15,6 +15,7 @@ import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 public class Train {
     private final ChessBot bot;
@@ -183,9 +184,29 @@ public class Train {
         }
     }
 
+    public void diagnose(){
+        // After model.init(), before any training
+        INDArray testInput = Nd4j.randn(new int[]{1, PositionEncoder.PLANES, 8, 8});
+        Map<String, INDArray> acts = network.getModel().feedForward(testInput, false);
+
+        for (String key : new String[]{
+                "stem-act", "rb-out-0", "rb-out-4", "rb-out-9", "rb-out-19",
+                "pol-act", "val-act"
+        }) {
+            INDArray a = acts.get(key);
+            System.out.printf("%-20s  mean=%.4e  std=%.4e  max=%.4e%n",
+                    key, a.meanNumber().doubleValue(),
+                    a.stdNumber().doubleValue(),
+                    a.maxNumber().doubleValue());
+        }
+    }
+
 
     public static void main(String[] args) throws IOException {
         Train train = new Train(new BatchChessBot(new AlphaNet(NetworkConfig.buildNet())), "BatchedT1");
+        train.diagnose();
+        train.train(32, 1000, 250, 100, 100, true);
+        train.train(32, 1000, 350, 100, 100, true);
         train.train(32, 5000, 400, 10000, 1000, true);
         train.saveNet();
     }

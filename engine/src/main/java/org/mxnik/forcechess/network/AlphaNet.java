@@ -10,6 +10,8 @@ import org.mxnik.forcechess.bot.Evaluator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
+import static org.mxnik.forcechess.network.NetworkConfig.RES_BLOCKS;
+
 /**
  * The neural net used for evaluating position and returning the bestMove
  */
@@ -19,11 +21,10 @@ public final class AlphaNet implements BatchEvaluator {
 
     /**
      * Net Evaluator
-     * @param model uninitialized model
+     * @param model initialized model
      */
     public AlphaNet(ComputationGraph model) {
         this.model = model;
-        model.init();
         flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
 
     }

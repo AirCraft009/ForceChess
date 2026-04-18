@@ -19,7 +19,7 @@ public final class NetworkConfig {
     private static final int KERNEL        = 3;
     private static final int CONV_OUT      = 256;
     private static final int PAD           = 1;
-    private static final int RES_BLOCKS    = 20;
+    public static final int RES_BLOCKS    = 20;
 
     // Policy head
     private static final int POL_CHANNELS  = 32;
@@ -157,8 +157,16 @@ public final class NetworkConfig {
                 .setOutputs("policy", "value")
                 .build();
 
-        return new ComputationGraph(conf);
+        ComputationGraph comp = new ComputationGraph(conf);
+        comp.init();
+        for (int i = 0; i < RES_BLOCKS; i++) {
+            String paramKey = "rb-c2-" + i + "_W";
+            comp.getParam(paramKey).assign(0.0).close();
+        }
+        return comp;
     }
+
+
 
 
     /**
