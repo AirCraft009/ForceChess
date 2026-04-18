@@ -1,7 +1,11 @@
 package org.mxnik.forcechess.network;
 
+import org.datavec.api.util.RecordUtils;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.mxnik.forcechess.bot.BatchChessBot;
+import org.mxnik.forcechess.bot.BatchEvaluator;
+import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.bot.Evaluator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
@@ -9,9 +13,9 @@ import org.nd4j.linalg.factory.Nd4j;
 /**
  * The neural net used for evaluating position and returning the bestMove
  */
-public final class AlphaNet implements Evaluator {
+public final class AlphaNet implements BatchEvaluator {
     private final ComputationGraph model;
-    private float[] flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
+    private final float[] flat;
 
     /**
      * Net Evaluator
@@ -20,6 +24,8 @@ public final class AlphaNet implements Evaluator {
     public AlphaNet(ComputationGraph model) {
         this.model = model;
         model.init();
+        flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
+
     }
 
     public ComputationGraph getModel(){
@@ -46,7 +52,27 @@ public final class AlphaNet implements Evaluator {
         return flat.clone();
     }
 
+    /**
+     * evaluates a batch that are all encoded into a single big array
+     * @param inputs TENSOR_SIZE * BATCHSIZE encoded positions
+     * @return policy-head , and position rating
+     */
+    @Override
+    public Result[] evaluateBatch(float[] inputs) {
 
 
+        INDArray input = Nd4j.create(inputs, new int[]{BatchChessBot.BATCH_SIZE, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE});
+        INDArray[] out = model.output(false, input);
 
+        Result[] results = new Result[BatchChessBot.BATCH_SIZE];
+        for (int i = 0; i < BatchChessBot.BATCH_SIZE; i ++) {
+            results[i] = new Result(out[0].getRow(i).toFloatVector(), out[1].getFloat(i));
+        }
+
+        out[0].close();
+        out[1].close();
+
+        input.close();
+        return results;
+    }
 }
