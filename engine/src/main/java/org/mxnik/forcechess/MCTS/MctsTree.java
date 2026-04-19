@@ -2,11 +2,16 @@ package org.mxnik.forcechess.MCTS;
 
 import java.util.Arrays;
 
+import static org.mxnik.forcechess.MCTS.RandNoise.dirichlet;
+
 public final class MctsTree {
     // balances exploitation with exploration
     public static final float C_PUCT = 3.5F;
     // max amount of MctsNodes
     public static final int POOL_SIZE = 500000;
+    private static final float epsilon = 0.25f;
+    private static final float alpha = 0.3f;
+
     public static final int ROOT = 0;
 
     // parallel arrays — one slot per node
@@ -70,6 +75,25 @@ public final class MctsTree {
             child = nextSibling[child];
         }
         return bestChild;
+    }
+
+    /**
+     * ensure that the last move isn't always picked on start to avoid repeating positions
+     */
+    public void addNoiseToRootChildren(){
+        int child = firstChild[ROOT];
+
+        // after setting p add noise
+        int count = 0;
+        while (child != 0) { count++; child = nextSibling[child]; }
+
+        float[] noise = dirichlet(alpha, count); // sample Dirichlet
+        child = firstChild[ROOT];
+        int i = 0;
+        while (child != ROOT){
+            p[child] = (1 - epsilon) * p[child] + epsilon * noise[i++];
+            child = nextSibling[child];
+        }
     }
 
     public void reset(){

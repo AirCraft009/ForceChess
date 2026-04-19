@@ -24,7 +24,6 @@ public class ChessBot {
     public static final int MAX_SEARCH_DEPTH = 64;
     public static final int MAX_MOVES_IN_POS = 256;
 
-
     protected PositionEncoder.Position pos;                                        // state
     protected final MctsTree tree;                                                 // eval the states and chose with PUCT
     protected final int[] moves = new int[MAX_MOVES_IN_POS];                       // pre-allocated move array to max search depth to avoid rapid allocs. and deallocs. in train-loop
@@ -183,6 +182,8 @@ public class ChessBot {
         Evaluator.Result r = getEvaluator().evaluate(pos);
         tree.w[ROOT] = r.value();
         expand(ROOT, r.policyV());
+
+        tree.addNoiseToRootChildren();
     }
 
 
@@ -207,7 +208,7 @@ public class ChessBot {
             move = bestMove(n);
             buffer.addSample(flat, moveDist.clone(), z);
             pos.makeMove(move);
-            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+            //System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
             g = pos.getState(pos.whiteToMove);
             startoffset ++;
@@ -239,9 +240,9 @@ public class ChessBot {
 
 
     public static void main(String[] args) throws IOException {
-        ChessBot bot = new ChessBot((Evaluator) new AlphaNet(ModelSerializer.restoreComputationGraph(
-                new File("boardsNBots/bots/networks/D250_T1.zip"), true
+        ChessBot bot = new ChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
+                new File("boardsNBots/bots/networks/BatchedT1_3_checkPoint.zip"), true
         )));
-        bot.selfPlayGame(100);
+        bot.selfPlayGame(400);
     }
 }

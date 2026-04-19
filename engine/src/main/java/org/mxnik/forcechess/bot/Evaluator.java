@@ -4,6 +4,7 @@ import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.util.Arrays;
+import java.util.Random;
 
 public interface Evaluator{
     Result evaluate(PositionEncoder.Position pos);
@@ -19,6 +20,20 @@ public interface Evaluator{
 
         @Override
         public Result evaluate(PositionEncoder.Position pos) {
+            return new Result(policy, pos.whiteMaterial - pos.blackMaterial);    // draw estimate
+        }
+    }
+
+    final class RandomEvaluator implements Evaluator {
+        public float[] policy = new float[Move.MOVE_POSSIBILITIES];
+        public final Random r = new Random();
+
+
+        @Override
+        public Result evaluate(PositionEncoder.Position pos) {
+            for (int i = 0; i < policy.length; i++) {
+                policy[i] = r.nextFloat(10);
+            }
             return new Result(policy, pos.whiteMaterial - pos.blackMaterial);    // draw estimate
         }
     }
