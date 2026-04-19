@@ -62,7 +62,7 @@ public final class MctsTree {
         int bestChild = -1;
         float bestScore = Float.NEGATIVE_INFINITY;      // start with the lowest score
         int child = firstChild[nodeIdx];
-        float sqrtN = (float) Math.sqrt(n[nodeIdx]);
+        float sqrtN = (float) Math.sqrt(globalVisits);
 
 
         while (child != 0) {
