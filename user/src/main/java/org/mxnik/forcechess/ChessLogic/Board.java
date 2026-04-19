@@ -1,7 +1,6 @@
 package org.mxnik.forcechess.ChessLogic;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
-import org.mxnik.forcechess.ChessLogic.Moves.MoveTypes;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
@@ -343,9 +342,9 @@ public class Board {
         return legalMoves;
     }
 
-    private MoveTypes castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
+    private boolean castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
         if (board[from] == EmptyPiece.EMPTY_PIECE) {
-            return MoveTypes.KingMove;
+            return true;
         }
         if(moved) {
             int pawnDir = (board[from].getColor())? 1:-1;
@@ -373,14 +372,14 @@ public class Board {
         board[to] = p;
 
         if (p.getType() != PieceTypes.KING) {
-            return MoveTypes.GoodMove;
+            return false;
         }
-        return MoveTypes.KingMove;
+        return true;
     }
 
-    private MoveTypes rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
-        if (castleFreeMove(from, to, moved) != MoveTypes.KingMove) {
-            return MoveTypes.GoodMove;
+    private void rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
+        if (castleFreeMove(from, to, moved)) {
+            return;
         }
 
         if (turn) {
@@ -395,10 +394,7 @@ public class Board {
                     ? from - BoardHelper.distanceLeftB(from)
                     : from + BoardHelper.distanceRightB(from);
             rawMove(rookPos, to - dir, moved);
-            return MoveTypes.Castle;
         }
-
-        return MoveTypes.KingMove;
     }
 
     public void move(int from, int to) throws CloneNotSupportedException {
