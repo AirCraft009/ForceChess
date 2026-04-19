@@ -208,7 +208,7 @@ public class ChessBot {
             move = bestMove(n);
             buffer.addSample(flat, moveDist.clone(), z);
             pos.makeMove(move);
-            //System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
             g = pos.getState(pos.whiteToMove);
             startoffset ++;

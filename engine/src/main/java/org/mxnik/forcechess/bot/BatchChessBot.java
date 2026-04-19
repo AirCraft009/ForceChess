@@ -2,17 +2,19 @@ package org.mxnik.forcechess.bot;
 
 import org.mxnik.forcechess.FlatArray;
 import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.MoveGen;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 
 public class BatchChessBot extends ChessBot{
-    public static final int BATCH_SIZE = 32;
+    public static final int BATCH_SIZE = 64;
     public static final float VIRTUAL_LOSS = 1F;
 
     // there to remove virtualLoss and virtualVisitCount
-    private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE ];          // all leaf-nodes affected by virtualLoss
+    private final int[] batchedMoves = new int[BATCH_SIZE * Move.MOVE_POSSIBILITIES];
+    private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];          // all leaf-nodes affected by virtualLoss
     private final FlatArray batchedInputs;
     private final BatchEvaluator evaluator;
 

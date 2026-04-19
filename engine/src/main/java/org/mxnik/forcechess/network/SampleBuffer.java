@@ -35,8 +35,12 @@ public class SampleBuffer {
 
     public SampleBuffer(String filename) throws IOException {
         fullPath = BASE_PATH + filename;
-        samples = new TrainingSample[length];
         readSample();
+    }
+
+    public SampleBuffer(String filename, int capacity) throws IOException {
+        fullPath = BASE_PATH + filename;
+        readSample(capacity);
     }
 
     public void addSample(TrainingSample s){
@@ -64,13 +68,15 @@ public class SampleBuffer {
         }
     }
 
-    private void readSample() throws IOException {
+    private void readSample(int gLength) throws IOException {
         try (DataInputStream is = new DataInputStream(
                 new BufferedInputStream(new FileInputStream(fullPath + ".bin")))) {
 
-            length = is.readInt();
+            length = Math.max(is.readInt(), gLength);
             ptr = is.readInt();
+
             samples = new TrainingSample[length];
+
 
             int totalFloats = TENSOR_SIZE + MOVE_POSSIBILITIES + 1;
             byte[] byteBuffer = new byte[4 * totalFloats];
@@ -97,6 +103,10 @@ public class SampleBuffer {
                 samples[i] = new TrainingSample(tensor, pi, z);
             }
         }
+    }
+
+    private void readSample() throws IOException {
+        readSample(0);
     }
 
     public void writeSamples() throws IOException {

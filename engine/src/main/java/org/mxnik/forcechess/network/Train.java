@@ -29,15 +29,19 @@ public class Train {
      * Read the configured AI-model from the file specified (no file ending)
      */
     public Train(String fileName) throws IOException {
-        this(fileName, true);
+        this(fileName, true, false);
     }
 
-    private Train(String fileName, boolean read) throws IOException {
-        fullPath = BASE_PATH + fileName;
+    public Train(String fileName, boolean batch) throws IOException {
+        this(fileName, true, batch);
+    }
+
+    private Train(String fileName, boolean read, boolean batch) throws IOException {
+        fullPath = BASE_PATH + fileName + ".zip";
         this.fileName = fileName;
         if (!read) {
             network = new AlphaNet(NetworkConfig.buildNet());
-            bot = new ChessBot(network);
+            bot = batch ? new BatchChessBot(network) : new ChessBot(network);
             return;
         }
 
@@ -45,17 +49,17 @@ public class Train {
                 new File(fullPath), true
         );
         network = new AlphaNet(loaded);
-        bot  = new ChessBot(network);
+        bot  = batch ? new BatchChessBot(network) : new ChessBot(network);
     }
 
     /**
      * creates a Train instances with the given network that will be saved to fileName
      */
-    public Train(AlphaNet net, String fileName) {
+    public Train(AlphaNet net, String fileName, boolean batch) {
         fullPath = BASE_PATH + fileName;
         this.fileName = fileName;
         network = net;
-        bot = new ChessBot(net);
+        bot = batch ? new BatchChessBot(net) : new ChessBot(net);
     }
 
     /**
@@ -90,7 +94,7 @@ public class Train {
      * @param moveDepth how often the MCTS-Loop is run for each move
      */
     public void selfPlayGames(int size, int moveDepth, SampleBuffer buffer) {
-        for (int i = 0; i < size; i++) {
+        for (int i = buffer.getPtr(); i < size; i++) {
             i = bot.selfPlayGame(moveDepth, i, size, buffer);
             bot.resetCore();
             bot.setPos(PositionEncoder.Position.StartingPosition());
@@ -219,14 +223,13 @@ public class Train {
 
 
 //         second stage training with model
-        Train train = new Train(new BatchChessBot(new AlphaNet(NetworkConfig.buildNet())), "BatchedT1");
-        SampleBuffer s = new SampleBuffer("RandBuff");
+        Train train = new Train("D250_T1", true);
+        SampleBuffer s = new SampleBuffer("RandBuff", 8000);
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
-        train.train(32,  0, 400, 1000, 100, s, true);
+        train.train(32,  s.length, 400, 10000, 1000, s, true);
         train.saveNet();
-
     }
 }
