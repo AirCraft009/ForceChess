@@ -113,9 +113,15 @@ public class Train {
 
         for (int i = 0; i < batchSize; i++) {
             TrainingSample s = buffer.sample();
-            inputs.putSlice(i, Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c'));
-            piTargets.putRow(i, Nd4j.create(s.pi));
-            zTargets.putRow(i, Nd4j.create(new float[]{s.z}));
+
+            try (INDArray tensorSlice = Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c');
+                 INDArray piRow     = Nd4j.create(s.pi);
+                 INDArray zRow      = Nd4j.create(new float[]{s.z})) {
+
+                inputs.putSlice(i, tensorSlice);
+                piTargets.putRow(i, piRow);
+                zTargets.putRow(i, zRow);
+            }
         }
 
         network.getModel().fit(new MultiDataSet(
@@ -203,11 +209,24 @@ public class Train {
 
 
     public static void main(String[] args) throws IOException {
+//        ChessBot randBot =  new ChessBot(new Evaluator.RandomEvaluator());
+//        SampleBuffer randBuff = new SampleBuffer(5000, "RandBuff");
+//        for (int i = 0; i < randBuff.length; i++) {
+//            i = randBot.selfPlayGame(300, i, randBuff.length, randBuff);
+//            randBot.setPos(PositionEncoder.Position.StartingPosition());
+//        }
+//        randBuff.writeSamples();
+
+
+//         second stage training with model
         Train train = new Train(new BatchChessBot(new AlphaNet(NetworkConfig.buildNet())), "BatchedT1");
-        train.diagnose();
-        train.train(32, 1000, 250, 100, 100, true);
-        train.train(32, 1000, 350, 100, 100, true);
-        train.train(32, 5000, 400, 10000, 1000, true);
+        SampleBuffer s = new SampleBuffer("RandBuff");
+        System.out.println(s.length);
+        if(s.length == 0){
+            return;
+        }
+        train.train(32,  0, 400, 1000, 100, s, true);
         train.saveNet();
+
     }
 }
