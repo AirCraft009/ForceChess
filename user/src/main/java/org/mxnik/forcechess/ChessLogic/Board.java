@@ -312,7 +312,7 @@ public class Board {
                                 break;
                             }
                             for (int k = i + dir; k != cornerPos; k += dir) {
-                                if (board[k] != EmptyPiece.EMPTY_PIECE) {
+                                if (board[k] != EmptyPiece.EMPTY_PIECE || isChecked(k,board[i].getColor())) {
                                     break moveLoop;
                                 }
                             }
