@@ -1,0 +1,110 @@
+package org.mxnik.forcechess.MCTS;
+
+import java.util.Arrays;
+
+import static org.mxnik.forcechess.MCTS.RandNoise.dirichlet;
+
+public final class MctsTree {
+    // balances exploitation with exploration
+    public static final float C_PUCT = 3.5F;
+    // max amount of MctsNodes
+    public static final int POOL_SIZE = 500000;
+    private static final float epsilon = 0.25f;
+    private static final float alpha = 0.3f;
+
+    public static final int ROOT = 0;
+
+    // parallel arrays — one slot per node
+    public final int[]   parentIdx    = new int[POOL_SIZE]; // index of node above
+    public final int[]   firstChild   = new int[POOL_SIZE]; // index of first child
+    public final int[]   nextSibling  = new int[POOL_SIZE]; // linked list of children (nextSibling[node] == 0 if there are no more)
+    public final int[]   move         = new int[POOL_SIZE]; // moves for each position
+    public final float[] w            = new float[POOL_SIZE];
+    public final float[] p            = new float[POOL_SIZE];
+    public final int[]   n            = new int[POOL_SIZE];
+    // the mean score q can be calculated with w[x] / n[x]
+
+    public int nextFree = 1; // 0 = root
+    public int globalVisits; // total number of visits over all nodes.
+
+    /**
+     * adds a child to a node
+     * @param index the node to add the child to
+     * @param move the move this node repr
+     */
+    public int addNewChild(int index, int move){
+        int newNode = nextFree++;
+        parentIdx[newNode]   = index;
+        this.move[newNode]        = move;
+        nextSibling[newNode] = firstChild[index]; // prepend to list
+        firstChild[index]        = newNode;
+        return newNode;
+    }
+
+    /**
+     * returns the move under root with the most visits / best move
+     */
+    public int highestVisitNode(int rootNode){
+        int node = firstChild[rootNode];
+        int maxNNode = -1;
+        int maxN = -1;
+        while (node != 0){
+            if(n[node] > maxN){
+                maxN = n[node];
+                maxNNode = node;
+            }
+            node = nextSibling[node];
+        }
+        return maxNNode;
+    }
+
+    public int findBestChild(int nodeIdx){
+        int bestChild = -1;
+        float bestScore = Float.NEGATIVE_INFINITY;      // start with the lowest score
+        int child = firstChild[nodeIdx];
+        float sqrtN = (float) Math.sqrt(globalVisits);
+
+
+        while (child != 0) {
+            float q = n[child] == 0 ? 0f : w[child] / n[child];             // evaluation
+            float score = q + C_PUCT * p[child] * sqrtN / (1 + n[child]);   // get the PUCT score
+            if (score > bestScore) {
+                bestScore = score;  // update bestScore
+                bestChild = child;  // update bestChild
+            }
+            child = nextSibling[child];
+        }
+        return bestChild;
+    }
+
+    /**
+     * ensure that the last move isn't always picked on start to avoid repeating positions
+     */
+    public void addNoiseToRootChildren(){
+        int child = firstChild[ROOT];
+
+        // after setting p add noise
+        int count = 0;
+        while (child != 0) { count++; child = nextSibling[child]; }
+
+        float[] noise = dirichlet(alpha, count); // sample Dirichlet
+        child = firstChild[ROOT];
+        int i = 0;
+        while (child != ROOT){
+            p[child] = (1 - epsilon) * p[child] + epsilon * noise[i++];
+            child = nextSibling[child];
+        }
+    }
+
+    public void reset(){
+        // reset arrays to 0 up until the nextFree node
+        Arrays.fill(parentIdx, 0, nextFree, 0);
+        Arrays.fill(nextSibling, 0, nextFree, 0);
+        Arrays.fill(firstChild,0, nextFree, 0);
+        Arrays.fill(w,0, nextFree, 0);
+        Arrays.fill(n,0, nextFree, 0);
+        // p gets set directly
+        nextFree = 1;       // set the ptr back to the start of the list
+    }
+    
+}
