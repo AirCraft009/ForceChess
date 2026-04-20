@@ -19,6 +19,10 @@ public class SampleBuffer {
     private final String fullPath;
     public final static String BASE_PATH = "boardsNBots/bots/sample_data/";
 
+    /**
+     * creates a sample buffer with a given capacity;
+     * @param filename name used to manage the writing and reading data to file
+     */
     public SampleBuffer(int length, String filename){
         fullPath = BASE_PATH + filename;
         int templength = 1;

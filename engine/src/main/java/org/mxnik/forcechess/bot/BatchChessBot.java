@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.bot;
 
+import org.mxnik.forcechess.DiversePair;
 import org.mxnik.forcechess.FlatArray;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.Pos.Move;
@@ -9,11 +10,12 @@ import org.mxnik.forcechess.Pos.PositionEncoder;
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 
 public class BatchChessBot extends ChessBot{
-    public static final int BATCH_SIZE = 64;
+    public static final int BATCH_SIZE = 32;
     public static final float VIRTUAL_LOSS = 1F;
 
     // there to remove virtualLoss and virtualVisitCount
-    private final int[] batchedMoves = new int[BATCH_SIZE * Move.MOVE_POSSIBILITIES];
+    private final int[][] batchedMoves = new int[BATCH_SIZE][Move.MOVE_POSSIBILITIES];
+    private final DiversePair<Integer, GameState>[] endStates = new DiversePair[BATCH_SIZE];
     private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];          // all leaf-nodes affected by virtualLoss
     private final FlatArray batchedInputs;
     private final BatchEvaluator evaluator;
@@ -73,7 +75,9 @@ public class BatchChessBot extends ChessBot{
                 tree.globalVisits++;
                 tree.n[node]++;
                 updateVirtual(node);
+                batchedMoves[nodeCount] = new int[0];           // empty array
                 virtuallyAffectedNodes[nodeCount] = node;
+                endStates[nodeCount] = new DiversePair<>(0,GameState.StaleMate);
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);
 
                 nodeCount++;
@@ -90,6 +94,7 @@ public class BatchChessBot extends ChessBot{
                 tree.n[node]++;
                 updateVirtual(node);
                 virtuallyAffectedNodes[nodeCount] = node;
+                endStates[nodeCount] = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, batchedMoves[nodeCount]);
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);            // save the position for later eval
 
                 // reset the tree so another batch run can be started
@@ -126,14 +131,13 @@ public class BatchChessBot extends ChessBot{
 
 
             if(tree.firstChild[node] == 0){
-                var out = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, moves);
 
                 // don't add after game end
-                if(out.second() != GameState.Continue)
+                if(endStates[i].second() != GameState.Continue)
                     continue;
 
                 // expand out all moves and set the policy
-                for (int j = 0; j < out.first(); j++) {
+                for (int j = 0; j < endStates[i].first(); j++) {
                     int child = tree.addNewChild(node, moves[j]);
                     tree.p[child] = results[i].policyV()[moves[j]];
                 }

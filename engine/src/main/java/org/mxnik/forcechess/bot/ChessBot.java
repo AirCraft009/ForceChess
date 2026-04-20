@@ -241,7 +241,7 @@ public class ChessBot {
 
     public static void main(String[] args) throws IOException {
         ChessBot bot = new ChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
-                new File("boardsNBots/bots/networks/BatchedT1_3_checkPoint.zip"), true
+                new File("boardsNBots/bots/networks/D250_T1.zip.zip"), true
         )));
         bot.selfPlayGame(400);
     }

@@ -196,7 +196,7 @@ public class Train {
 
     public void diagnose(){
         // After model.init(), before any training
-        INDArray testInput = Nd4j.randn(new int[]{1, PositionEncoder.PLANES, 8, 8});
+        INDArray testInput = Nd4j.create(PositionEncoder.encodeFlat(PositionEncoder.Position.StartingPosition()), new int[]{1, PositionEncoder.PLANES, 8, 8});
         Map<String, INDArray> acts = network.getModel().feedForward(testInput, false);
 
         for (String key : new String[]{
@@ -224,12 +224,14 @@ public class Train {
 
 //         second stage training with model
         Train train = new Train("D250_T1", true);
-        SampleBuffer s = new SampleBuffer("RandBuff", 8000);
+        train.diagnose();
+        SampleBuffer s = new SampleBuffer( "smallBuff");
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
-        train.train(32,  s.length, 400, 10000, 1000, s, true);
+        train.train(32,  s.length, 400, 1000, 100, s, true);
         train.saveNet();
+        train.bot.selfPlayGame(400);
     }
 }
