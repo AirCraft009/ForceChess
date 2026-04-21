@@ -1,8 +1,7 @@
-package org.mxnik.forcechess;
+package org.mxnik.forcechess.scripts;
 
 
 import java.io.File;
-import java.util.InputMismatchException;
 import java.util.Scanner;
 
 /**

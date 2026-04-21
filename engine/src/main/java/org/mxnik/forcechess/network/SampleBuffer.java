@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.network;
 
 import org.apache.commons.math3.distribution.NormalDistribution;
+import org.mxnik.forcechess.FileLocations;
 import org.mxnik.forcechess.Pos.Move;
 
 import java.io.*;
@@ -17,7 +18,8 @@ public class SampleBuffer {
     private TrainingSample[] samples;
     private final Random random = new Random();
     private final String fullPath;
-    public final static String BASE_PATH = "boardsNBots/bots/sample_data/";
+    private final float DECAY = 0.1F;
+    public final static String BASE_PATH = FileLocations.SAMPLE_LOCATIONS;
 
     /**
      * creates a sample buffer with a given capacity;

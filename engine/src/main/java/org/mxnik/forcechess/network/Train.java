@@ -4,6 +4,7 @@ package org.mxnik.forcechess.network;
 import com.sun.jna.platform.unix.X11;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.util.ModelSerializer;
+import org.mxnik.forcechess.FileLocations;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 import org.mxnik.forcechess.bot.BatchChessBot;
@@ -23,7 +24,8 @@ public class Train {
     private final String fullPath;
     private final String fileName;
     private int checkPointC = 0;
-    public final static String BASE_PATH = "boardsNBots/bots/networks/";
+    public final static String BASE_PATH = FileLocations.NETWORK_LOCATIONS;
+    public final static String FILE_ENDING = ".zip";
 
     /**
      * Read the configured AI-model from the file specified (no file ending)
@@ -37,7 +39,7 @@ public class Train {
     }
 
     private Train(String fileName, boolean read, boolean batch) throws IOException {
-        fullPath = BASE_PATH + fileName + ".zip";
+        fullPath = BASE_PATH + fileName + FILE_ENDING;
         this.fileName = fileName;
         if (!read) {
             network = new AlphaNet(NetworkConfig.buildNet());
@@ -78,13 +80,13 @@ public class Train {
     }
 
     public void saveCheckPoint() throws IOException {
-        String checkPath = fullPath + "_" + checkPointC + "_checkPoint.zip";
+        String checkPath = fullPath + "_" + checkPointC + "_checkPoint" + FILE_ENDING;
         ModelSerializer.writeModel(network.getModel(), new File(checkPath), true);
         checkPointC++;
     }
 
     public void saveNet() throws IOException {
-        ModelSerializer.writeModel(network.getModel(), new File(fullPath + ".zip"), true);
+        ModelSerializer.writeModel(network.getModel(), new File(fullPath + FILE_ENDING), true);
     }
 
     /**

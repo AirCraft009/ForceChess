@@ -2,6 +2,7 @@ package org.mxnik.forcechess.network;
 
 import org.datavec.api.util.RecordUtils;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.bot.BatchEvaluator;
@@ -9,6 +10,8 @@ import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.bot.Evaluator;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
+
+import java.util.Arrays;
 
 import static org.mxnik.forcechess.network.NetworkConfig.RES_BLOCKS;
 
@@ -75,5 +78,29 @@ public final class AlphaNet implements BatchEvaluator {
 
         input.close();
         return results;
+    }
+
+    public int bestMove(PositionEncoder.Position inPos){
+        PositionEncoder.encode(inPos, flat);
+        INDArray input = Nd4j.create(flat, new int[]{1, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE});
+        INDArray[] out = model.output( false, input);
+        float[] policy = out[0].toFloatVector();
+        int maxMove = -1;
+        float maxS = Float.NEGATIVE_INFINITY;
+        for (int i = 0; i < policy.length; i++) {
+            if(maxS < policy[i]){
+                maxMove = i;
+                maxS = policy[i];
+            }
+        }
+        return maxMove;
+    }
+
+    public void testGame(){
+        PositionEncoder.Position p = PositionEncoder.Position.StartingPosition();
+        GameState g = GameState.Continue;
+        while (g == GameState.Continue){
+            int move = bestMove(p);
+        }
     }
 }
