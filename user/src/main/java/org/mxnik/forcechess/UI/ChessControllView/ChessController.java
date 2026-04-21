@@ -3,6 +3,7 @@ package org.mxnik.forcechess.UI.ChessControllView;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import org.mxnik.forcechess.Callback;
 import org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
@@ -12,7 +13,7 @@ import org.mxnik.forcechess.ChessLogic.BoardHelper;
 import java.io.IOException;
 
 
-public class ChessController implements EventHandler<Event> {
+public class ChessController implements EventHandler<Event>, Callback {
 
     final private ChessScene chessScene;
     final private Board board;
@@ -137,5 +138,15 @@ public class ChessController implements EventHandler<Event> {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    @Override
+    public void update() {
+        //TODO: update the visual chessboard here
+    }
+
+    @Override
+    public void finish() {
+        //TODO: show the win/loose screen and end game
     }
 }
