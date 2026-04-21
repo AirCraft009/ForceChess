@@ -783,6 +783,13 @@ public final class PositionEncoder {
             return (castlePerms & Perm) != 0;
         }
 
+        /** Empty position — no pieces, clean state. */
+        public static Position emptyPosition() {
+            Position pos = new Position();
+            Arrays.fill(pos.pieceMap, (byte) Piece.EMPTY_PIECE);
+            return pos;
+        }
+
         // default position
 
         public static Position StartingPosition() {
