@@ -34,6 +34,11 @@ public class Train {
         this(fileName, true, false);
     }
 
+    /**
+     * Reads the model from the file specified (no extensions)
+     * @param fileName file without file-extension(.zip)
+     * @param batch use Batched MCTS
+     */
     public Train(String fileName, boolean batch) throws IOException {
         this(fileName, true, batch);
     }
@@ -224,16 +229,16 @@ public class Train {
 //        randBuff.writeSamples();
 
 
-//         second stage training with model
-        Train train = new Train("D250_T1", true);
+//       second stage training with model
+        Train train = new Train("D300", false, true);
         train.diagnose();
-        SampleBuffer s = new SampleBuffer( "smallBuff");
+        SampleBuffer s = new SampleBuffer( 2000, "BigB");
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
         train.train(32,  s.length, 400, 1000, 100, s, true);
         train.saveNet();
-        train.bot.selfPlayGame(400);
+        train.bot.selfPlayGame(300);
     }
 }

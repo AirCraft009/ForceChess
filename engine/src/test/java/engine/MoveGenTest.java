@@ -2,6 +2,7 @@ package engine;
 
 import org.junit.jupiter.api.*;
 import org.mxnik.forcechess.Bitboard;
+
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.MoveGen;
 import org.mxnik.forcechess.Pos.Piece;
@@ -11,6 +12,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mxnik.forcechess.ChessSquares.*;
 
 // KI-Generiert
 
@@ -1104,6 +1106,22 @@ class MoveGenTest {
         @Nested
         @DisplayName("Legal move filter")
         class LegalMoveFilterTests {
+
+            @Test
+            @DisplayName("Pinned knight cannot move off pin ray")
+            void pinnedKnightStaysOnRay() {
+                var pos = emptyPosition();
+                place(pos, true, Piece.QUEEN, H5);
+                place(pos, false, Piece.KNIGHT, F7);
+                place(pos, false, Piece.KING, E8);
+                place(pos, true, Piece.KING, A1);
+
+                int[] legal = genLegal(pos, true);
+                // The pinned knight may NOT move
+                boolean offRay = Arrays.stream(legal)
+                        .anyMatch(m -> Move.from(m) == F7);
+                assertFalse(offRay, "Pinned rook must stay on the e-file");
+            }
 
             @Test
             @DisplayName("Pinned rook cannot move off pin ray")
