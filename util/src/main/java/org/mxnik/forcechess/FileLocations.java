@@ -16,9 +16,9 @@ public class FileLocations {
     public static final String SAMPLE_LOCATION_KEY = "samples";
 
     // loaded Vars
-    public static final String BOT_FILES = FILE_PROPERTIES.getProperty(BOT_FILE_KEY);
-    public static final String NETWORK_LOCATIONS = FILE_PROPERTIES.getProperty(NETWORK_LOCATION_KEY);
-    public static final String SAMPLE_LOCATIONS = FILE_PROPERTIES.getProperty(SAMPLE_LOCATION_KEY);
+    public static final String BOT_FILES;
+    public static final String NETWORK_LOCATIONS;
+    public static final String SAMPLE_LOCATIONS;
 
     static {
         try {
@@ -27,5 +27,9 @@ public class FileLocations {
         } catch (IOException e) {
             throw new RuntimeException("Error reading PropertyFiles on Startup");
         }
+
+        BOT_FILES = FILE_PROPERTIES.getProperty(BOT_FILE_KEY);
+        NETWORK_LOCATIONS = FILE_PROPERTIES.getProperty(NETWORK_LOCATION_KEY);
+        SAMPLE_LOCATIONS = FILE_PROPERTIES.getProperty(SAMPLE_LOCATION_KEY);
     }
 }
