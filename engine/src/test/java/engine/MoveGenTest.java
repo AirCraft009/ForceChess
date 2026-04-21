@@ -1109,18 +1109,20 @@ class MoveGenTest {
 
             @Test
             @DisplayName("Pinned knight cannot move off pin ray")
+            //TODO: figure out why a knight isn't pinned in game
+
             void pinnedKnightStaysOnRay() {
                 var pos = emptyPosition();
-                place(pos, true, Piece.QUEEN, H5);
-                place(pos, false, Piece.KNIGHT, F7);
-                place(pos, false, Piece.KING, E8);
-                place(pos, true, Piece.KING, A1);
+                place(pos, true,  Piece.BISHOP, H5);
+                place(pos, false, Piece.KNIGHT, F7);  // on the pin ray H5-G6-F7-E8
+                place(pos, false, Piece.KING,   E8);
+                place(pos, true,  Piece.PAWN,   E5);
+                place(pos, true,  Piece.KING,   A1);
 
-                int[] legal = genLegal(pos, true);
-                // The pinned knight may NOT move
-                boolean offRay = Arrays.stream(legal)
+                int[] legal = genLegal(pos, false);   // Black's moves
+                boolean knightCanMove = Arrays.stream(legal)
                         .anyMatch(m -> Move.from(m) == F7);
-                assertFalse(offRay, "Pinned rook must stay on the e-file");
+                assertFalse(knightCanMove, "Pinned knight on F7 cannot move off the H5-E8 diagonal");
             }
 
             @Test
