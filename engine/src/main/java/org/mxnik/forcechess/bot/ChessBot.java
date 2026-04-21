@@ -1,14 +1,9 @@
 package org.mxnik.forcechess.bot;
 
-import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.util.ModelSerializer;
-import org.mxnik.forcechess.FlatArray;
 import org.mxnik.forcechess.MCTS.MctsTree;
-import org.mxnik.forcechess.Pos.Move;
-import org.mxnik.forcechess.Pos.MoveGen;
-import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.network.AlphaNet;
-import org.mxnik.forcechess.network.NetworkConfig;
 import org.mxnik.forcechess.network.SampleBuffer;
 import org.mxnik.forcechess.GameState;
 
@@ -16,6 +11,7 @@ import java.io.File;
 import java.io.IOException;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
+import static org.mxnik.forcechess.ChessSquares.*;
 
 /**
  * Final class connecting all classes from Pos to the NN
@@ -197,16 +193,17 @@ public class ChessBot {
         float z = 0;
         float[] flat;
         int startPtr = buffer.getPtr();
-        GameState g = pos.getState(pos.whiteToMove);
 
+        GameState g = pos.getState(pos.whiteToMove);
         System.out.println("startGame");
         int move;
-        while (g == GameState.Continue && startoffset < end){
+        while (g == GameState.Continue && startoffset < end){       // loop until Check/stalemate or full buffer
 
-            flat = PositionEncoder.encodeFlat(pos);
+            flat = PositionEncoder.encodeFlat(pos);     // save pos before move happens
             expandRoot();
             move = bestMove(n);
-            buffer.addSample(flat, moveDist.clone(), z);
+            buffer.addSample(flat, moveDist.clone(), z); // record the moveDist. and z value
+
             pos.makeMove(move);
             System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
@@ -226,7 +223,7 @@ public class ChessBot {
         System.out.println("startGame");
         int move;
         while (g == GameState.Continue){
-
+            expandRoot();
             move = bestMove(n);
             pos.makeMove(move);
             System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
@@ -237,12 +234,12 @@ public class ChessBot {
     }
 
 
-
-
     public static void main(String[] args) throws IOException {
-        BatchChessBot bot = new BatchChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
-                new File("boardsNBots/bots/networks/D400_1000.zip"), true
-        )));
-        bot.selfPlayGame(400);
+//        BatchChessBot bot = new BatchChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
+//                new File("boardsNBots/bots/networks/D400_1000.zip"), true
+//        )));
+//        bot.selfPlayGame(400);
+        BatchChessBot b = new BatchChessBot(new BatchEvaluator.StubEvaluator());
+        b.selfPlayGame(300);
     }
 }

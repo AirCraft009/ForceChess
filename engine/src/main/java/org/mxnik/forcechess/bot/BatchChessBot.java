@@ -24,7 +24,6 @@ public class BatchChessBot extends ChessBot{
         super(null);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
-        expandRoot();
     }
 
     @Override

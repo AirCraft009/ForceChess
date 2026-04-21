@@ -463,7 +463,7 @@ public final class PositionEncoder {
          */
         public GameState getState(boolean color){
             boolean isChecked = checkChess(color);
-            boolean hasMoves = color ? Check.WhiteHasMoves(this) : Check.BlackHasMoves(this);
+            boolean hasMoves = Check.hasMoves(this, whiteToMove);
 
             if(fiftyMoveCounter > 100){
                 return GameState.FiftyMove;
