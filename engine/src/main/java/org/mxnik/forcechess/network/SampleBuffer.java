@@ -39,11 +39,19 @@ public class SampleBuffer {
         this(length, "");
     }
 
+    /**
+     * reads a Buffer from a file
+     */
     public SampleBuffer(String filename) throws IOException {
         fullPath = BASE_PATH + filename;
         readSample();
     }
 
+    /**
+     * creates a sampleBuffer with data from the Buffer saved at fileNam
+     * @param filename reads the data from here
+     * @param capacity max capacity (set to the one of the file if smaller)
+     */
     public SampleBuffer(String filename, int capacity) throws IOException {
         fullPath = BASE_PATH + filename;
         readSample(capacity);
@@ -68,9 +76,15 @@ public class SampleBuffer {
         return ptr;
     }
 
+    /**
+     * update the Z value of past games while decaying the value as the moves get further away from the end
+     * @param start the first game
+     * @param z the z value to update with
+     */
     public void updateZ(int start, float z  ){
-        for (int i = start; i < ptr; i++) {
+        for (int i = ptr-1; i >= start; i--) {
             samples[i].z = z;
+            z -= DECAY;
         }
     }
 

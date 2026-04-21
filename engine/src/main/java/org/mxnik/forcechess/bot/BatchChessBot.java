@@ -24,6 +24,7 @@ public class BatchChessBot extends ChessBot{
         super(null);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
+        expandRoot();
     }
 
     @Override
@@ -127,7 +128,7 @@ public class BatchChessBot extends ChessBot{
             int node = virtuallyAffectedNodes[i];
 
             // set the value
-            backProp(node, results[i].value());
+            backProp(node, tree.w[node]);
 
 
             if(tree.firstChild[node] == 0){
@@ -138,8 +139,8 @@ public class BatchChessBot extends ChessBot{
 
                 // expand out all moves and set the policy
                 for (int j = 0; j < endStates[i].first(); j++) {
-                    int child = tree.addNewChild(node, moves[j]);
-                    tree.p[child] = results[i].policyV()[moves[j]];
+                    int child = tree.addNewChild(node, batchedMoves[i][j]);
+                    tree.p[child] = results[i].policyV()[batchedMoves[i][j]];
                 }
             }
         }
@@ -165,6 +166,8 @@ public class BatchChessBot extends ChessBot{
             node = tree.parentIdx[node];
         }
     }
+
+
 
 
 }

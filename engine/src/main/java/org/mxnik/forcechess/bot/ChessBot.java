@@ -240,8 +240,8 @@ public class ChessBot {
 
 
     public static void main(String[] args) throws IOException {
-        ChessBot bot = new ChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
-                new File("boardsNBots/bots/networks/D250_T1.zip.zip"), true
+        BatchChessBot bot = new BatchChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
+                new File("boardsNBots/bots/networks/D400_1000.zip"), true
         )));
         bot.selfPlayGame(400);
     }
