@@ -100,11 +100,16 @@ public class Train {
      * @param size amount of moves played in total over all games
      * @param moveDepth how often the MCTS-Loop is run for each move
      */
-    public void selfPlayGames(int size, int moveDepth, SampleBuffer buffer) {
-        for (int i = buffer.getPtr(); i < size; i++) {
-            i = bot.selfPlayGame(moveDepth, i, size, buffer);
-            bot.resetCore();
-            bot.setPos(PositionEncoder.Position.StartingPosition());
+    public void selfPlayGames(int size, int moveDepth, SampleBuffer buffer) throws IOException {
+        try {
+            for (int i = buffer.getPtr(); i < size; i++) {
+                i = bot.selfPlayGame(moveDepth, i, size, buffer);
+                bot.resetCore();
+                bot.setPos(PositionEncoder.Position.StartingPosition());
+            }
+        } catch (Exception e) {
+            System.err.println("crashed during self-play buffer progress was saved\n error: " + e);
+            buffer.writeSamples();
         }
         System.out.println("Finished self play");
     }
@@ -193,11 +198,17 @@ public class Train {
      *                   - checkpoints are set as filename_n_checkPoint.zip
      */
     public void train(int batchSize, SampleBuffer buffer, int epoch, int checkPoint) throws IOException {
-        for (int i = 1; i < epoch + 1; i++) {
-            trainFromBuffer(batchSize, buffer);
-            if(i % checkPoint == 0){
-                saveCheckPoint();
+        try {
+            for (int i = 1; i < epoch + 1; i++) {
+                trainFromBuffer(batchSize, buffer);
+                if (i % checkPoint == 0) {
+                    saveCheckPoint();
+                }
             }
+        } catch (Exception e) {
+            System.err.println("crashed during training, buffer progress and network were saved");
+            buffer.writeSamples();
+            saveNet();
         }
     }
 
