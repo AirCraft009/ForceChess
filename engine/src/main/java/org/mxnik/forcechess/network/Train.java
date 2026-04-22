@@ -241,15 +241,15 @@ public class Train {
 
 
 //       second stage training with model
-        Train train = new Train("D300", false, true);
+        Train train = new Train("D400_T2", false, true);
         train.diagnose();
-        SampleBuffer s = new SampleBuffer( 2000, "BigB");
+        SampleBuffer s = new SampleBuffer( 5000, "22_4_2026_Buff");
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
-        train.train(32,  s.length, 400, 1000, 100, s, true);
+        train.train(32,  s.length, 400, 6000, 3001, s, true);
         train.saveNet();
-        train.bot.selfPlayGame(300);
+        train.bot.selfPlayGame(400);
     }
 }

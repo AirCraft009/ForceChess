@@ -189,7 +189,6 @@ public class ChessBot {
      * every move will have n rounds in the tree
      */
     public int selfPlayGame(int n, int startoffset, int end, SampleBuffer buffer){
-
         float z = 0;
         float[] flat;
         int startPtr = buffer.getPtr();
@@ -206,6 +205,7 @@ public class ChessBot {
 
             pos.makeMove(move);
             System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+            //System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
             g = pos.getState(pos.whiteToMove);
             startoffset ++;

@@ -53,7 +53,7 @@ Des Weiteren können unterschiedlich trainierte KIs gespeichert sowie genutzt we
 
 ### Run the Main Javafx application
 
-- ```mvn javafx:run```
+- ```mvn -pl user javafx:run```
 
 ### Run FCC the command-line tool for training
 
