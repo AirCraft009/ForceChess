@@ -214,7 +214,7 @@ public class Board {
     }
 
     void rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
-        if (castleFreeMove(from, to, moved)) {
+        if (!castleFreeMove(from, to, moved)) {
             return;
         }
 
