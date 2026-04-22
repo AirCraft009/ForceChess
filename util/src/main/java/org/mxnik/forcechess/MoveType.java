@@ -1,12 +1,22 @@
 package org.mxnik.forcechess;
 
 public enum MoveType {
-    Generic,
-    CastleK,
-    CastleQ,
-    EnPassant,
-    PromotionQ,
-    PromotionR,
-    PromotionB,
-    PromotionN,
+    Generic(0),
+    CastleK(1),
+    CastleQ(2),
+    EnPassant(3),
+    PromotionQ(4),
+    PromotionR(5),
+    PromotionB(6),
+    PromotionN(7);
+
+    public final int flagVal;
+
+    MoveType(int flagVal) {
+        this.flagVal = flagVal;
+    }
+
+    public static MoveType fromFlagVal(int flagVal){
+        return MoveType.values()[flagVal];
+    }
 }

@@ -235,11 +235,11 @@ public class ChessBot {
 
 
     public static void main(String[] args) throws IOException {
-//        BatchChessBot bot = new BatchChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
-//                new File("boardsNBots/bots/networks/D400_1000.zip"), true
-//        )));
-//        bot.selfPlayGame(400);
-        BatchChessBot b = new BatchChessBot(new BatchEvaluator.StubEvaluator());
-        b.selfPlayGame(300);
+        BatchChessBot bot = new BatchChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
+                new File("boardsNBots/bots/networks/D300.zip"), true
+        )));
+        bot.selfPlayGame(400);
+//        BatchChessBot b = new BatchChessBot(new BatchEvaluator.StubEvaluator());
+//        b.selfPlayGame(300);
     }
 }

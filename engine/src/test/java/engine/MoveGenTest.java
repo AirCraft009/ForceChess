@@ -1113,15 +1113,18 @@ class MoveGenTest {
 
             void pinnedKnightStaysOnRay() {
                 var pos = emptyPosition();
-                place(pos, true,  Piece.BISHOP, H5);
-                place(pos, false, Piece.KNIGHT, F7);  // on the pin ray H5-G6-F7-E8
+                place(pos, true,  Piece.BISHOP, A4);
+                place(pos, false, Piece.KNIGHT, D7);  // on the pin ray H5-G6-F7-E8
                 place(pos, false, Piece.KING,   E8);
+                place(pos, false, Piece.QUEEN,   D8);
                 place(pos, true,  Piece.PAWN,   E5);
-                place(pos, true,  Piece.KING,   A1);
+                place(pos, true,  Piece.BISHOP, C5);
+                place(pos, true,  Piece.PAWN,   C7);
+                place(pos, true,  Piece.KING,   E2);
 
                 int[] legal = genLegal(pos, false);   // Black's moves
                 boolean knightCanMove = Arrays.stream(legal)
-                        .anyMatch(m -> Move.from(m) == F7);
+                        .anyMatch(m -> Move.from(m) == D7);
                 assertFalse(knightCanMove, "Pinned knight on F7 cannot move off the H5-E8 diagonal");
             }
 

@@ -6,6 +6,9 @@ package org.mxnik.forcechess.Pos;
 // bits 12 - 15: flags (capture, castle, en passant, promotion piece)
 // └─> bits(12-14) Type, bit 15 (is a capture)
 
+import org.mxnik.forcechess.MovePacket;
+import org.mxnik.forcechess.MoveType;
+
 public final class Move {
     /**
      * encodes a move into a single integer
@@ -106,6 +109,17 @@ public final class Move {
                             | ((b >>> 7) & ~(ROW_8 | FILE_A))       // down right
                             | ((b >>> 9) & ~(ROW_8 | FILE_H));      // down left
         }
+    }
+
+
+    // Helper for MovePacket
+
+    public static MovePacket toMovePacket(int move){
+        return new MovePacket(MoveType.fromFlagVal(baseFlag(move)), from(move), to(move), attackFromFlag(flags(move)));
+    }
+
+    public static int MovePacketToMove(MovePacket packet){
+        return of(packet.from(), packet.to(), packet.type().flagVal | (packet.capture() ? 1 : 0) << 3);
     }
 
 
