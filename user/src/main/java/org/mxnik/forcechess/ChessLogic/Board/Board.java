@@ -1,7 +1,6 @@
-package org.mxnik.forcechess.ChessLogic;
+package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
-import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.ChessLogic.Notation.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
@@ -10,8 +9,6 @@ import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.DiversePair;
-
-import java.util.Arrays;
 
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 import static org.mxnik.forcechess.RayDetection.*;
@@ -28,9 +25,9 @@ public class Board {
     MoveList moveList;
     public int teamWMaterial;
     public int teamBMaterial;
-    private int kingWPos;
-    private int kingBPos;
-    private int enPassantPos;
+    int kingWPos;
+    int kingBPos;
+    int enPassantPos;
 
     int maxMoves = 0;
 
@@ -181,167 +178,6 @@ public class Board {
         return false;
     }
 
-    /**
-     * Filters pseudo-legal moves down to legal moves by making each move,
-     * running incremental check detection, then restoring the board.
-     * Modifies pseudoLegalMoves in place and returns the resulting game state.
-     */
-    public GameState checkChess(byte[][] pseudoLegalMoves) throws CloneNotSupportedException {
-        Piece[] baseState = board.clone();
-        int kB = kingBPos;
-        int kW = kingWPos;
-        boolean hasMoves = false;
-
-        for (int i = 0; i < pseudoLegalMoves.length; i++) {
-            byte[] moves = pseudoLegalMoves[i];
-            int writePtr = 0;
-
-            for (int j = 0; j < moves.length; j++) {
-                byte move = moves[j];
-
-                rawMove(i, move, false);
-
-                // isChecked now uses incremental ray casting instead of full
-                // move generation — the hot path is now ~80 ops instead of ~300+
-                boolean inCheck = turn
-                        ? isChecked(kingWPos, true)
-                        : isChecked(kingBPos, false);
-
-                kingBPos = kB;
-                kingWPos = kW;
-                board = baseState.clone();
-
-                if (inCheck) continue;
-
-                if (board[i].getColor() == turn) {
-                    hasMoves = true;
-                }
-
-                moves[writePtr] = move;
-                writePtr++;
-            }
-
-            pseudoLegalMoves[i] = Arrays.copyOf(moves, writePtr);
-        }
-
-        return checkCheckmate(hasMoves);
-    }
-
-    private GameState checkCheckmate(boolean hasMove) throws CloneNotSupportedException {
-        if (hasMove) {
-            return GameState.Continue;
-        }
-
-        // No moves: distinguish checkmate from stalemate
-        boolean inCheck = turn
-                ? isChecked(kingWPos, true)
-                : isChecked(kingBPos, false);
-
-        return inCheck ? GameState.CheckMate : GameState.StaleMate;
-    }
-
-    public DiversePair<byte[][], GameState> getMovesFromPosition() throws CloneNotSupportedException {
-        byte[][] legalMoves = getPseudoMovesFromPosition();
-        return new DiversePair<>(legalMoves, checkChess(legalMoves));
-    }
-
-    /**
-     * Generates pseudo-legal moves for all squares.
-     * Does not filter for leaving own king in check — that is done in checkChess.
-     */
-    private byte[][] getPseudoMovesFromPosition() throws CloneNotSupportedException {
-        moveList.clear();
-        byte[] moves = moveList.getMovesArray();
-
-        byte[][] legalMoves = new byte[size][];
-
-        int pieceCount = 0;
-        int prevMoveCount = moveList.getMoveCount();
-
-        for (int i = 0; i < board.length; i++) {
-            if (board[i].getType() == PieceTypes.EMPTY) {
-                legalMoves[i] = new byte[0];
-                continue;
-            }
-
-            board[i].getMoves(i, moveList);
-
-            int newMoveCount = moveList.getMoveCount();
-            int dirStart = moveList.getDirectionOffset(pieceCount);
-            int dirCount = moveList.getDirectionCount(pieceCount);
-
-            int ptr = 0;
-            byte[] legalMoveSection = new byte[newMoveCount - prevMoveCount];
-            prevMoveCount = newMoveCount;
-
-            for (int d = 0; d < dirCount; d++) {
-                int dirIndex = dirStart + d;
-                int moveOffset = moveList.getDirectionMovesOffset(dirIndex);
-                int moveLength = moveList.getDirectionMovesLength(dirIndex);
-
-                int j;
-                moveLoop:
-                for (j = 0; j < moveLength; j++) {
-                    byte square = moves[moveOffset + j];
-
-                    if (board[i].getType() == PieceTypes.PAWN) {
-                        if (BoardHelper.isDiagonalMove(i, square)) {
-                            if ((board[square].getColor() != board[i].getColor()
-                                    && board[square] != EmptyPiece.EMPTY_PIECE)
-                                    || square == enPassantPos) {
-                                legalMoveSection[ptr] = square;
-                                ptr++;
-                            }
-                            break;
-                        } else {
-                            if (board[square] != EmptyPiece.EMPTY_PIECE) {
-                                break;
-                            }
-                        }
-                    } else if (board[i].getType() == PieceTypes.KING) {
-                        int dir = Integer.compare(square, i);
-                        int cornerPos = (dir < 0)
-                                ? i - BoardHelper.distanceLeftB(i)
-                                : i + BoardHelper.distanceRightB(i);
-                        Piece corner = board[cornerPos];
-
-                        if (BoardHelper.colDiff(i, square) > 1) {
-                            if (board[i].isHasMoved()
-                                    || corner.isHasMoved()
-                                    || corner.getType() != PieceTypes.ROOK) {
-                                break;
-                            }
-                            for (int k = i + dir; k != cornerPos; k += dir) {
-                                if (board[k] != EmptyPiece.EMPTY_PIECE || isChecked(k,board[i].getColor())) {
-                                    break moveLoop;
-                                }
-                            }
-                            legalMoveSection[ptr] = square;
-                            ptr++;
-                            break;
-                        }
-                    }
-
-                    if (board[square] != EmptyPiece.EMPTY_PIECE) {
-                        if (board[square].getColor() != board[i].getColor()) {
-                            legalMoveSection[ptr] = square;
-                            ptr++;
-                        }
-                        break;
-                    }
-
-                    legalMoveSection[ptr] = square;
-                    ptr++;
-                }
-            }
-
-            legalMoves[i] = Arrays.copyOf(legalMoveSection, ptr);
-            pieceCount++;
-        }
-
-        return legalMoves;
-    }
-
     private boolean castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
         if (board[from] == EmptyPiece.EMPTY_PIECE) {
             return true;
@@ -377,7 +213,7 @@ public class Board {
         return true;
     }
 
-    private void rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
+    void rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
         if (castleFreeMove(from, to, moved)) {
             return;
         }
@@ -466,7 +302,7 @@ public class Board {
         long starT = System.nanoTime();
         byte[][] allMoves = null;
         for (int i = 0; i < 1000000; i++) {
-            allMoves = board1.getMovesFromPosition().first();
+            allMoves = ChessMoveGen.getMovesFromPosition(board1).first();
         }
         long endT = System.nanoTime();
         long timeT = endT - starT;

@@ -1,7 +1,8 @@
 package org.mxnik.forcechess.Chess;
 
 import org.mxnik.forcechess.Callback;
-import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.Board.Board;
+import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.MovePacket;
 import org.mxnik.forcechess.Player;
@@ -29,7 +30,7 @@ public final class ChessGame implements Runnable{
     public void run() {
         while (true) {
             try {
-                var state = board.getMovesFromPosition();
+                var state = ChessMoveGen.getMovesFromPosition(board);
                 if (state.second() != GameState.Continue) {
                     response.finish();
                     break;

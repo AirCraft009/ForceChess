@@ -4,13 +4,16 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import org.mxnik.forcechess.Callback;
-import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.Board.Board;
+import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.DiversePair;
-import org.mxnik.forcechess.ChessLogic.BoardHelper;
+import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 
 import java.io.IOException;
+
+import static org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen.getMovesFromPosition;
 
 
 public class ChessController implements EventHandler<Event>, Callback {
@@ -29,7 +32,7 @@ public class ChessController implements EventHandler<Event>, Callback {
         chessScene = chess;
         board = new Board(startFen);
         chessScene.drawPieces(board.getBoard());
-        currentMoveState = board.getMovesFromPosition();
+        currentMoveState = getMovesFromPosition(board);
         currPieceMoves = new byte[0];
     }
 
@@ -116,7 +119,7 @@ public class ChessController implements EventHandler<Event>, Callback {
             pieceSelected = false;
             if (BoardHelper.contains(currPieceMoves, secondClick)) {
                 board.move(firstClick, secondClick);
-                currentMoveState = board.getMovesFromPosition();
+                currentMoveState = getMovesFromPosition(board);
                 if (currentMoveState.second() != GameState.Continue){
                     chessScene.showWinImage();
                 }

@@ -1,10 +1,10 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
-import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
-import static org.mxnik.forcechess.ChessLogic.BoardHelper.*;
+import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 
 public class Rook extends Piece {
     public final static int dirCount = 4;

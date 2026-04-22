@@ -2,7 +2,7 @@ package org.mxnik.forcechess.ChessLogic.Pieces;
 
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 
-import static org.mxnik.forcechess.ChessLogic.BoardHelper.*;
+import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class King extends Piece{

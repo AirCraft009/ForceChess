@@ -1,6 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Moves;
 
-import org.mxnik.forcechess.ChessLogic.Board;
+import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
 
 public enum MoveOffsets {

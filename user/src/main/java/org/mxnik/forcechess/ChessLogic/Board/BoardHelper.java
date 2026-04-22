@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.ChessLogic;
+package org.mxnik.forcechess.ChessLogic.Board;
 
 import static java.lang.Math.abs;
 

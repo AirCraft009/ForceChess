@@ -2,8 +2,8 @@ package user;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mxnik.forcechess.ChessLogic.Board;
-import org.mxnik.forcechess.ChessLogic.BoardHelper;
+import org.mxnik.forcechess.ChessLogic.Board.Board;
+import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
