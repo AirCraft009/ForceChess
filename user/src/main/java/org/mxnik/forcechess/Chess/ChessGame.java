@@ -10,6 +10,7 @@ import org.mxnik.forcechess.Player;
 public final class ChessGame implements Runnable{
     private  Player white;
     private  Player black;
+    private boolean running;
     private final Board board;
     private final Callback response;
     private final Thread requestThread;
@@ -28,7 +29,12 @@ public final class ChessGame implements Runnable{
     }
 
     public void startGame(){
+        running = true;
         requestThread.start();
+    }
+
+    public void stop(){
+        running = false;
     }
 
     public Player getActivePLayer(){
@@ -37,7 +43,7 @@ public final class ChessGame implements Runnable{
 
     @Override
     public void run() {
-        while (true) {
+        while (running) {
             try {
                 var state = ChessMoveGen.getMovesFromPosition(board);
                 if (state.second() != GameState.Continue) {

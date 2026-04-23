@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.UI.ChessControllView;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -56,6 +57,13 @@ public class ChessScene extends Stage {
         drawBoard();
         root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
         this.controller.start();
+        this.setOnCloseRequest(e ->
+                {
+                    cleanUp();
+                    Platform.exit();
+                    System.exit(0);
+                }
+        );
     }
 
     public void drawBoard() {
@@ -70,7 +78,7 @@ public class ChessScene extends Stage {
             for (int j = 0; j < sideLen; j++) {
                 int logCol = sideLen - 1 - i;
                 index = logCol * sideLen + j;;
-                // --- Background ---
+                //  Background
                 ChessBackgroundPane square;
 
                 if ((i + j) % 2 == 0) {
@@ -86,7 +94,7 @@ public class ChessScene extends Stage {
 
                 panes[index] = square;
 
-                // --- Click Layer ---
+                //  Click Layer W
                 ChessButton button = new ChessButton("", index);
                 button.addEventHandler(ActionEvent.ACTION, controller);
 
@@ -163,6 +171,10 @@ public class ChessScene extends Stage {
             pieceImages.put(i, imageView);
             pieceLayer.getChildren().add(imageView);
         }
+    }
+
+    public void cleanUp(){
+        controller.cleanUp();
     }
 
     public void showWinImage(){

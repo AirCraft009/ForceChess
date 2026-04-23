@@ -31,7 +31,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
     public ChessController(ChessScene chess, String startFen) throws CloneNotSupportedException, IOException {
         chessScene = chess;
-        moveReady = true;
+        moveReady = false;
         board = new Board(startFen);
         game = new ChessGame(board, this);
         chessScene.drawPieces(board.getBoard());
@@ -44,7 +44,11 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     }
 
     public void start(){
-        game.run();
+        game.startGame();
+    }
+
+    public void cleanUp(){
+        game.stop();
     }
 
     public void handleActiveChessClick(ChessButton sourceButton) throws CloneNotSupportedException {
@@ -168,7 +172,6 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     @Override
     public MovePacket requestMove(byte[][] possibleMoves) {
         while (!moveReady) {
-            Thread.onSpinWait();
             //poll for move ready
         }
         System.out.println("move issued");
