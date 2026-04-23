@@ -10,6 +10,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.UI.Constants;
 
 import java.io.FileInputStream;
@@ -142,6 +143,9 @@ public class ChessScene extends Stage {
 
 
             Piece p = pieces[i];
+            if(p.getType() == PieceTypes.KNIGHT){
+                System.out.println("new KNight");
+            }
             String imageP;
             switch (p.getType()){
                 case PAWN -> imageP = pathToImages + (p.getColor()?"white-":"black-") + "pawn.png";

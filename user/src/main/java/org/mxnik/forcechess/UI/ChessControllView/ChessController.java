@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.UI.ChessControllView;
 
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -21,7 +22,6 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     final private Board board;
     final private ChessGame game;
     private DiversePair<byte[][], GameState> currentMoveState;
-    private boolean turn = true;
     private int firstClick = -1;
     private int secondClick = -1;
     private boolean pieceSelected = false;
@@ -69,7 +69,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
         boolean hasPiece = board.getBoard()[buttonField] != EmptyPiece.EMPTY_PIECE;
         boolean pieceColor = board.getBoard()[buttonField].getColor();
-        if(pieceColor != turn && hasPiece && !pieceSelected) {
+        if(pieceColor != board.getTurn() && hasPiece && !pieceSelected) {
             return;
         }
 
@@ -78,7 +78,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             firstClick = buttonField;
             highlightSquares(moves);
         }else {
-            if(pieceColor == turn && hasPiece && buttonField != firstClick) {
+            if(pieceColor == board.getTurn() && hasPiece && buttonField != firstClick) {
                 firstClick = buttonField;
                 highlightSquares(moves);
                 pieceSelected = false;
@@ -98,6 +98,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
         currPieceMoves = moves;
 
+        System.out.println(board.toStringBoard());
+        chessScene.drawPieces(board.getBoard());
     }
 
     public void handleActionEvent(ActionEvent event) throws CloneNotSupportedException {
@@ -161,7 +163,15 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
     @Override
     public void update() {
-        chessScene.drawPieces(board.getBoard());
+        try {
+            currentMoveState = ChessMoveGen.getMovesFromPosition(board);
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println(board.toStringBoard());
+        Platform.runLater(() -> {
+            chessScene.drawPieces(board.getBoard());
+        });
     }
 
     @Override
@@ -175,6 +185,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             //poll for move ready
         }
         System.out.println("move issued");
+        moveReady = false;
         return new MovePacket(MoveType.Generic, firstClick, secondClick, false);
     }
 }

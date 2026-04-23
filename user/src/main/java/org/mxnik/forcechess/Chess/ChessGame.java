@@ -53,6 +53,7 @@ public final class ChessGame implements Runnable{
                 MovePacket packet = getActivePLayer().requestMove(state.first());
                 //TODO: implemented MovePacket inner workings and connect them with board
                 board.move(packet.from(), packet.to());
+                System.out.println("moved");
                 response.update();
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);
