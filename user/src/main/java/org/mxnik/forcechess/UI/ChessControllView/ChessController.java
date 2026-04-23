@@ -188,7 +188,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     }
 
     @Override
-    public MovePacket requestMove(byte[][] possibleMoves) {
+    public MovePacket requestMove() {
         while (!moveReady) {
             Thread.onSpinWait();
             //poll for move ready
@@ -196,5 +196,10 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         //System.out.println("move issued");
         moveReady = false;
         return new MovePacket(MoveType.Generic, firstClick, secondClick, false);
+    }
+
+    @Override
+    public MovePacket getMove() {
+        return null;
     }
 }

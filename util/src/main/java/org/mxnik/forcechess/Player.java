@@ -1,5 +1,6 @@
 package org.mxnik.forcechess;
 
 public interface Player {
-    public MovePacket requestMove(byte[][] possibleMoves);
+    public MovePacket requestMove();
+    public MovePacket getMove();
 }

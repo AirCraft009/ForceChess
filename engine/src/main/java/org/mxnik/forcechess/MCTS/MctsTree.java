@@ -58,6 +58,23 @@ public final class MctsTree {
         return maxNNode;
     }
 
+    public int highestScoreChild(int nodeIdx){
+        int bestChild = -1;
+        float bestScore = Float.NEGATIVE_INFINITY;      // start with the lowest score
+        int child = firstChild[nodeIdx];
+
+
+        while (child != 0) {
+            float q = n[child] == 0 ? 0f : w[child] / n[child];             // evaluation
+            if (q > bestScore) {
+                bestScore = q;  // update bestScore
+                bestChild = child;  // update bestChild
+            }
+            child = nextSibling[child];
+        }
+        return bestChild;
+    }
+
     public int findBestChild(int nodeIdx){
         int bestChild = -1;
         float bestScore = Float.NEGATIVE_INFINITY;      // start with the lowest score

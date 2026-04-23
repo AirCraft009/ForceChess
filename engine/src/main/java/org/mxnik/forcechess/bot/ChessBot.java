@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
-import static org.mxnik.forcechess.ChessSquares.*;
 
 /**
  * Final class connecting all classes from Pos to the NN
@@ -138,13 +137,22 @@ public class ChessBot implements Player {
     /**
      * returns the move with the highest visit count after n moves
      */
+    public int bestMoveUCB(int n){
+        for (int i = 0; i < n; i++) {
+            simulate();
+        }
+        return tree.move[tree.highestVisitNode(ROOT)];
+    }
+
+    /**
+     * returns the move with the highest visit count after n moves
+     */
     public int bestMove(int n){
         for (int i = 0; i < n; i++) {
             simulate();
         }
-        return tree.move[tree.highestVisitNode(0)];
+        return tree.move[tree.highestScoreChild(ROOT)];
     }
-
 
 
     /**
@@ -203,7 +211,7 @@ public class ChessBot implements Player {
 
             flat = PositionEncoder.encodeFlat(pos);     // save pos before move happens
             expandRoot();
-            move = bestMove(n);
+            move = bestMoveUCB(n);
             buffer.addSample(flat, moveDist.clone(), z); // record the moveDist. and z value
 
             pos.makeMove(move);
@@ -227,7 +235,7 @@ public class ChessBot implements Player {
         int move;
         while (g == GameState.Continue){
             expandRoot();
-            move = bestMove(n);
+            move = bestMoveUCB(n);
             pos.makeMove(move);
             System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
@@ -247,7 +255,12 @@ public class ChessBot implements Player {
     }
 
     @Override
-    public MovePacket requestMove(byte[][] possibleMoves) {
+    public MovePacket requestMove() {
         return Move.toMovePacket(bestMove(playDepth));
+    }
+
+    @Override
+    public MovePacket getMove() {
+        return null;
     }
 }

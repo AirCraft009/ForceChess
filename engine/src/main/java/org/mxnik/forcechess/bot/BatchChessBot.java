@@ -50,7 +50,7 @@ public class BatchChessBot extends ChessBot{
     /**
      * returns the move with the highest visit count after n (to the closest batch) moves
      */
-    public int bestMove(int n){
+    public int bestMoveUCB(int n){
         // an entire batch is evaluated at once
         for (int i = 0; i < n; i+=BATCH_SIZE) {
             simulate();

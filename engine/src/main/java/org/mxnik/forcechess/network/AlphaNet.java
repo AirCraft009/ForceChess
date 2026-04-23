@@ -16,7 +16,7 @@ import java.util.Arrays;
 import static org.mxnik.forcechess.network.NetworkConfig.RES_BLOCKS;
 
 /**
- * The neural net used for evaluating position and returning the bestMove
+ * The neural net used for evaluating position and returning the bestMoveUCB
  */
 public final class AlphaNet implements BatchEvaluator {
     private final ComputationGraph model;
