@@ -8,22 +8,31 @@ import org.mxnik.forcechess.MovePacket;
 import org.mxnik.forcechess.Player;
 
 public final class ChessGame implements Runnable{
-    private final Player white;
-    private final Player black;
+    private  Player white;
+    private  Player black;
     private final Board board;
     private final Callback response;
-    private Thread requestThread;
+    private final Thread requestThread;
 
-    public ChessGame(Player white, Player black, Board board, Callback response){
-        this.white = white;
-        this.black = white;
+    public ChessGame( Board board, Callback response){
         this.board = board;
         this.response = response;
         requestThread = new Thread(ChessGame.this);
     }
 
+    public void setPlayers(Player white, Player black){
+        this.black = black;
+        this.white = white;
+        System.out.println(white);
+        System.out.println(black);
+    }
+
     public void startGame(){
         requestThread.start();
+    }
+
+    public Player getActivePLayer(){
+        return board.getTurn() ? white : black;
     }
 
     @Override
@@ -35,9 +44,9 @@ public final class ChessGame implements Runnable{
                     response.finish();
                     break;
                 }
-                MovePacket packet = board.getTurn() ? white.requestMove(state.first()) : black.requestMove(state.first());
+                MovePacket packet = getActivePLayer().requestMove(state.first());
                 //TODO: implemented MovePacket inner workings and connect them with board
-                board.move(0,0);
+                board.move(packet.from(), packet.to());
                 response.update();
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);

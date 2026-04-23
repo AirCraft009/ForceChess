@@ -2,6 +2,8 @@ package org.mxnik.forcechess.bot;
 
 import org.deeplearning4j.util.ModelSerializer;
 import org.mxnik.forcechess.MCTS.MctsTree;
+import org.mxnik.forcechess.MovePacket;
+import org.mxnik.forcechess.Player;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.network.AlphaNet;
 import org.mxnik.forcechess.network.SampleBuffer;
@@ -16,7 +18,7 @@ import static org.mxnik.forcechess.ChessSquares.*;
 /**
  * Final class connecting all classes from Pos to the NN
  */
-public class ChessBot {
+public class ChessBot implements Player {
     public static final int MAX_SEARCH_DEPTH = 64;
     public static final int MAX_MOVES_IN_POS = 256;
 
@@ -28,10 +30,11 @@ public class ChessBot {
 
     protected final Evaluator evaluator;
     protected int depth = 1;                                                      // depth = 1 da root immer existiert
+    private int playDepth;
 
-
-    public ChessBot(Evaluator evaluator){
+    public ChessBot(Evaluator evaluator, int playDepth){
         this.evaluator = evaluator;
+        this.playDepth = playDepth;
         pos = PositionEncoder.Position.StartingPosition();
         tree = new MctsTree();
     }
@@ -237,9 +240,14 @@ public class ChessBot {
     public static void main(String[] args) throws IOException {
         BatchChessBot bot = new BatchChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
                 new File("boardsNBots/bots/networks/D300.zip"), true
-        )));
+        )), 400);
         bot.selfPlayGame(400);
 //        BatchChessBot b = new BatchChessBot(new BatchEvaluator.StubEvaluator());
 //        b.selfPlayGame(300);
+    }
+
+    @Override
+    public MovePacket requestMove(byte[][] possibleMoves) {
+        return Move.toMovePacket(bestMove(playDepth));
     }
 }

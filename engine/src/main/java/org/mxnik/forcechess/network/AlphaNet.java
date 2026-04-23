@@ -95,12 +95,4 @@ public final class AlphaNet implements BatchEvaluator {
         }
         return maxMove;
     }
-
-    public void testGame(){
-        PositionEncoder.Position p = PositionEncoder.Position.StartingPosition();
-        GameState g = GameState.Continue;
-        while (g == GameState.Continue){
-            int move = bestMove(p);
-        }
-    }
 }

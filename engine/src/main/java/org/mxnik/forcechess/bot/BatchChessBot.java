@@ -20,8 +20,8 @@ public class BatchChessBot extends ChessBot{
     private final FlatArray batchedInputs;
     private final BatchEvaluator evaluator;
 
-    public BatchChessBot(BatchEvaluator evaluator) {
-        super(null);
+    public BatchChessBot(BatchEvaluator evaluator, int playDepth) {
+        super(null, playDepth);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
     }
