@@ -39,66 +39,75 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         currPieceMoves = new byte[0];
     }
 
+    /**
+     * sets the players that will take turns
+     */
     public void setPlayers(Player white, Player black){
         game.setPlayers(white,black);
     }
 
+    /**
+     * starts the thread for the game
+     */
     public void start(){
         game.startGame();
     }
 
+    /**
+     * stops the thread in the game so it doesn't become a zombie process
+     */
     public void cleanUp(){
         game.stop();
     }
 
-    public void handleActiveChessClick(ChessButton sourceButton) throws CloneNotSupportedException {
-        // handle menu buttons
-
+    /**
+     * should a click be handled by the method checks if there is a piece the current player is the controller and the color is right
+     */
+    public boolean shouldHandle(int field, boolean hasPiece, boolean pieceColor){
         //handle field buttons
         //durchschnittlich 70 micros max 100 micros -> 0.0000999 sec
 
         if(game.getActivePLayer() != this){
             // only do with the right players
-            return;
+            return false;
         }
 
-        int buttonField = sourceButton.getField();
+        return pieceColor == board.getTurn() || !hasPiece || pieceSelected;
+    }
 
+    /**
+     * handles clicks on fields
+     * @param sourceButton specific button (field) clicked
+     */
+    public void handleActiveChessClick(ChessButton sourceButton) throws CloneNotSupportedException {
+        int buttonField = sourceButton.getField();
+        boolean hasPiece = board.getBoard()[buttonField] != EmptyPiece.EMPTY_PIECE;
+        boolean pieceColor = board.getBoard()[buttonField].getColor();
+
+        if(!shouldHandle(buttonField, hasPiece, pieceColor)){
+            return;
+        }
 
         byte[] moves = currentMoveState.first()[buttonField];
 
-        boolean hasPiece = board.getBoard()[buttonField] != EmptyPiece.EMPTY_PIECE;
-        boolean pieceColor = board.getBoard()[buttonField].getColor();
-        if(pieceColor != board.getTurn() && hasPiece && !pieceSelected) {
-            return;
-        }
+        chessScene.resetBoard();        // clear pieces and highlights before setting them again
 
-        chessScene.resetBoard();
         if(!pieceSelected) {
             firstClick = buttonField;
             highlightSquares(moves);
         }else {
-            if(pieceColor == board.getTurn() && hasPiece && buttonField != firstClick) {
-                firstClick = buttonField;
-                highlightSquares(moves);
-                pieceSelected = false;
-            }else {
-                secondClick = buttonField;
-            }
+            secondClick = buttonField;
         }
 
 
         handleSquare(hasPiece);
 
         ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(buttonField);
-        if(!pieceSelected){
-            oldRect.deactivate();
-        }else {
+        if(pieceSelected){
             oldRect.setActive();
         }
         currPieceMoves = moves;
 
-        System.out.println(board.toStringBoard());
         chessScene.drawPieces(board.getBoard());
     }
 
@@ -133,7 +142,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     }
 
     /**
-     * handle the logic behind highlighting and moving Pieces
+     * handles if to set the flag for moveReady
      * @param hasPiece does the square contain a piece
      */
     public void handleSquare(boolean hasPiece) throws CloneNotSupportedException {
@@ -168,23 +177,23 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
-        System.out.println(board.toStringBoard());
         Platform.runLater(() -> {
             chessScene.drawPieces(board.getBoard());
         });
     }
 
     @Override
-    public void finish() {
+    public void finish(GameState g) {
         //TODO: show the win/loose screen and end game
     }
 
     @Override
     public MovePacket requestMove(byte[][] possibleMoves) {
         while (!moveReady) {
+            Thread.onSpinWait();
             //poll for move ready
         }
-        System.out.println("move issued");
+        //System.out.println("move issued");
         moveReady = false;
         return new MovePacket(MoveType.Generic, firstClick, secondClick, false);
     }

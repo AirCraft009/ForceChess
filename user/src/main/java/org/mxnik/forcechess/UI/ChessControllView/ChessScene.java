@@ -23,31 +23,18 @@ public class ChessScene extends Stage {
     private final String pathToImages = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
     Group root;
     Constants constants;
-    private ChessController controller = null;
-    private HashMap<Integer, ImageView> pieceImages = new HashMap<>();
+    private ChessController controller;
     Group backgroundLayer = new Group();
     private Group pieceLayer = new Group();
     private Group interactionLayer = new Group();
     ImageView winView;
 
-    ChessScene() throws CloneNotSupportedException {
-        setX(Constants.bounds.getMinX());
-        setY(Constants.bounds.getMinY());
-        setWidth(Constants.bounds.getWidth());
-        setHeight(Constants.bounds.getHeight());
+    ChessScene(int sideLen) throws CloneNotSupportedException {
+        setBounds();
+        basicInit(sideLen);
 
-        root = new Group();
-        Scene scene = new Scene(root, 500, 500, Color.GREY);
-        setTitle("Chess");
-        setScene(scene);
-        show();
-        constants = new Constants(8, scene);
-
-//        this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         try {
-            System.out.println("pre controller");
             this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-            System.out.println("set control");
             this.controller.setPlayers(controller, controller);
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
@@ -55,9 +42,9 @@ public class ChessScene extends Stage {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
         drawBoard();
         root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
-        this.controller.start();
         this.setOnCloseRequest(e ->
                 {
                     cleanUp();
@@ -65,8 +52,46 @@ public class ChessScene extends Stage {
                     System.exit(0);
                 }
         );
+
+        this.controller.start();
     }
 
+    /**
+     * sets the x,y & width, height properties
+     */
+    public void setBounds(){
+        setX(Constants.bounds.getMinX());
+        setY(Constants.bounds.getMinY());
+        setWidth(Constants.bounds.getWidth());
+        setHeight(Constants.bounds.getHeight());
+    }
+
+    /**
+     * initializes root, scene and generates constants for the screen dimensions
+     * @param sideLen used to generate screen dimensions
+     */
+    public void basicInit(int sideLen){
+        root = new Group();
+        Scene scene = new Scene(root, 500, 500, Color.GREY);
+        setTitle("Chess");
+        setScene(scene);
+        show();
+        constants = new Constants(sideLen, scene);
+    }
+
+    /**
+     * cleans up the controller
+     */
+    public void cleanUp(){
+        controller.cleanUp();
+    }
+
+
+    // draw Helpers
+
+    /**
+     * draws the board BackGround
+     */
     public void drawBoard() {
         int sideLen = constants.sideLen;
         int size = constants.BlockS;
@@ -116,12 +141,17 @@ public class ChessScene extends Stage {
         interactionLayer.getChildren().addAll(buttons);
     }
 
+    /**
+     * resets both highlights and pieces
+     */
     public void resetBoard(){
         clearPieces();
         clearHighlights();
     }
 
-
+    /**
+     * clears all highlights
+     */
     public void clearHighlights(){
         for (int i = 0; i < backgroundLayer.getChildren().size(); i++) {
             ChessBackgroundPane bp = (ChessBackgroundPane) backgroundLayer.getChildren().get(i);
@@ -129,11 +159,19 @@ public class ChessScene extends Stage {
         }
     }
 
+    /**
+     * leaves an empty board (visually)
+     */
     public void clearPieces(){
         pieceLayer.getChildren().clear();
     }
 
+    /**
+     * draws all pieces
+     * @param pieces pieces in a board
+     */
     public void drawPieces(Piece[] pieces){
+        clearPieces();
         int sideLen = constants.sideLen;
 
         for (int i = 0; i < pieces.length; i++) {
@@ -143,9 +181,7 @@ public class ChessScene extends Stage {
 
 
             Piece p = pieces[i];
-            if(p.getType() == PieceTypes.KNIGHT){
-                System.out.println("new KNight");
-            }
+
             String imageP;
             switch (p.getType()){
                 case PAWN -> imageP = pathToImages + (p.getColor()?"white-":"black-") + "pawn.png";
@@ -172,14 +208,10 @@ public class ChessScene extends Stage {
             imageView.setFitHeight(constants.BlockS );
             imageView.setFitWidth(constants.BlockS);
 
-            pieceImages.put(i, imageView);
             pieceLayer.getChildren().add(imageView);
         }
     }
 
-    public void cleanUp(){
-        controller.cleanUp();
-    }
 
     public void showWinImage(){
         String imageP = sourcedir + "img.png";
@@ -192,26 +224,6 @@ public class ChessScene extends Stage {
         winView = new ImageView(image);
         winView.setFitHeight(constants.bounds.getHeight());
         winView.setFitWidth(constants.bounds.getWidth());
-        pieceLayer.getChildren().add(winView);
-    }
-
-    public void movePiece(int from, int to){
-        int sideLen = constants.sideLen;
-        int size = constants.BlockS;
-
-        ImageView i = pieceImages.remove(from);
-        pieceImages.remove(to);
-        if(i == null){
-            return;
-        }
-        int x = (to % sideLen)* size + constants.WidthStart;
-        int y = (sideLen - to / sideLen - 1) * size ;
-        i.setX(x);
-        i.setY(y);
-        pieceImages.put(to, i);
-    }
-
-    public static void main(String[] args) {
-
+        pieceLayer.getChildren().addFirst(winView);
     }
 }

@@ -47,13 +47,13 @@ public final class ChessGame implements Runnable{
             try {
                 var state = ChessMoveGen.getMovesFromPosition(board);
                 if (state.second() != GameState.Continue) {
-                    response.finish();
+                    response.finish(state.second());
                     break;
                 }
                 MovePacket packet = getActivePLayer().requestMove(state.first());
                 //TODO: implemented MovePacket inner workings and connect them with board
                 board.move(packet.from(), packet.to());
-                System.out.println("moved");
+                //System.out.println("moved");
                 response.update();
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);
