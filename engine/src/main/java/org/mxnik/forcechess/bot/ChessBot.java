@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.bot;
 
 import org.deeplearning4j.util.ModelSerializer;
+import org.mxnik.forcechess.Bitboard;
 import org.mxnik.forcechess.MCTS.MctsTree;
 import org.mxnik.forcechess.MovePacket;
 import org.mxnik.forcechess.Player;
@@ -256,11 +257,22 @@ public class ChessBot implements Player {
 
     @Override
     public MovePacket requestMove() {
-        return Move.toMovePacket(bestMove(playDepth));
+        int rMove = bestMove(playDepth);
+        expandRoot();
+        System.out.printf("Black: %d -> %d\n", Move.from(rMove), Move.to(rMove));
+        pos.makeMove(rMove);
+        System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
+        resetCore();
+        return Move.toMovePacket(rMove);
     }
 
     @Override
-    public MovePacket getMove() {
-        return null;
+    public void getMove(MovePacket movePacket) {
+        int move = Move.MovePacketToMove(movePacket);
+        expandRoot();
+        System.out.printf("whiteM: %d -> %d\n", Move.from(move), Move.to(move));
+        System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
+        pos.makeMove(move);
+        resetCore();
     }
 }

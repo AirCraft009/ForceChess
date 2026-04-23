@@ -119,7 +119,7 @@ public final class Move {
     }
 
     public static int MovePacketToMove(MovePacket packet){
-        return of(packet.from(), packet.to(), packet.type().flagVal | (packet.capture() ? 1 : 0) << 3);
+        return of(packet.from(), packet.to(), packet.type().flagVal | ((packet.capture() ? 1 : 0) << 3));
     }
 
 

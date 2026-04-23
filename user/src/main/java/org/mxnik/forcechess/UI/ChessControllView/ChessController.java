@@ -195,11 +195,11 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
         //System.out.println("move issued");
         moveReady = false;
-        return new MovePacket(MoveType.Generic, firstClick, secondClick, false);
+        return new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick]!=EmptyPiece.EMPTY_PIECE);
     }
 
     @Override
-    public MovePacket getMove() {
-        return null;
+    public void getMove(MovePacket movePacket) {
+        //don't do anything update handles it
     }
 }

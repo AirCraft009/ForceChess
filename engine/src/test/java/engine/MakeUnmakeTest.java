@@ -1,10 +1,14 @@
 package engine;
 
+import org.bytedeco.libfreenect._freenect_device;
 import org.junit.jupiter.api.*;
 import org.mxnik.forcechess.Bitboard;
 import org.mxnik.forcechess.Pos.Move;
+import org.mxnik.forcechess.Pos.MoveGen;
 import org.mxnik.forcechess.Pos.Piece;
 import org.mxnik.forcechess.Pos.PositionEncoder;
+
+import javax.management.MXBean;
 import static org.mxnik.forcechess.ChessSquares.*;
 
 import java.util.Arrays;
@@ -137,6 +141,28 @@ class MakeUnmakeTest {
             int undo = pos.makeMove(Move.of(A1, A5, Move.FLAG_GENERIC));
             pos.unmakeMove(undo);
             before.assertRestoredIn(pos);
+        }
+    }
+
+    @Nested
+    @DisplayName("specific piece tests")
+    class SpecificTest {
+        @Test
+        @DisplayName("move king")
+        void kingMoved(){
+            var pos = emptyPosition();
+            place(pos, Piece.WHITE, Piece.KING, D4);
+            place(pos, Piece.BLACK, Piece.KING, A7);
+
+            int[] moves = new int[256];
+            int n = MoveGen.generateMoves(pos, 0, true, moves);
+            Bitboard.visualiseBitboard(pos.Occupied);
+            for (int i = 0; i < n; i++) {
+                int undo = pos.makeMove(moves[i]);
+                Bitboard.visualiseBitboard(pos.Occupied);
+                pos.unmakeMove(undo);
+            }
+            assertEquals(8, n);
         }
     }
 
