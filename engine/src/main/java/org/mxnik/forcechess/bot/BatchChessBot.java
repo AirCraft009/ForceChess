@@ -1,11 +1,13 @@
 package org.mxnik.forcechess.bot;
 
-import org.mxnik.forcechess.DiversePair;
-import org.mxnik.forcechess.FlatArray;
-import org.mxnik.forcechess.GameState;
-import org.mxnik.forcechess.Pos.Move;
-import org.mxnik.forcechess.Pos.MoveGen;
-import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.mxnik.forcechess.global.DiversePair;
+import org.mxnik.forcechess.global.FlatArray;
+import org.mxnik.forcechess.global.GameState;
+import org.mxnik.forcechess.network_bot_interactions.Pos.Move;
+import org.mxnik.forcechess.network_bot_interactions.Pos.MoveGen;
+import org.mxnik.forcechess.network_bot_interactions.Pos.PositionEncoder;
+import org.mxnik.forcechess.network_bot_interactions.eval.BatchEvaluator;
+import org.mxnik.forcechess.network_bot_interactions.eval.Evaluator;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 

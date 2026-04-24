@@ -1,14 +1,17 @@
 package org.mxnik.forcechess.bot;
 
 import org.deeplearning4j.util.ModelSerializer;
-import org.mxnik.forcechess.Bitboard;
+import org.mxnik.forcechess.AlphaNetwork.AlphaNet;
+import org.mxnik.forcechess.global.Bitboard;
 import org.mxnik.forcechess.MCTS.MctsTree;
-import org.mxnik.forcechess.MovePacket;
-import org.mxnik.forcechess.Player;
-import org.mxnik.forcechess.Pos.*;
-import org.mxnik.forcechess.network.AlphaNet;
-import org.mxnik.forcechess.network.SampleBuffer;
-import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.global.MovePacket;
+import org.mxnik.forcechess.network_bot_interactions.Pos.Move;
+import org.mxnik.forcechess.network_bot_interactions.Pos.MoveGen;
+import org.mxnik.forcechess.network_bot_interactions.Pos.PositionEncoder;
+import org.mxnik.forcechess.network_bot_interactions.eval.Evaluator;
+import org.mxnik.forcechess.network_bot_interactions.training.SampleBuffer;
+import org.mxnik.forcechess.user_bot_interactions.Player;
+import org.mxnik.forcechess.global.GameState;
 
 import java.io.File;
 import java.io.IOException;

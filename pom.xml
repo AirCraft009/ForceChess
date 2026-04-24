@@ -21,6 +21,7 @@
         <module>engine</module>
         <module>user</module>
         <module>util</module>
+        <module>network</module>
     </modules>
 
     <properties>

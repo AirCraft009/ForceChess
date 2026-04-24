@@ -3,8 +3,8 @@ package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
-import org.mxnik.forcechess.DiversePair;
-import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.global.DiversePair;
+import org.mxnik.forcechess.global.GameState;
 
 import java.util.Arrays;
 

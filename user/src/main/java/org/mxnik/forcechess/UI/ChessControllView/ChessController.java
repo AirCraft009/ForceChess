@@ -4,12 +4,17 @@ import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import org.mxnik.forcechess.*;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
+import org.mxnik.forcechess.global.DiversePair;
+import org.mxnik.forcechess.global.GameState;
+import org.mxnik.forcechess.global.MovePacket;
+import org.mxnik.forcechess.global.MoveType;
+import org.mxnik.forcechess.user_bot_interactions.Callback;
+import org.mxnik.forcechess.user_bot_interactions.Player;
 
 import java.io.IOException;
 

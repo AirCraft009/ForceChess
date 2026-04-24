@@ -10,15 +10,13 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.UI.Constants;
-import org.mxnik.forcechess.bot.BatchEvaluator;
+import org.mxnik.forcechess.network_bot_interactions.eval.BatchEvaluator;
 import org.mxnik.forcechess.bot.ChessBot;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
 
 public class ChessScene extends Stage {
     private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";

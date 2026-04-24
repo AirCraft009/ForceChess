@@ -8,10 +8,10 @@ import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
-import org.mxnik.forcechess.DiversePair;
+import org.mxnik.forcechess.global.DiversePair;
 
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
-import static org.mxnik.forcechess.RayDetection.*;
+import static org.mxnik.forcechess.global.RayDetection.*;
 
 public class Board {
     public static int sideLen = 8;
