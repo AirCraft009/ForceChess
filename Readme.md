@@ -48,6 +48,18 @@ Des Weiteren können unterschiedlich trainierte KIs gespeichert sowie genutzt we
   - Bester Zug in Position 
   - Falls Stockfish schnell genug evaluieren kann     
 
+## Build
+
+> building the whole project takes long because of network as it binds DL4J
+> to avoid that first build engine and util and then run/build user
+> network is very stable and doesn't receive changes often
+
+- ```mvn -pl :engine,:util compile```
+- ```mvn -pl :user javafx:run```
+
+> if network needs to be rebuilt
+
+- ```mvn -pl :network compile```
 
 ## Run - Project
 
