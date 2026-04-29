@@ -2,15 +2,16 @@ package org.mxnik.forcechess.UI.ChessControllView;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchEvaluator;
 import org.mxnik.forcechess.bot.ChessBot;
@@ -18,7 +19,6 @@ import org.mxnik.forcechess.bot.ChessBot;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
 
 public class ChessScene extends Stage {
     private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
@@ -37,6 +37,9 @@ public class ChessScene extends Stage {
         setBounds();
         basicInit(sideLen);
         generateImages();
+
+        getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
+        getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         try {
             this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
@@ -149,21 +152,21 @@ public class ChessScene extends Stage {
                 }
 
                 square.setLayoutX(constants.WidthStart + j * size);
-                square.setLayoutY(i * size);
+                square.setLayoutY(constants.HeightStart + i * size);
 
 
                 panes[index] = square;
 
                 //  Click Layer W
                 ChessButton button = new ChessButton("", index);
-                button.addEventHandler(ActionEvent.ACTION, controller);
+                button.addEventHandler(Event.ANY, controller);
 
                 button.setPrefSize(size, size);
                 button.setMinSize(size, size);
                 button.setMaxSize(size, size);
 
                 button.setLayoutX(constants.WidthStart + j * size);
-                button.setLayoutY(i * size);
+                button.setLayoutY(constants.HeightStart + i * size);
 
                 // IMPORTANT -fx-background-color: transparent;
                 button.setStyle("-fx-background-color: transparent");
@@ -200,6 +203,10 @@ public class ChessScene extends Stage {
         pieceLayer.getChildren().clear();
     }
 
+    void clearInteractionLayer(){
+        interactionLayer.getChildren().clear();
+    }
+
     /**
      * draws all pieces
      * @param pieces pieces in a board
@@ -231,8 +238,8 @@ public class ChessScene extends Stage {
             }
 
             imgView.setX(x * constants.BlockS + constants.WidthStart);
-            imgView.setY((sideLen - 1 - y) * constants.BlockS);
-            imgView.setFitHeight(constants.BlockS );
+            imgView.setY((sideLen - 1 - y) * constants.BlockS + constants.HeightStart);
+            imgView.setFitHeight(constants.BlockS);
             imgView.setFitWidth(constants.BlockS);
 
             pieceLayer.getChildren().add(imgView);

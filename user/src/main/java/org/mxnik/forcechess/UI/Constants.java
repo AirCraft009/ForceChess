@@ -9,6 +9,7 @@ import javafx.scene.paint.*;
 public class Constants {
     final int BoardSize;
     public final int WidthStart;
+    public final int HeightStart;
     public final int BlockS;
     public final Paint DarkColor = Color.DARKBLUE;
     public final Paint WhiteColor = Color.WHITE;
@@ -18,9 +19,11 @@ public class Constants {
 
     public Constants(int sideLen, Scene scene){
         this.sideLen = sideLen;
-        BoardSize = (int) scene.getHeight();
-        int middle = (int) scene.getWidth() / 2;
-        WidthStart = middle - BoardSize / 2;
+        BoardSize = (int) (Math.min(scene.getHeight(), scene.getWidth()) * 0.95);
+        int middleX = (int) scene.getWidth() / 2;
+        int middleY = (int) scene.getHeight() / 2;
+        WidthStart = middleX - BoardSize / 2;
+        HeightStart = middleY - BoardSize / 2;
         BlockS = BoardSize / sideLen;
     }
 }

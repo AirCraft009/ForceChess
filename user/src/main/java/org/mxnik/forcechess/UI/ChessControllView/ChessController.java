@@ -1,15 +1,19 @@
 package org.mxnik.forcechess.UI.ChessControllView;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.scene.input.KeyEvent;
 import org.mxnik.forcechess.*;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
+import org.mxnik.forcechess.UI.Constants;
 
 import java.io.IOException;
 
@@ -120,6 +124,17 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
     }
 
+    public void handleKeyEvent(KeyEvent event) throws CloneNotSupportedException {
+        Object source = event.getSource();
+        if(event.getEventType() != KeyEvent.KEY_PRESSED){
+            return;
+        }
+
+        switch (event.getCode()){
+            case F11 -> chessScene.setFullScreen(!chessScene.isFullScreen());
+        }
+    }
+
     public void resetToDefault(){
         firstClick = -1;
         secondClick = -1;
@@ -167,6 +182,12 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);
             }
+        }else if(event instanceof KeyEvent){
+            try {
+                handleKeyEvent((KeyEvent) event);
+            } catch (CloneNotSupportedException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 
@@ -201,5 +222,16 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     @Override
     public void getMove(MovePacket movePacket) {
         //don't do anything update handles it
+    }
+
+    /**
+     * scale the viewed items properly
+     */
+    public void resize() {
+        chessScene.constants = new Constants(chessScene.constants.sideLen, chessScene.getScene());
+        chessScene.backgroundLayer.getChildren().clear();
+        chessScene.clearInteractionLayer();
+        chessScene.drawBoard();
+        chessScene.drawPieces(board.getBoard());
     }
 }
