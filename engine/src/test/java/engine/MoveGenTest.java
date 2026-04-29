@@ -738,6 +738,38 @@ class MoveGenTest {
     class KingTests {
 
         @Test
+        @DisplayName("Illegal King move gen (github issue https://github.com/AirCraft009/ForceChess/issues/10")
+        void illegalKingMoveGen(){
+            var pos = emptyPosition();
+            place(pos, false, Piece.ROOK, A8);
+            place(pos, false, Piece.KNIGHT, B8);
+            place(pos, false, Piece.BISHOP, C8);
+            place(pos, false, Piece.QUEEN, D8);
+            place(pos, false, Piece.KING, E8);
+            place(pos, false, Piece.BISHOP, F8);
+            place(pos, false, Piece.KNIGHT, H6);
+            place(pos, false, Piece.ROOK, G8);
+
+            place(pos, false, Piece.PAWN, A7);
+            place(pos, false, Piece.PAWN, B7);
+            place(pos, false, Piece.PAWN, C7);
+            place(pos, false, Piece.PAWN, D7);
+            place(pos, false, Piece.PAWN, E7);
+            place(pos, false, Piece.PAWN, G7);
+            place(pos, false, Piece.PAWN, H7);
+
+            place(pos, true, Piece.KING, E4);
+            place(pos, true, Piece.BISHOP, F7);
+            place(pos, true, Piece.QUEEN, F3);
+
+            for (int m : genLegal(pos, false)){
+                System.out.printf("move: %d -> %d\n", Move.from(m), Move.to(m));
+            }
+
+
+        }
+
+        @Test
         @DisplayName("Center king (e5) has 8 moves")
         void centerKing8Moves() {
             var pos = emptyPosition();

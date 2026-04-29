@@ -330,7 +330,6 @@ public class MoveGen {
 
         while (endPositions != 0L) {
             int sq = Bitboard.lsb(endPositions);
-            System.out.println(sq);
             endPositions = Bitboard.popLsb(endPositions);
 
             int flag = ((enemyPieces >>> sq) & 1L) == 1L

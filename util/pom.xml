@@ -21,6 +21,7 @@
                 <configuration>
                     <source>24</source>
                     <target>24</target>
+                    <debug>true</debug>
                 </configuration>
             </plugin>
         </plugins>
