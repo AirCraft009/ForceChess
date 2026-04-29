@@ -63,20 +63,22 @@ class MakeUnmakeTest {
     record Snapshot(
             long WPawns, long WKnights, long WBishops, long WRooks, long WQueens, long WKing,
             long BPawns, long BKnights, long BBishops, long BRooks, long BQueens, long BKing,
-            long Occupied, long WPieces, long BPieces,
+            long Occupied, long WPieces, long BPieces, long doublePW, long doublePB,
             boolean WQueenCastle, boolean WKingCastle,
             boolean BQueenCastle, boolean BKingCastle,
             int enPassantSquare,
+            int fiftyMove,
             byte[] pieceMap
     ) {
         static Snapshot of(PositionEncoder.Position pos) {
             return new Snapshot(
                     pos.WPawns, pos.WKnights, pos.WBishops, pos.WRooks, pos.WQueens, pos.WKing,
                     pos.BPawns, pos.BKnights, pos.BBishops, pos.BRooks, pos.BQueens, pos.BKing,
-                    pos.Occupied, pos.WPieces, pos.BPieces,
+                    pos.Occupied, pos.WPieces, pos.BPieces, pos.WDoublePawnMove, pos.BDoublePawnMove,
                     pos.WQueenCastle, pos.WKingCastle,
                     pos.BQueenCastle, pos.BKingCastle,
                     pos.enPassantSquare,
+                    pos.fiftyMoveCounter,
                     Arrays.copyOf(pos.pieceMap, 64)
             );
         }
@@ -97,6 +99,9 @@ class MakeUnmakeTest {
             assertEquals(Occupied, pos.Occupied, "Occupied");
             assertEquals(WPieces,  pos.WPieces,  "WPieces");
             assertEquals(BPieces,  pos.BPieces,  "BPieces");
+            assertEquals(fiftyMove,  pos.fiftyMoveCounter,  "moveCounter");
+            assertEquals(doublePW,  pos.WDoublePawnMove,  "white double pawn");
+            assertEquals(doublePB,  pos.BDoublePawnMove,  "black double pawn");
             assertEquals(WQueenCastle, pos.WQueenCastle, "WQueenCastle");
             assertEquals(WKingCastle,  pos.WKingCastle,  "WKingCastle");
             assertEquals(BQueenCastle, pos.BQueenCastle, "BQueenCastle");
@@ -474,6 +479,39 @@ class MakeUnmakeTest {
             int undo1 = pos.makeMove(Move.of(A1, A4, Move.FLAG_GENERIC));
             int undo2 = pos.makeMove(Move.of(B1, C3, Move.FLAG_GENERIC));
 
+            pos.unmakeMove(undo2);
+            pos.unmakeMove(undo1);
+
+            before.assertRestoredIn(pos);
+        }
+
+        @Test
+        @DisplayName("Two quiet moves then two unmakes restores original position")
+        void multiUnmake() {
+            var pos = emptyPosition();
+            place(pos, Piece.WHITE, Piece.ROOK,   A1);
+            place(pos, Piece.WHITE, Piece.KNIGHT, B1);
+            place(pos, Piece.WHITE, Piece.KING,   E1);
+            place(pos, Piece.BLACK, Piece.KING,   E8);
+
+            var before = Snapshot.of(pos);
+
+            int undo1 = pos.makeMove(Move.of(A1, A4, Move.FLAG_GENERIC));
+            int undo2 = pos.makeMove(Move.of(B1, C3, Move.FLAG_GENERIC));
+            int undo3 = pos.makeMove(Move.of(A4, A1, Move.FLAG_GENERIC));
+            int undo4 = pos.makeMove(Move.of(C3, B1, Move.FLAG_GENERIC));
+            int undo5 = pos.makeMove(Move.of(A1, A4, Move.FLAG_GENERIC));
+            int undo6 = pos.makeMove(Move.of(B1, C3, Move.FLAG_GENERIC));
+            int undo7 = pos.makeMove(Move.of(A4, A1, Move.FLAG_GENERIC));
+            int undo8 = pos.makeMove(Move.of(C3, B1, Move.FLAG_GENERIC));
+
+
+            pos.unmakeMove(undo8);
+            pos.unmakeMove(undo7);
+            pos.unmakeMove(undo6);
+            pos.unmakeMove(undo5);
+            pos.unmakeMove(undo4);
+            pos.unmakeMove(undo3);
             pos.unmakeMove(undo2);
             pos.unmakeMove(undo1);
 

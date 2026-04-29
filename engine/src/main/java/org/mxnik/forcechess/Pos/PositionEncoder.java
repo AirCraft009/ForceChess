@@ -327,6 +327,8 @@ public final class PositionEncoder {
             int to        = Move.to(move);
             int moveType  = Move.flags(move);
 
+            //System.out.printf("making move %d -> %d\n", from, to);
+
             switch (moveType) {
                 case Move.FLAG_CASTLE_K_CAPTURE,
                      Move.FLAG_CASTLE_Q_CAPTURE -> throw new IllegalStateException(
@@ -394,8 +396,8 @@ public final class PositionEncoder {
 
                 }
             }
-            byte currentPerms = castlePerms;
-            updateCastlePerms(from, to);
+
+            byte currentPerms = updateCastlePerms(from, to);
             return UndoMoveInfo.of(move, movePiece(from, to), currentPerms);
         }
 
@@ -448,8 +450,7 @@ public final class PositionEncoder {
                 }
             }
 
-            castlePerms = UndoMoveInfo.castlePerms(undoInfo);
-
+            resetCastlePerms(UndoMoveInfo.castlePerms(undoInfo));
             updateHelper();
             calcMat();
             whiteToMove = !whiteToMove;
@@ -763,9 +764,8 @@ public final class PositionEncoder {
                             + Long.bitCount(BKing)    * pieceVals[Piece.KING];
         }
 
-        // castle helpers
-
-        private void updateCastlePerms(int from, int to){
+        private byte updateCastlePerms(int from, int to){
+            byte prevPerms = castlePerms;
             // these squares are fixed by the rules of chess
             if (from == E1 || to == E1) castlePerms &= ~(W_KINGSIDE | W_QUEENSIDE);
             if (from == H1 || to == H1) castlePerms &= ~W_KINGSIDE;
@@ -773,13 +773,19 @@ public final class PositionEncoder {
             if (from == E8 || to == E8) castlePerms &= ~(B_KINGSIDE | B_QUEENSIDE);
             if (from == H8 || to == H8) castlePerms &= ~B_KINGSIDE;
             if (from == A8 || to == A8) castlePerms &= ~B_QUEENSIDE;
+            return prevPerms;
         }
 
-        public void revoke(byte Perm){
+        private void resetCastlePerms(byte perms){
+            castlePerms = perms;
+        }
+
+
+        public void revokeCastlePerms(byte Perm){
             castlePerms &= (byte) ~Perm;
         }
 
-        public boolean queryPerms(byte Perm){
+        public boolean queryCastlePerms(byte Perm){
             return (castlePerms & Perm) != 0;
         }
 

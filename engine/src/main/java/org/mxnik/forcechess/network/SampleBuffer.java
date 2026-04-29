@@ -7,9 +7,11 @@ import org.mxnik.forcechess.Pos.Move;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Deque;
 import java.util.Random;
 
 import static org.mxnik.forcechess.Pos.Move.MOVE_POSSIBILITIES;
+import static org.mxnik.forcechess.Pos.Move.to;
 import static org.mxnik.forcechess.Pos.PositionEncoder.TENSOR_SIZE;
 
 public class SampleBuffer {
@@ -18,8 +20,9 @@ public class SampleBuffer {
     private TrainingSample[] samples;
     private final Random random = new Random();
     private final String fullPath;
-    private final float DECAY = 0.1F;
+    private final float DECAY = 0.01F;
     public final static String BASE_PATH = FileLocations.SAMPLE_LOCATIONS;
+    private final static float lambda = 0.8F;
 
     /**
      * creates a sample buffer with a given capacity;
@@ -62,9 +65,22 @@ public class SampleBuffer {
         ptr++;
     }
 
+
+    /**
+     * add a sample to the Buffer
+     * @param input the flat encoded input
+     * @param pi the move distribution at the root node
+     * @param z the preemptive z value
+     */
     public void addSample(float[] input, float[] pi, float z){
-        samples[ptr] = new TrainingSample(input, pi, z);
+        samples[ptr] = new TrainingSample(input, pi,z);
         ptr++;
+    }
+
+    // currently unused will come into effect after fixing various move gen issues
+    private static float blendZ(float term, float mcts, float progress){
+        float weight = lambda * progress + (1 - lambda) * (1 - progress);
+        return weight * term + (1 - weight) * mcts;
     }
 
     public TrainingSample sample(){
@@ -81,10 +97,10 @@ public class SampleBuffer {
      * @param start the first game
      * @param z the z value to update with
      */
-    public void updateZ(int start, float z  ){
+    public void updateZ(int start, float z){
         for (int i = ptr-1; i >= start; i--) {
-            samples[i].z = z;
-            z -= DECAY;
+            samples[i].z = z - ((z < 0)? -DECAY : DECAY);
+            z = -z;
         }
     }
 

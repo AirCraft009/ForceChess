@@ -44,7 +44,7 @@ public class Train {
     }
 
     private Train(String fileName, boolean read, boolean batch) throws IOException {
-        fullPath = BASE_PATH + fileName + FILE_ENDING;
+        fullPath = BASE_PATH + fileName;
         this.fileName = fileName;
         if (!read) {
             network = new AlphaNet(NetworkConfig.buildNet());
@@ -53,7 +53,7 @@ public class Train {
         }
 
         ComputationGraph loaded = ModelSerializer.restoreComputationGraph(
-                new File(fullPath), true
+                new File(fullPath + FILE_ENDING), true
         );
         network = new AlphaNet(loaded);
         bot  = batch ? new BatchChessBot(network, 300) : new ChessBot(network, 300);
@@ -241,9 +241,9 @@ public class Train {
 
 
 //       second stage training with model
-        Train train = new Train("D400_T2", false, true);
+        Train train = new Train("D400_T2", true, true);
         train.diagnose();
-        SampleBuffer s = new SampleBuffer( 5000, "22_4_2026_Buff");
+        SampleBuffer s = new SampleBuffer( 6000, "25_4_2026_Buff");
         System.out.println(s.length);
         if(s.length == 0){
             return;

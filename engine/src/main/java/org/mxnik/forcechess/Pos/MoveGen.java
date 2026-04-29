@@ -34,6 +34,7 @@ public class MoveGen {
             int undo = pos.makeMove(moves[i]);
 
             if (pos.checkChess(whiteToMove)){
+                System.out.println("check detected");
                 legalOffset --;                            // one less move
 
                 pos.unmakeMove(undo);
@@ -329,9 +330,10 @@ public class MoveGen {
 
         while (endPositions != 0L) {
             int sq = Bitboard.lsb(endPositions);
+            System.out.println(sq);
             endPositions = Bitboard.popLsb(endPositions);
 
-            int flag = (enemyPieces >>> sq & 1L) == 1L
+            int flag = ((enemyPieces >>> sq) & 1L) == 1L
                 ? Move.FLAG_GENERIC_CAPTURE
                 : Move.FLAG_GENERIC;
 

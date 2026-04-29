@@ -115,7 +115,7 @@ public final class Move {
     // Helper for MovePacket
 
     public static MovePacket toMovePacket(int move){
-        return new MovePacket(MoveType.fromFlagVal(baseFlag(move)), from(move), to(move), attackFromFlag(flags(move)));
+        return new MovePacket(MoveType.fromFlagVal(baseFlag(flags(move))), from(move), to(move), attackFromFlag(flags(move)));
     }
 
     public static int MovePacketToMove(MovePacket packet){

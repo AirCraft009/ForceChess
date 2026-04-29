@@ -210,6 +210,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
     @Override
     public MovePacket requestMove() {
+        System.out.println("player move requested");
         while (!moveReady) {
             Thread.onSpinWait();
             //poll for move ready
