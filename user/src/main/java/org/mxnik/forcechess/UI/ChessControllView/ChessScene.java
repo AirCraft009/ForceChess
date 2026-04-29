@@ -31,9 +31,12 @@ public class ChessScene extends Stage {
     private Group interactionLayer = new Group();
     ImageView winView;
 
+    private Image[] images;
+
     ChessScene(int sideLen) throws CloneNotSupportedException {
         setBounds();
         basicInit(sideLen);
+        generateImages();
 
         try {
             this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
@@ -79,6 +82,35 @@ public class ChessScene extends Stage {
         setScene(scene);
         show();
         constants = new Constants(sideLen, scene);
+    }
+
+    /**
+     * Generate the images beforehand - for better efficiency
+     */
+    private void generateImages(){
+        String[] imagePaths = new String[]{
+                pathToImages + "white-pawn.png",
+                pathToImages + "black-pawn.png",
+                pathToImages + "white-knight.png",
+                pathToImages + "black-knight.png",
+                pathToImages + "white-bishop.png",
+                pathToImages + "black-bishop.png",
+                pathToImages + "white-rook.png",
+                pathToImages + "black-rook.png",
+                pathToImages + "white-queen.png",
+                pathToImages + "black-queen.png",
+                pathToImages + "white-king.png",
+                pathToImages + "black-king.png"
+        };
+        images = new Image[imagePaths.length];
+
+        for(int i = 0; i < imagePaths.length; i++) {
+            try {
+                images[i] = new Image(new FileInputStream(imagePaths[i]));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     /**
@@ -184,33 +216,26 @@ public class ChessScene extends Stage {
 
             Piece p = pieces[i];
 
-            String imageP;
-            switch (p.getType()){
-                case PAWN -> imageP = pathToImages + (p.getColor()?"white-":"black-") + "pawn.png";
-                case KNIGHT -> imageP = pathToImages + (p.getColor()?"white-":"black-") + "knight.png";
-                case BISHOP -> imageP = pathToImages + (p.getColor()?"white-":"black-") + "bishop.png";
-                case ROOK -> imageP = pathToImages + (p.getColor()?"white-":"black-") + "rook.png";
-                case QUEEN -> imageP = pathToImages + (p.getColor()?"white-":"black-") + "queen.png";
-                case KING -> imageP = pathToImages + (p.getColor()?"white-":"black-") + "king.png";
-                default -> {continue;}
+            int colorOffset = (p.getColor()?0:1);
+            ImageView imgView = switch (p.getType()){
+                case PAWN -> new ImageView(images[colorOffset]);
+                case KNIGHT -> new ImageView(images[2+colorOffset]);
+                case BISHOP -> new ImageView(images[4+colorOffset]);
+                case ROOK -> new ImageView(images[6+colorOffset]);
+                case QUEEN -> new ImageView(images[8+colorOffset]);
+                case KING -> new ImageView(images[10+colorOffset]);
+                case ToPromote, EMPTY, ILLEGAL -> null;
+            };
+            if(imgView == null){
+                continue;
             }
 
-            //System.out.println(x + " : " + y + "\ni: " + i + "\n piece: " + pieces[i] + "\nimage: " + imageP);
+            imgView.setX(x * constants.BlockS + constants.WidthStart);
+            imgView.setY((sideLen - 1 - y) * constants.BlockS);
+            imgView.setFitHeight(constants.BlockS );
+            imgView.setFitWidth(constants.BlockS);
 
-            Image image;
-            try {
-                image = new Image(new FileInputStream(imageP));
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
-
-            ImageView imageView = new ImageView(image);
-            imageView.setX(x * constants.BlockS + constants.WidthStart);
-            imageView.setY((sideLen - 1 - y) * constants.BlockS);
-            imageView.setFitHeight(constants.BlockS );
-            imageView.setFitWidth(constants.BlockS);
-
-            pieceLayer.getChildren().add(imageView);
+            pieceLayer.getChildren().add(imgView);
         }
     }
 
