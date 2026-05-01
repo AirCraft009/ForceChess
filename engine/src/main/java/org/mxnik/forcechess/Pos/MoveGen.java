@@ -31,7 +31,9 @@ public class MoveGen {
 
         int place = offset;                                 // where next move should be places ( after illegal move -> rearrange moves)
         for (int i = offset; i < pseudoOffset; i++) {
+            int move = moves[i];
             int undo = pos.makeMove(moves[i]);
+
 
             if (pos.checkChess(whiteToMove)){
                 //System.out.println("check detected");
@@ -332,7 +334,7 @@ public class MoveGen {
             int sq = Bitboard.lsb(endPositions);
             endPositions = Bitboard.popLsb(endPositions);
 
-            int flag = ((enemyPieces >>> sq) & 1L) == 1L
+            int flag = ((enemyPieces >>> sq) & 1L) == 1
                 ? Move.FLAG_GENERIC_CAPTURE
                 : Move.FLAG_GENERIC;
 

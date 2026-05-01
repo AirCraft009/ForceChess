@@ -261,12 +261,7 @@ public class ChessBot implements Player {
 //        System.out.println("bot move requested");
 //        System.out.println("All moves in position");
         int rMove = bestMove(playDepth);
-        expandRoot();
-        int node = tree.firstChild[ROOT];
-        while (node != 0){
-            //System.out.printf("move: %d -> %d\n", Move.from(tree.move[node]), Move.to(tree.move[node]));
-            node = tree.nextSibling[node];
-        }
+
         //System.out.printf("Black: %d -> %d\n", Move.from(rMove), Move.to(rMove));
         pos.makeMove(rMove);
         //System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
@@ -277,6 +272,7 @@ public class ChessBot implements Player {
     @Override
     public void getMove(MovePacket movePacket) {
         int move = Move.MovePacketToMove(movePacket);
+
         System.out.printf("whiteM: %d -> %d: %d\n", Move.from(move), Move.to(move), Move.flags(move));
         //System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
         pos.makeMove(move);

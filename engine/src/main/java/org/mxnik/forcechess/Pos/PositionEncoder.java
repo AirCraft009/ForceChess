@@ -852,8 +852,8 @@ public final class PositionEncoder {
             p.pieceMap[56] = (byte) Piece.of(Piece.BLACK, Piece.ROOK);
             p.pieceMap[57] = (byte) Piece.of(Piece.BLACK, Piece.KNIGHT);
             p.pieceMap[58] = (byte) Piece.of(Piece.BLACK, Piece.BISHOP);
-            p.pieceMap[59] = (byte) Piece.of(Piece.BLACK, Piece.KING);   // d8
-            p.pieceMap[60] = (byte) Piece.of(Piece.BLACK, Piece.QUEEN);  // e8
+            p.pieceMap[59] = (byte) Piece.of(Piece.BLACK, Piece.QUEEN);   // d8
+            p.pieceMap[60] = (byte) Piece.of(Piece.BLACK, Piece.KING);  // e8
             p.pieceMap[61] = (byte) Piece.of(Piece.BLACK, Piece.BISHOP);
             p.pieceMap[62] = (byte) Piece.of(Piece.BLACK, Piece.KNIGHT);
             p.pieceMap[63] = (byte) Piece.of(Piece.BLACK, Piece.ROOK);
