@@ -177,8 +177,8 @@ public class MoveGen {
 
 
         // Pawn attacks — must land on enemy square
-        long attackL = ((pos.BPawns >>> PositionEncoder.SIZE + 1) & pos.WPieces) & ~Move.FILE_A;
-        long attackR = ((pos.BPawns >>> PositionEncoder.SIZE - 1) & pos.WPieces) & ~Move.FILE_H;
+        long attackL = ((pos.BPawns >>> PositionEncoder.SIZE + 1) & pos.WPieces) & ~Move.FILE_H;
+        long attackR = ((pos.BPawns >>> PositionEncoder.SIZE - 1) & pos.WPieces) & ~Move.FILE_A;
 
         // En passant attacks
         long enPassant =  1L << pos.enPassantSquare;

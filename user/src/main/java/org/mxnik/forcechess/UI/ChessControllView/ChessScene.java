@@ -10,6 +10,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
@@ -45,7 +46,7 @@ public class ChessScene extends Stage {
 
         try {
             this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-            this.controller.setPlayers(controller, new ChessBot(new Evaluator.StubEvaluator(), 20));
+            this.controller.setPlayers(controller, new ChessBot(new Evaluator.StubEvaluator(), 100));
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");
@@ -216,40 +217,13 @@ public class ChessScene extends Stage {
         clearPieces();
 
         int sideLen = constants.sideLen;
-        int knightC = 0;
 
         for (int i = 0; i < b.getBoard().length; i++) {
             int x = i % sideLen;
             int y = i / sideLen;
 
 
-
-            Piece p = b.getBoard()[i];
-            if(p.getColor() && p.getType() == PieceTypes.KNIGHT && i == 18) {
-                System.out.println("danger knight danger knight");
-            }
-
-
-            if(p.getColor() && p.getType() == PieceTypes.KNIGHT)
-                knightC++;
-
-            if (knightC > 2){
-                System.out.println("error check state");
-                knightC = 0;
-            }
-
-
-
-            int colorOffset = (p.getColor()?0:1);
-            ImageView imgView = switch (p.getType()){
-                case PAWN -> new ImageView(images[colorOffset]);
-                case KNIGHT -> new ImageView(images[2+colorOffset]);
-                case BISHOP -> new ImageView(images[4+colorOffset]);
-                case ROOK -> new ImageView(images[6+colorOffset]);
-                case QUEEN -> new ImageView(images[8+colorOffset]);
-                case KING -> new ImageView(images[10+colorOffset]);
-                case ToPromote, EMPTY, ILLEGAL -> null;
-            };
+            ImageView imgView = getImageView(b, i);
             if(imgView == null){
                 continue;
             }
@@ -261,6 +235,23 @@ public class ChessScene extends Stage {
 
             pieceLayer.getChildren().add(imgView);
         }
+    }
+
+    @Nullable
+    private ImageView getImageView(Board b, int i) {
+        Piece p = b.getBoard()[i];
+
+
+        int colorOffset = (p.getColor()?0:1);
+        return switch (p.getType()){
+            case PAWN -> new ImageView(images[colorOffset]);
+            case KNIGHT -> new ImageView(images[2+colorOffset]);
+            case BISHOP -> new ImageView(images[4+colorOffset]);
+            case ROOK -> new ImageView(images[6+colorOffset]);
+            case QUEEN -> new ImageView(images[8+colorOffset]);
+            case KING -> new ImageView(images[10+colorOffset]);
+            case ToPromote, EMPTY, ILLEGAL -> null;
+        };
     }
 
 

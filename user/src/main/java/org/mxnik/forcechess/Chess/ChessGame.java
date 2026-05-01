@@ -6,6 +6,7 @@ import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.MovePacket;
 import org.mxnik.forcechess.Player;
+import org.mxnik.forcechess.Pos.MoveGen;
 
 public final class ChessGame implements Runnable{
     private  Player white;

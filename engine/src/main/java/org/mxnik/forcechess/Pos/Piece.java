@@ -20,6 +20,6 @@ public final class Piece {
     public static boolean color(int Piece){ return ((Piece >>> 3) & 0x1) == WHITE; }
     public static int colorInt(int Piece){ return ((Piece >>> 3) & 0x1);}
     public static int pieceT(int Piece){ return (Piece) & 0x7;}
-    public static int of(boolean color, int PieceT){return (color)? PieceT | BLACK << 3 : PieceT;}
+    public static int of(boolean color, int PieceT){return (!color)? PieceT | BLACK << 3 : PieceT;}
     public static int of(int color, int PieceT){return PieceT | color << 3;}
 }

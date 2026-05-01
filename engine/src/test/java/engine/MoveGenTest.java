@@ -1140,6 +1140,24 @@ class MoveGenTest {
         class LegalMoveFilterTests {
 
             @Test
+            @DisplayName("pawn zugzwang because king is in check")
+            void pawnZugzwang(){
+                var pos = emptyPosition();
+                place(pos, false, Piece.ROOK, A8);
+                place(pos, false, Piece.KING, B8);
+                place(pos, false, Piece.BISHOP, C8);
+                place(pos, false, Piece.PAWN, A7);
+                place(pos, false, Piece.PAWN, B7);
+                place(pos, false, Piece.PAWN, C7);
+                place(pos, true, Piece.KNIGHT, A6);
+                place(pos, true, Piece.KING, A1);
+
+                int[] legal = genLegal(pos, false);   // Black's moves
+                assertEquals(1, legal.length);
+
+            }
+
+            @Test
             @DisplayName("Pinned knight cannot move off pin ray")
             //TODO: figure out why a knight isn't pinned in game
 
