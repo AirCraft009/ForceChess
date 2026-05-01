@@ -13,6 +13,7 @@ import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
+import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.UI.Constants;
 
 import java.io.IOException;
@@ -38,7 +39,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         moveReady = false;
         board = new Board(startFen);
         game = new ChessGame(board, this);
-        chessScene.drawPieces(board.getBoard());
+        chessScene.drawPieces(board);
         currentMoveState = getMovesFromPosition(board);
         currPieceMoves = new byte[0];
     }
@@ -83,10 +84,11 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      * handles clicks on fields
      * @param sourceButton specific button (field) clicked
      */
-    public void handleActiveChessClick(ChessButton sourceButton) throws CloneNotSupportedException {
+    public void handleActiveChessClick(ChessButton sourceButton){
         int buttonField = sourceButton.getField();
-        boolean hasPiece = board.getBoard()[buttonField] != EmptyPiece.EMPTY_PIECE;
-        boolean pieceColor = board.getBoard()[buttonField].getColor();
+        Piece[] cBoard = board.getBoard();
+        boolean hasPiece = cBoard[buttonField] != EmptyPiece.EMPTY_PIECE;
+        boolean pieceColor = cBoard[buttonField].getColor();
 
         if(!shouldHandle(buttonField, hasPiece, pieceColor)){
             return;
@@ -112,10 +114,10 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
         currPieceMoves = moves;
 
-        chessScene.drawPieces(board.getBoard());
+        chessScene.drawPieces(board);
     }
 
-    public void handleActionEvent(ActionEvent event) throws CloneNotSupportedException {
+    public void handleActionEvent(ActionEvent event){
         Object source = event.getSource();
 
         // all Buttons
@@ -124,7 +126,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
     }
 
-    public void handleKeyEvent(KeyEvent event) throws CloneNotSupportedException {
+    public void handleKeyEvent(KeyEvent event) {
         Object source = event.getSource();
         if(event.getEventType() != KeyEvent.KEY_PRESSED){
             return;
@@ -160,7 +162,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      * handles if to set the flag for moveReady
      * @param hasPiece does the square contain a piece
      */
-    public void handleSquare(boolean hasPiece) throws CloneNotSupportedException {
+    public void handleSquare(boolean hasPiece){
         if (pieceSelected) {
             //condition: -> firstCLick != -1;
             pieceSelected = false;
@@ -177,17 +179,10 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     @Override
     public void handle(Event event) {
         if (event instanceof ActionEvent){
-            try {
-                handleActionEvent((ActionEvent) event);
-            } catch (CloneNotSupportedException e) {
-                throw new RuntimeException(e);
-            }
+            handleActionEvent((ActionEvent) event);
         }else if(event instanceof KeyEvent){
-            try {
-                handleKeyEvent((KeyEvent) event);
-            } catch (CloneNotSupportedException e) {
-                throw new RuntimeException(e);
-            }
+            handleKeyEvent((KeyEvent) event);
+
         }
     }
 
@@ -195,11 +190,12 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     public void update() {
         try {
             currentMoveState = ChessMoveGen.getMovesFromPosition(board);
-        } catch (CloneNotSupportedException e) {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
+
         Platform.runLater(() -> {
-            chessScene.drawPieces(board.getBoard());
+              chessScene.drawPieces(board);
         });
     }
 
@@ -233,6 +229,6 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         chessScene.backgroundLayer.getChildren().clear();
         chessScene.clearInteractionLayer();
         chessScene.drawBoard();
-        chessScene.drawPieces(board.getBoard());
+        chessScene.drawPieces(board);
     }
 }

@@ -216,7 +216,6 @@ public class ChessBot implements Player {
             buffer.addSample(flat, moveDist.clone(), z); // record the moveDist. and z value
 
             pos.makeMove(move);
-            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             //System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
             g = pos.getState(pos.whiteToMove);
@@ -259,16 +258,16 @@ public class ChessBot implements Player {
 
     @Override
     public MovePacket requestMove() {
-        System.out.println("bot move requested");
-        System.out.println("All moves in position");
+//        System.out.println("bot move requested");
+//        System.out.println("All moves in position");
         int rMove = bestMove(playDepth);
         expandRoot();
         int node = tree.firstChild[ROOT];
         while (node != 0){
-            System.out.printf("move: %d -> %d\n", Move.from(tree.move[node]), Move.to(tree.move[node]));
+            //System.out.printf("move: %d -> %d\n", Move.from(tree.move[node]), Move.to(tree.move[node]));
             node = tree.nextSibling[node];
         }
-        System.out.printf("Black: %d -> %d\n", Move.from(rMove), Move.to(rMove));
+        //System.out.printf("Black: %d -> %d\n", Move.from(rMove), Move.to(rMove));
         pos.makeMove(rMove);
         //System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
         resetCore();
@@ -281,7 +280,6 @@ public class ChessBot implements Player {
         System.out.printf("whiteM: %d -> %d: %d\n", Move.from(move), Move.to(move), Move.flags(move));
         //System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
         pos.makeMove(move);
-        System.out.println();
         resetCore();
     }
 }

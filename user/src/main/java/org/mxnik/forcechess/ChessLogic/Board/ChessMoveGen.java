@@ -18,10 +18,9 @@ public class ChessMoveGen {
      * Generates pseudo-legal moves for all squares.
      * Does not filter for leaving own king in check — that is done in checkChess.
      */
-    private static byte[][] getPseudoMovesFromPosition(Board cBoard) throws CloneNotSupportedException {
+    private static byte[][] getPseudoMovesFromPosition(Board cBoard) {
         cBoard.moveList.clear();
         byte[] moves = cBoard.moveList.getMovesArray();
-
         byte[][] legalMoves = new byte[Board.size][];
 
         int pieceCount = 0;
@@ -153,6 +152,8 @@ public class ChessMoveGen {
 
             pseudoLegalMoves[i] = Arrays.copyOf(moves, writePtr);
         }
+
+        //System.out.println(cBoard.toStringBoard());
 
         return checkCheckmate(cBoard, hasMoves);
     }

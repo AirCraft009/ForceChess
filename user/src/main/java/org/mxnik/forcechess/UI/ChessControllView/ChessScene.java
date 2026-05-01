@@ -12,6 +12,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchEvaluator;
 import org.mxnik.forcechess.bot.ChessBot;
@@ -22,8 +23,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class ChessScene extends Stage {
-    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
-    private final String pathToImages = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
+    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
+    private final String pathToImages = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
     Group root;
     Constants constants;
     private ChessController controller;
@@ -210,19 +211,34 @@ public class ChessScene extends Stage {
 
     /**
      * draws all pieces
-     * @param pieces pieces in a board
      */
-    public void drawPieces(Piece[] pieces){
+    public void drawPieces(Board b){
         clearPieces();
-        int sideLen = constants.sideLen;
 
-        for (int i = 0; i < pieces.length; i++) {
+        int sideLen = constants.sideLen;
+        int knightC = 0;
+
+        for (int i = 0; i < b.getBoard().length; i++) {
             int x = i % sideLen;
             int y = i / sideLen;
 
 
 
-            Piece p = pieces[i];
+            Piece p = b.getBoard()[i];
+            if(p.getColor() && p.getType() == PieceTypes.KNIGHT && i == 18) {
+                System.out.println("danger knight danger knight");
+            }
+
+
+            if(p.getColor() && p.getType() == PieceTypes.KNIGHT)
+                knightC++;
+
+            if (knightC > 2){
+                System.out.println("error check state");
+                knightC = 0;
+            }
+
+
 
             int colorOffset = (p.getColor()?0:1);
             ImageView imgView = switch (p.getType()){

@@ -34,7 +34,7 @@ public class MoveGen {
             int undo = pos.makeMove(moves[i]);
 
             if (pos.checkChess(whiteToMove)){
-                System.out.println("check detected");
+                //System.out.println("check detected");
                 legalOffset --;                            // one less move
 
                 pos.unmakeMove(undo);
