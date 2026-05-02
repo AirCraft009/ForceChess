@@ -20,7 +20,7 @@ public class SampleBuffer {
     private TrainingSample[] samples;
     private final Random random = new Random();
     private final String fullPath;
-    private final float DECAY = 0.01F;
+    private final float DECAY = 0.0F;
     public final static String BASE_PATH = FileLocations.SAMPLE_LOCATIONS;
     private final static float lambda = 0.8F;
 
@@ -73,7 +73,7 @@ public class SampleBuffer {
      * @param z the preemptive z value
      */
     public void addSample(float[] input, float[] pi, float z){
-        samples[ptr] = new TrainingSample(input, pi,z);
+        samples[ptr] = new TrainingSample(input, pi, z);
         ptr++;
     }
 
@@ -181,5 +181,16 @@ public class SampleBuffer {
     }
 
 
+    public static final class TrainingSample {
+        public final float[] tensor;
+        public final float[] pi;
+        public  float z;
 
+        public TrainingSample(float[] tensor, float[] pi, float z){
+            this.tensor = tensor;
+            this.pi = pi;
+            this.z = z;
+        }
+
+    }
 }

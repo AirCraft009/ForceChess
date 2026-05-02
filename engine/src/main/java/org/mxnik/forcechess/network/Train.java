@@ -14,6 +14,7 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
+import javax.swing.plaf.synth.SynthOptionPaneUI;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -128,7 +129,7 @@ public class Train {
 
 
         for (int i = 0; i < batchSize; i++) {
-            TrainingSample s = buffer.sample();
+            SampleBuffer.TrainingSample s = buffer.sample();
 
             try (INDArray tensorSlice = Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c');
                  INDArray piRow     = Nd4j.create(s.pi);
@@ -206,6 +207,7 @@ public class Train {
                 }
             }
         } catch (Exception e) {
+            e.printStackTrace();
             System.err.println("crashed during training, buffer progress and network were saved");
             buffer.writeSamples();
             saveNet();
@@ -241,14 +243,14 @@ public class Train {
 
 
 //       second stage training with model
-        Train train = new Train("D400_T2", true, true);
-        train.diagnose();
-        SampleBuffer s = new SampleBuffer( 6000, "25_4_2026_Buff");
+        Train train = new Train("D400_10_RES_BLOCKS",  true, true);
+        //train.diagnose();
+        SampleBuffer s = new SampleBuffer( 10000, "02_05_2026_full_terminal");
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
-        train.train(32,  s.length, 400, 6000, 3001, s, true);
+        train.train(32,  s.length, 400, 12000, 4001, s, true);
         train.saveNet();
         train.bot.selfPlayGame(400);
     }

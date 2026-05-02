@@ -15,11 +15,11 @@ import org.nd4j.linalg.lossfunctions.LossFunctions;
 
 public final class NetworkConfig {
 
-    // --- Architecture constants ---
+    //  Architecture constants
     private static final int KERNEL        = 3;
     private static final int CONV_OUT      = 256;
     private static final int PAD           = 1;
-    public static final int RES_BLOCKS    = 20;
+    public static final int RES_BLOCKS    =  10;
 
     // Policy head
     private static final int POL_CHANNELS  = 32;

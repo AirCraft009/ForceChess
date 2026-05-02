@@ -1,11 +1,15 @@
 package org.mxnik.forcechess.bot;
 
+import org.deeplearning4j.util.ModelSerializer;
 import org.mxnik.forcechess.DiversePair;
 import org.mxnik.forcechess.FlatArray;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.MoveGen;
 import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.mxnik.forcechess.network.AlphaNet;
+
+import java.io.IOException;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 
@@ -167,6 +171,9 @@ public class BatchChessBot extends ChessBot{
     }
 
 
-
+    public static void main(String[] args) throws IOException {
+        BatchChessBot bc = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\boardsNBots\\bots\\networks\\D400_10_RES_BLOCKS.zip", true)),400);
+        bc.selfPlayGame(400);
+    }
 
 }

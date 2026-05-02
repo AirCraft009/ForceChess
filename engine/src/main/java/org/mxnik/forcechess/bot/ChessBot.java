@@ -216,7 +216,7 @@ public class ChessBot implements Player {
             buffer.addSample(flat, moveDist.clone(), z); // record the moveDist. and z value
 
             pos.makeMove(move);
-            //System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
             resetCore();
             g = pos.getState(pos.whiteToMove);
             startoffset ++;
