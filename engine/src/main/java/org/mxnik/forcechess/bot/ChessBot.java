@@ -1,13 +1,12 @@
 package org.mxnik.forcechess.bot;
 
 import org.deeplearning4j.util.ModelSerializer;
-import org.mxnik.forcechess.Bitboard;
 import org.mxnik.forcechess.MCTS.MctsTree;
 import org.mxnik.forcechess.MovePacket;
 import org.mxnik.forcechess.Player;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.network.AlphaNet;
-import org.mxnik.forcechess.network.SampleBuffer;
+import org.mxnik.forcechess.Training.SampleBuffer;
 import org.mxnik.forcechess.GameState;
 
 import java.io.File;

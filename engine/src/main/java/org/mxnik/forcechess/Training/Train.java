@@ -1,7 +1,6 @@
-package org.mxnik.forcechess.network;
+package org.mxnik.forcechess.Training;
 
 
-import com.sun.jna.platform.unix.X11;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.util.ModelSerializer;
 import org.mxnik.forcechess.FileLocations;
@@ -10,11 +9,12 @@ import org.mxnik.forcechess.Pos.PositionEncoder;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.bot.Evaluator;
+import org.mxnik.forcechess.network.AlphaNet;
+import org.mxnik.forcechess.network.NetworkConfig;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
 
-import javax.swing.plaf.synth.SynthOptionPaneUI;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;

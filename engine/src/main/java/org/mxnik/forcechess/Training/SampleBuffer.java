@@ -1,17 +1,13 @@
-package org.mxnik.forcechess.network;
+package org.mxnik.forcechess.Training;
 
-import org.apache.commons.math3.distribution.NormalDistribution;
 import org.mxnik.forcechess.FileLocations;
-import org.mxnik.forcechess.Pos.Move;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.Deque;
 import java.util.Random;
 
 import static org.mxnik.forcechess.Pos.Move.MOVE_POSSIBILITIES;
-import static org.mxnik.forcechess.Pos.Move.to;
 import static org.mxnik.forcechess.Pos.PositionEncoder.TENSOR_SIZE;
 
 public class SampleBuffer {
