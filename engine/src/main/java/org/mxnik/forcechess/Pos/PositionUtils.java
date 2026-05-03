@@ -9,6 +9,7 @@ import java.util.Random;
 import static org.mxnik.forcechess.Pos.Move.ROW_1;
 import static org.mxnik.forcechess.Pos.Piece.*;
 import static org.mxnik.forcechess.Pos.PositionEncoder.Position.*;
+import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
 
 public class PositionUtils {
 
@@ -73,18 +74,18 @@ public class PositionUtils {
             throw new FenException("illegal number of parts in fen string", -1);
 
         String pieces = parts[0];
-        var pos = new PositionEncoder.Position();
+        var pos = PositionEncoder.Position.emptyPosition();
 
         int parsePos = 0;
 
-        for (int i = 0; i < PositionEncoder.SIZE; i++) {
-            for (int j = 0; j < PositionEncoder.SIZE; j++) {
-                int square = i * PositionEncoder.SIZE + j;
+        for (int i = SIZE - 1; i >= 0; i--) {
+            for (int j = 0; j < SIZE; j++) {
+                int square = i * SIZE + j;
                 char p = pieces.charAt(parsePos);
                 parsePos ++;
                 if(Character.isDigit(p)){
                     j += p - '0';
-                    if(j > PositionEncoder.SIZE)
+                    if(j > SIZE)
                         throw  new FenException("Gap between two pieces to big (more than 8 in sum): " + j, square);
                     continue;
                 } else if (p == '/') {      // new row
@@ -94,23 +95,24 @@ public class PositionUtils {
 
                 switch (p){
                     case 'p':
-                        place(pos, false, PAWN, square);;
+                        place(pos, false, PAWN, square);
+                        break;
 
                     case 'n':
-                        place(pos, false, KNIGHT, square);;
-
+                        place(pos, false, KNIGHT, square);
+                        break;
                     case 'b':
-                        place(pos, false, BISHOP, square);;
-
+                        place(pos, false, BISHOP, square);
+                        break;
                     case 'r':
-                        place(pos, false, ROOK, square);;
-
+                        place(pos, false, ROOK, square);
+                        break;
                     case 'q':
-                        place(pos, false, QUEEN, square);;
-
+                        place(pos, false, QUEEN, square);
+                        break;
                     case 'k':
-                        place(pos, false, KING, square);;
-
+                        place(pos, false, KING, square);
+                        break;
                     case 'P':
                         place(pos, true, PAWN, square);
                         break;
@@ -173,11 +175,95 @@ public class PositionUtils {
 
         // Move number
         try {
-            pos.fiftyMoveCounter = Integer.parseInt(parts[4]) * 2;
+            pos.fiftyMoveCounter = Integer.parseInt(parts[4]);
         }catch (NumberFormatException e){
             throw new FenException("Error when reading move number", -1);
         }
         return pos;
+    }
+
+    public static String toFen(PositionEncoder.Position pos){
+        StringBuilder fenBuilder = new StringBuilder();
+        int skip = 0;
+
+        for (int i = SIZE - 1; i >= 0 ; i--) {
+            for (int j = 0; j < SIZE; j++) {
+                int square = i * SIZE + j;
+                if (pos.pieceMap[square] == EMPTY_PIECE){
+                    skip ++;
+                    continue;
+                }
+                if(skip > 0){
+                    fenBuilder.append(skip);
+                    skip = 0;
+                }
+
+                if(Piece.color(pos.pieceMap[square])) {
+                    switch (Piece.pieceT(pos.pieceMap[square])) {
+                        case PAWN -> fenBuilder.append('P');
+                        case KNIGHT -> fenBuilder.append('N');
+                        case BISHOP -> fenBuilder.append('B');
+                        case ROOK -> fenBuilder.append('R');
+                        case QUEEN -> fenBuilder.append('Q');
+                        case KING -> fenBuilder.append('K');
+                    }
+                }else {
+                    switch (Piece.pieceT(pos.pieceMap[square])) {
+                        case PAWN -> fenBuilder.append('p');
+                        case KNIGHT -> fenBuilder.append('n');
+                        case BISHOP -> fenBuilder.append('b');
+                        case ROOK -> fenBuilder.append('r');
+                        case QUEEN -> fenBuilder.append('q');
+                        case KING -> fenBuilder.append('k');
+                    }
+                }
+
+            }
+            if (skip > 0){
+                fenBuilder.append(skip);
+                skip = 0;
+            }
+            if(i != 0)
+                fenBuilder.append("/");
+        }
+
+        fenBuilder.append(" ");
+
+        // side to move
+        fenBuilder.append((pos.whiteToMove)? "w " : "b ");
+
+
+        // write up the castle permissions
+        if(pos.castlePerms != 0){
+            if(pos.queryCastlePerms(W_KINGSIDE))
+                fenBuilder.append("K");
+            if(pos.queryCastlePerms(W_QUEENSIDE))
+                fenBuilder.append("Q");
+            if(pos.queryCastlePerms(B_KINGSIDE))
+                fenBuilder.append("k");
+            if(pos.queryCastlePerms(B_QUEENSIDE))
+                fenBuilder.append("q");
+        }else {
+            fenBuilder.append("-");
+        }
+
+        fenBuilder.append(" ");
+
+        //en passant
+        if(pos.enPassantSquare != -1){
+            fenBuilder.append(toFieldName(pos.enPassantSquare));
+        }else {
+            fenBuilder.append("-");
+        }
+
+        fenBuilder.append(" ");
+
+        // fifty move counter
+        fenBuilder.append(pos.fiftyMoveCounter).append(" ");
+
+        // temporarily write 1 only as this isn't important to us
+        fenBuilder.append("1");
+        return fenBuilder.toString();
     }
 
     /**
@@ -192,11 +278,19 @@ public class PositionUtils {
         int col = fieldName.charAt(0) - 'a';
         int row = fieldName.charAt(1) - '0';
 
-        return row * PositionEncoder.SIZE + col;
+        return row * SIZE + col;
+    }
+
+    public static String toFieldName(int field){
+        int row = field / SIZE;
+        int col = field % SIZE;
+
+        return  Character.toString('a' + col) + row;
     }
 
     public static void main(String[] args) {
         var pos = fromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
         System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
+        System.out.println(toFen(pos));
     }
 }

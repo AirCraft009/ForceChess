@@ -4,6 +4,7 @@ import org.mxnik.forcechess.Bitboard;
 import org.mxnik.forcechess.GameState;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 import static org.mxnik.forcechess.RayDetection.*;
 import static org.mxnik.forcechess.RayDetection.KNIGHT_COL;
@@ -274,7 +275,7 @@ public final class PositionEncoder {
         public long BPieces;
 
         // pieceVals
-        public static final int[] pieceVals = {0, 1, 3, 3, 0, 9, 1};        // king can't get taken so 0 since both sides always have one
+        public static final int[] pieceVals = {0, 5, 3, 3, 0, 9, 1};        // king can't get taken so 0 since both sides always have one
 
         // Castling permissions (may castle if rights arise)
         // bit 0 = WKingC
@@ -824,6 +825,7 @@ public final class PositionEncoder {
 
             // materials
             p.whiteMaterial =  39;
+            p.blackMaterial =  39;
 
             // game-state castling
             p.WKingCastle  = false;
@@ -863,6 +865,53 @@ public final class PositionEncoder {
             }
 
             return p;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (o == null || getClass() != o.getClass()) return false;
+            Position position = (Position) o;
+            return WPawns == position.WPawns && WKnights == position.WKnights && WBishops == position.WBishops && WRooks == position.WRooks && WQueens == position.WQueens && WKing == position.WKing && BPawns == position.BPawns && BKnights == position.BKnights && BBishops == position.BBishops && BRooks == position.BRooks && BQueens == position.BQueens && BKing == position.BKing && WDoublePawnMove == position.WDoublePawnMove && BDoublePawnMove == position.BDoublePawnMove && Occupied == position.Occupied && WPieces == position.WPieces && BPieces == position.BPieces && castlePerms == position.castlePerms && WQueenCastle == position.WQueenCastle && WKingCastle == position.WKingCastle && BQueenCastle == position.BQueenCastle && BKingCastle == position.BKingCastle && enPassantSquare == position.enPassantSquare && whiteToMove == position.whiteToMove && fiftyMoveCounter == position.fiftyMoveCounter && whiteMaterial == position.whiteMaterial && blackMaterial == position.blackMaterial && Objects.deepEquals(pieceMap, position.pieceMap);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(WPawns, WKnights, WBishops, WRooks, WQueens, WKing, BPawns, BKnights, BBishops, BRooks, BQueens, BKing, WDoublePawnMove, BDoublePawnMove, Occupied, WPieces, BPieces, castlePerms, WQueenCastle, WKingCastle, BQueenCastle, BKingCastle, enPassantSquare, whiteToMove, fiftyMoveCounter, Arrays.hashCode(pieceMap), whiteMaterial, blackMaterial);
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("Position{");
+            sb.append("WPawns=").append(WPawns);
+            sb.append(", WKnights=").append(WKnights);
+            sb.append(", WBishops=").append(WBishops);
+            sb.append(", WRooks=").append(WRooks);
+            sb.append(", WQueens=").append(WQueens);
+            sb.append(", WKing=").append(WKing);
+            sb.append(", BPawns=").append(BPawns);
+            sb.append(", BKnights=").append(BKnights);
+            sb.append(", BBishops=").append(BBishops);
+            sb.append(", BRooks=").append(BRooks);
+            sb.append(", BQueens=").append(BQueens);
+            sb.append(", BKing=").append(BKing);
+            sb.append(", WDoublePawnMove=").append(WDoublePawnMove);
+            sb.append(", BDoublePawnMove=").append(BDoublePawnMove);
+            sb.append(", Occupied=").append(Occupied);
+            sb.append(", WPieces=").append(WPieces);
+            sb.append(", BPieces=").append(BPieces);
+            sb.append(", castlePerms=").append(castlePerms);
+            sb.append(", WQueenCastle=").append(WQueenCastle);
+            sb.append(", WKingCastle=").append(WKingCastle);
+            sb.append(", BQueenCastle=").append(BQueenCastle);
+            sb.append(", BKingCastle=").append(BKingCastle);
+            sb.append(", enPassantSquare=").append(enPassantSquare);
+            sb.append(", whiteToMove=").append(whiteToMove);
+            sb.append(", fiftyMoveCounter=").append(fiftyMoveCounter);
+            sb.append(", pieceMap=").append(Arrays.toString(pieceMap));
+            sb.append(", whiteMaterial=").append(whiteMaterial);
+            sb.append(", blackMaterial=").append(blackMaterial);
+            sb.append('}');
+            return sb.toString();
         }
     }
 
