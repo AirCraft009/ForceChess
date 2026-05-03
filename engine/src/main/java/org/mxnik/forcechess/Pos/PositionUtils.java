@@ -94,63 +94,45 @@ public class PositionUtils {
 
                 switch (p){
                     case 'p':
-                        place(pos, false, PAWN, square);
-                        pos.pieceMap[square] = (byte) Piece.of(BLACK, PAWN);
-                        break;
+                        place(pos, false, PAWN, square);;
 
                     case 'n':
-                        place(pos, false, KNIGHT, square);
-                        pos.pieceMap[square] = (byte) Piece.of(BLACK, PAWN);
-                        break;
+                        place(pos, false, KNIGHT, square);;
 
                     case 'b':
-                        place(pos, false, BISHOP, square);
-                        pos.pieceMap[square] = (byte) Piece.of(BLACK, PAWN);
-                        break;
+                        place(pos, false, BISHOP, square);;
 
                     case 'r':
-                        place(pos, false, ROOK, square);
-                        pos.pieceMap[square] = (byte) Piece.of(BLACK, PAWN);
-                        break;
+                        place(pos, false, ROOK, square);;
 
                     case 'q':
-                        place(pos, false, QUEEN, square);
-                        pos.pieceMap[square] = (byte) Piece.of(BLACK, PAWN);
-                        break;
+                        place(pos, false, QUEEN, square);;
 
                     case 'k':
-                        place(pos, false, KING, square);
-                        pos.pieceMap[square] = (byte) Piece.of(BLACK, PAWN);
-                        break;
+                        place(pos, false, KING, square);;
 
                     case 'P':
                         place(pos, true, PAWN, square);
-                        pos.pieceMap[square] = (byte) Piece.of(Piece.WHITE, PAWN);
                         break;
 
                     case 'N':
                         place(pos, true, KNIGHT, square);
-                        pos.pieceMap[square] = (byte) Piece.of(Piece.WHITE, KNIGHT);
                         break;
 
                     case 'B':
                         place(pos, true, BISHOP, square);
-                        pos.pieceMap[square] = (byte) Piece.of(Piece.WHITE, BISHOP);
                         break;
 
                     case 'R':
                         place(pos, true, ROOK, square);
-                        pos.pieceMap[square] = (byte) Piece.of(Piece.WHITE, ROOK);
                         break;
 
                     case 'Q':
                         place(pos, true, QUEEN, square);
-                        pos.pieceMap[square] = (byte) Piece.of(Piece.WHITE, QUEEN);
                         break;
 
                     case 'K':
                         place(pos, true, KING, square);
-                        pos.pieceMap[square] = (byte) Piece.of(Piece.WHITE, KING);
                         break;
                     default:
                         throw new FenException("Illegal char: " + p, square);
