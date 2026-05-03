@@ -178,7 +178,16 @@ public class PositionUtils {
             };
         }
         // En passant
-        // TODO: add en-passant recognition for basic fen-strings
+        try {
+            if(!parts[3].equals("-"))
+                pos.enPassantSquare = parseFieldName(parts[3]);
+            else
+                pos.enPassantSquare = -1;
+
+        } catch (IllegalArgumentException e) {
+            throw new FenException("Error while parsing the enPassant square: longer than two chars", -1);
+        }
+
 
         // Move number
         try {
@@ -187,6 +196,21 @@ public class PositionUtils {
             throw new FenException("Error when reading move number", -1);
         }
         return pos;
+    }
+
+    /**
+     * parses a field like A6 and returns the integer representation
+     */
+    public static int parseFieldName(String fieldName) throws IllegalArgumentException {
+        if(fieldName.length() > 2){
+            throw new IllegalArgumentException("A chessField can only be two chars long Column Row");
+        }
+        fieldName = fieldName.toLowerCase();
+
+        int col = fieldName.charAt(0) - 'a';
+        int row = fieldName.charAt(1) - '0';
+
+        return row * PositionEncoder.SIZE + col;
     }
 
     public static void main(String[] args) {
