@@ -243,14 +243,14 @@ public class Train {
 
 
 //       second stage training with model
-        Train train = new Train("D400_10_RES_BLOCKS",  true, true);
+        Train train = new Train("D600_10_RES_BLOCKS_STALE",  false, true);
         //train.diagnose();
-        SampleBuffer s = new SampleBuffer( 10000, "02_05_2026_full_terminal");
+        SampleBuffer s = new SampleBuffer( 10000, "penalty_for_Stalemate");
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
-        train.train(32,  s.length, 400, 12000, 4001, s, true);
+        train.train(32,  s.length, 600, 12000, 4001, s, true);
         train.saveNet();
         train.bot.selfPlayGame(400);
     }

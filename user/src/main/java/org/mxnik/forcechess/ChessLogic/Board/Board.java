@@ -1,7 +1,7 @@
 package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
-import org.mxnik.forcechess.ChessLogic.Notation.FenException;
+import org.mxnik.forcechess.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 

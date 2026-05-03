@@ -2,7 +2,7 @@ package user;
 
 import org.junit.jupiter.api.Test;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
-import org.mxnik.forcechess.ChessLogic.Notation.FenException;
+import org.mxnik.forcechess.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;

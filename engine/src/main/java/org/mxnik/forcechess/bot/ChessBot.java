@@ -221,8 +221,12 @@ public class ChessBot implements Player {
             g = pos.getState(pos.whiteToMove);
             startoffset ++;
         }
-
-        z = pos.whiteToMove && g == GameState.CheckMate ? 1 : -1;
+        z = switch (g){
+            case Continue -> 0.0F;
+            case StaleMate -> -0.5F;
+            case CheckMate -> 1;
+            case FiftyMove -> -0.8F;
+        };
         buffer.updateZ(startPtr, z);
         return startoffset;
     }

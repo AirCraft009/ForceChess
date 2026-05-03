@@ -201,7 +201,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
     @Override
     public void finish(GameState g) {
-        //TODO: show the win/loose screen and end game
+        Platform.runLater(chessScene::showWinImage);
     }
 
     @Override

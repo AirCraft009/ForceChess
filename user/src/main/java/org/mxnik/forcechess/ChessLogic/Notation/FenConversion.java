@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Notation;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
+import org.mxnik.forcechess.FenException;
 
 public class FenConversion {
 
@@ -22,7 +23,7 @@ public class FenConversion {
     }
 
 
-    public static char FromPiece(PieceTypes p, boolean color) throws FenException{
+    public static char FromPiece(PieceTypes p, boolean color) throws FenException {
         switch (p){
             case KING -> {
                 return (char) ('k' - ((color)? 32 : 0));

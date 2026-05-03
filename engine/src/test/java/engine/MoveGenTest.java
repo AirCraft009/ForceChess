@@ -1178,6 +1178,25 @@ class MoveGenTest {
                 assertFalse(knightCanMove, "Pinned knight on F7 cannot move off the H5-E8 diagonal");
             }
 
+
+            @Test
+            @DisplayName("King is forced to move")
+            void kingHasToMove(){
+                var pos = emptyPosition();
+                place(pos, false, Piece.KING, D8);
+                place(pos, false, Piece.QUEEN, H5);
+                place(pos, true, Piece.ROOK, D7);
+                place(pos, true, Piece.BISHOP, B5);
+                place(pos, true, Piece.KNIGHT, A8);
+                place(pos, true, Piece.KING, G1);
+
+                int[] legal = genLegal(pos, false);
+                for (int m : legal){
+                    assertNotEquals(A5, Move.from(m));
+                }
+            }
+
+
             @Test
             @DisplayName("Pinned rook cannot move off pin ray")
             void pinnedRookStaysOnRay() {

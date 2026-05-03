@@ -1,4 +1,4 @@
-package org.mxnik.forcechess.ChessLogic.Notation;
+package org.mxnik.forcechess;
 
 public class FenException extends RuntimeException {
     public FenException(String message, int pos) {
