@@ -3,10 +3,25 @@ package org.mxnik.forcechess.Training;
 import net.chesstango.gardel.fen.FEN;
 import net.chesstango.piazzolla.syzygy.Syzygy;
 import net.chesstango.piazzolla.syzygy.SyzygyPosition;
+import org.mxnik.forcechess.Pos.Piece;
+import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.io.IOException;
+import java.util.Random;
+
+import static java.lang.Math.abs;
+import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
+import static org.mxnik.forcechess.Pos.PositionUtils.place;
+import static org.mxnik.forcechess.Pos.PositionUtils.toFen;
 
 public class EndgameTraining {
+    // seed for reproducible outcomes
+    private final static int SEED = 42;
+    private Random pieceCGen = new Random(42);
+
+    public EndgameTraining(int seed){
+        pieceCGen = new Random(seed);
+    }
 
 
     // THIS METHOD WAS TAKEN FROM GOOGLE AI
@@ -38,7 +53,7 @@ public class EndgameTraining {
     }
     // AI END
 
-    public static void getEndgamePos(Syzygy syzygy) {
+    public void getEndgamePos(Syzygy syzygy) {
             //  WDL probe: just "is this a win?" (fast, no move)
             FEN fen = FEN.of("7k/8/7K/7Q/8/8/8/8 w - - 0 1");
             SyzygyPosition pos = SyzygyPosition.from(fen);
@@ -64,7 +79,44 @@ public class EndgameTraining {
                     // use these to build your training samples
                 }
             }
+    }
 
+    /**
+     * generates a legal position with randomly placed pieces
+     * @param wPieceCount amount of white pieces to place king included
+     * @param bPieceCount amount of black pieces to place king included
+     */
+    PositionEncoder.Position generateLegalPosition(int wPieceCount, int bPieceCount, boolean whiteToMove){
+        if(wPieceCount < 1 || bPieceCount < 1){
+            throw new IllegalArgumentException("can't generate a position with < 1 pieces on either side");
+        }
+
+        var pos = PositionEncoder.Position.emptyPosition();
+
+        int K_W_Pos = pieceCGen.nextInt(0, 64);
+        int K_B_Pos = pieceCGen.nextInt(0, 64);
+
+        // make sure it's not in the same position or adjacent
+
+        if(abs(K_B_Pos / SIZE - K_W_Pos/SIZE) < 2 || abs(K_B_Pos % SIZE - K_W_Pos % SIZE) < 2){
+            K_B_Pos = (K_W_Pos + 2) % 64;
+        }
+
+        place(pos, true, Piece.KING, K_W_Pos);
+        place(pos, false, Piece.KING, K_B_Pos);
+
+
+        return pos;
+    }
+
+    /**
+     * generates legal 5 piece (all-inclusive) positions and formats it into a fen String
+     */
+     String generateLegalFen(){
+         int whitePCount = pieceCGen.nextInt(0, 4);
+         int blackPCount = pieceCGen.nextInt(0, 4 - whitePCount);
+
+         return toFen(generateLegalPosition(whitePCount, blackPCount, pieceCGen.nextBoolean()));
     }
 
     public void trainOnEndgames() {
