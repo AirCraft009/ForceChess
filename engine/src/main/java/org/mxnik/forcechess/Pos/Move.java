@@ -6,8 +6,11 @@ package org.mxnik.forcechess.Pos;
 // bits 12 - 15: flags (capture, castle, en passant, promotion piece)
 // └─> bits(12-14) Type, bit 15 (is a capture)
 
+import net.chesstango.piazzolla.syzygy.Syzygy;
 import org.mxnik.forcechess.MovePacket;
 import org.mxnik.forcechess.MoveType;
+
+import static org.mxnik.forcechess.Pos.Piece.EMPTY_PIECE;
 
 public final class Move {
     /**
@@ -122,5 +125,17 @@ public final class Move {
         return of(packet.from(), packet.to(), packet.type().flagVal | ((packet.capture() ? 1 : 0) << 3));
     }
 
+    public static int toFlags(PositionEncoder.Position pos, int to, int promotes){
+        boolean attack = pos.pieceMap[to] != EMPTY_PIECE;
+        int base = switch (promotes){
+            case Syzygy.TB_PROMOTES_BISHOP -> FLAG_PROMOTE_B;
+            case Syzygy.TB_PROMOTES_KNIGHT -> FLAG_PROMOTE_N;
+            case Syzygy.TB_PROMOTES_ROOK -> FLAG_PROMOTE_R;
+            case Syzygy.TB_PROMOTES_QUEEN -> FLAG_PROMOTE_Q;
+            case Syzygy.TB_PROMOTES_NONE -> FLAG_GENERIC;
+            default -> throw new IllegalStateException("Unexpected Syzygy promotion value: " + promotes);
+        };
+        return (base | ((attack)? 1 : 0) << 3);
+    }
 
 }

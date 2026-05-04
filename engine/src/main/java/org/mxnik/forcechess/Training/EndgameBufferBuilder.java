@@ -4,6 +4,9 @@ import net.chesstango.gardel.fen.FEN;
 import net.chesstango.piazzolla.syzygy.Syzygy;
 import net.chesstango.piazzolla.syzygy.SyzygyPosition;
 import org.mxnik.forcechess.DiversePair;
+import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.Pos.Move;
+import org.mxnik.forcechess.Pos.MoveGen;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.io.IOException;
@@ -14,11 +17,22 @@ import static org.mxnik.forcechess.Pos.Piece.*;
 import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
 import static org.mxnik.forcechess.Pos.PositionUtils.place;
 import static org.mxnik.forcechess.Pos.PositionUtils.toFen;
+import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 
 public class EndgameBufferBuilder {
     // seed for reproducible outcomes
     private final static int SEED = 42;
-    private Random pieceCGen;
+    private final static float WIN_WDL_BASE = 0.8F;
+    private final static float WIN_CLAMP = 1 - WIN_WDL_BASE;
+    private final static float CURSED_WIN_WDL_BASE = 0.1F;
+    private final static float CURSED_WIN_CLAMP = 0.1F;
+    private final static float BLESSED_LOSS_WDL_BASE = -0.1F;
+    private final static float BLESSED_LOSS_CLAMP = 0.1F;
+    private final static float LOSS_WDL_BASE = -0.8F;
+    private final static float LOSS_CLAMP = 1 + WIN_WDL_BASE;
+
+    private final Random pieceCGen;
+    private final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
 
     public EndgameBufferBuilder(int seed){
         pieceCGen = new Random(seed);
@@ -107,34 +121,50 @@ public class EndgameBufferBuilder {
     }
 
     /**
-     * generates a legal position with a fixed number of pieces including both kings
+     * generates a legal position as a fenString with a fixed number of pieces including both kings
      */
      String generateLegalFen(int pieceC){
-         if(pieceC > 63){
-             System.err.println("can't place more than 63 pieces");
-             return null;
-         }
-
-         int whitePCount = pieceCGen.nextInt(0, pieceC - 1);    // dec for the kings
-         // the rest are black pieces
-         int blackPCount = (pieceC - 2) - whitePCount;      // remove two because of the kings
-
-         return toFen(generateLegalPosition(whitePCount, blackPCount, pieceCGen.nextBoolean()));
+         var pos = generateLegalPosition(pieceC);
+         return toFen(pos);
     }
 
-    public void trainOnEndgames() {
+    /**
+     * generates a legal position with a fixed number of pieces including both kings
+     */
+    PositionEncoder.Position generateLegalPosition(int pieceC){
+        if(pieceC > 63){
+            System.err.println("can't place more than 63 pieces");
+            return null;
+        }
+
+        int whitePCount = pieceCGen.nextInt(0, pieceC - 1);    // dec for the kings
+        // the rest are black pieces
+        int blackPCount = (pieceC - 2) - whitePCount;      // remove two because of the kings
+        return generateLegalPosition(whitePCount, blackPCount, pieceCGen.nextBoolean());
+    }
+
+    public void buildBufferOnEndgames(int moveCount) {
+        // open file
         try(Syzygy syzygy = Syzygy.open("boardsNBots/bots/Syzygy_Bases/Syzygy")){
-            String fen =  generateLegalFen(5);
+            int moveCounter = 0;
+            var pos = generateLegalPosition(5);
+        while (moveCounter < moveCount) {
+            moveCounter ++;
+
+            if(MoveGen.generateMovesAndResult(pos, pos.whiteToMove, tempBuffer).second() != GameState.Continue)
+                pos = generateLegalPosition(5); // generate new position after mate or stalemate
+
+            String fen = toFen(pos);
             DiversePair<Integer, int[]> res = getEndgamePos(syzygy, fen);
             int best = res.first();
             int[] results = res.second();
 
             if (best != Syzygy.TB_RESULT_FAILED) {
-                int bestWdl = Syzygy.TB_GET_WDL(best);
+                int bestWdl = Syzygy.TB_GET_WDL(best);      // check for wins
                 int dtzStart = Syzygy.TB_GET_DTZ(best);
                 int fromSq = Syzygy.TB_GET_FROM(best);
                 int toSq = Syzygy.TB_GET_TO(best);
-                int promotes = Syzygy.TB_GET_PROMOTES(best);
+
 
                 System.out.println("position: " + fen);
                 System.out.printf("Best move: %d -> %d | WDL: %d | DTZ: %d%n", fromSq, toSq, bestWdl, dtzStart);
@@ -143,18 +173,22 @@ public class EndgameBufferBuilder {
                 for (int r : results) {
                     if (r == Syzygy.TB_RESULT_FAILED) break;
 
-                    int moveWdl  = Syzygy.TB_GET_WDL(r);
-                    int moveDtz  = Syzygy.TB_GET_DTZ(r);
+                    int moveWdl = Syzygy.TB_GET_WDL(r);
+                    int moveDtz = Syzygy.TB_GET_DTZ(r);
                     int moveFrom = Syzygy.TB_GET_FROM(r);
-                    int moveTo   = Syzygy.TB_GET_TO(r);
+                    int moveTo = Syzygy.TB_GET_TO(r);
+                    int movePromotes = Syzygy.TB_GET_PROMOTES(r);
+
 
                     double score = computeScore(moveWdl, moveDtz, dtzStart);
+
+                    int engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveTo, movePromotes));
 
                     System.out.printf("move: %d -> %d | WDL: %d | DTZ: %d | score: %.4f%n",
                             moveFrom, moveTo, moveWdl, moveDtz, score);
                 }
             }
-        }catch (IOException e){
+        }}catch (IOException e){
             System.err.println("Error when querying for position (IOException)");
             e.printStackTrace();
         }
@@ -174,24 +208,24 @@ public class EndgameBufferBuilder {
 
         switch (wdl) {
             case Syzygy.TB_WIN -> {          // 4 - clean win, full range
-                wdlBase = 0.5;
-                dtzProgress = Math.clamp(rawProgress, -0.5, 0.5);
+                wdlBase = WIN_WDL_BASE;
+                dtzProgress = Math.clamp(rawProgress, -WIN_CLAMP, WIN_CLAMP);
             }
             case Syzygy.TB_CURSED_WIN -> {   // 3 - won but 50-move rule, capped so never reaches 1.0
-                wdlBase = 0.1;
-                dtzProgress = Math.clamp(rawProgress, -0.1, 0.1);
+                wdlBase = CURSED_WIN_WDL_BASE;
+                dtzProgress = Math.clamp(rawProgress, -CURSED_WIN_CLAMP, CURSED_WIN_CLAMP);
             }
             case Syzygy.TB_DRAW -> {         // 2
                 wdlBase = 0.0;
                 dtzProgress = 0.0;
             }
             case Syzygy.TB_BLESSED_LOSS -> { // 1 - lost but 50-move rule saves it, mirror of cursed win
-                wdlBase = -0.1;
-                dtzProgress = Math.clamp(rawProgress, -0.1, 0.1);
+                wdlBase = BLESSED_LOSS_WDL_BASE;
+                dtzProgress = Math.clamp(rawProgress, -BLESSED_LOSS_CLAMP, BLESSED_LOSS_CLAMP);
             }
             case Syzygy.TB_LOSS -> {         // 0 - clean loss, full negative range
-                wdlBase = -0.5;
-                dtzProgress = Math.clamp(rawProgress, -0.5, 0.5);
+                wdlBase = LOSS_WDL_BASE;
+                dtzProgress = Math.clamp(rawProgress, -LOSS_CLAMP, LOSS_CLAMP);
             }
             default -> {
                 wdlBase = 0.0;
@@ -204,7 +238,7 @@ public class EndgameBufferBuilder {
 
     public static void main(String[] args) {
         EndgameBufferBuilder eg = new EndgameBufferBuilder();
-        eg.trainOnEndgames();
+        eg.buildBufferOnEndgames(300);
     }
 
 }
