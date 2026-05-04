@@ -318,7 +318,6 @@ public final class PositionEncoder {
             whiteToMove = !whiteToMove;
             updateHelper();
             calcMat();
-            fiftyMoveCounter ++;
             return undo;
         }
 
@@ -327,6 +326,12 @@ public final class PositionEncoder {
             int from      = Move.from(move);
             int to        = Move.to(move);
             int moveType  = Move.flags(move);
+            int prevCounter = fiftyMoveCounter;
+            fiftyMoveCounter ++;
+
+            if(Move.attackFromFlag(moveType)){
+                fiftyMoveCounter = 0;
+            }
 
             //System.out.printf("making move %d -> %d\n", from, to);
 
@@ -355,7 +360,8 @@ public final class PositionEncoder {
                     byte currentPerms = castlePerms;
                     movePiece(from, to);
                     updateCastlePerms(from, to);
-                    return UndoMoveInfo.of(move, p, currentPerms);
+                    fiftyMoveCounter = 0;
+                    return UndoMoveInfo.of(move, p, currentPerms, prevCounter);
                 }
                 case Move.FLAG_PROMOTE_Q, Move.FLAG_PROMOTE_Q_CAPTURE -> {
                     int p = pieceMap[from];                                 //  remove the pawn
@@ -363,6 +369,7 @@ public final class PositionEncoder {
                     int placedP = Piece.of(Piece.colorInt(p), Piece.QUEEN);
                     PlaceOnBoard(placedP, from);                            // place a Queen on the from-pos
                     pieceMap[from] = (byte) placedP;                        // also replace it in the pieceMap so that after the move below the Queen is in the correct pos
+                    fiftyMoveCounter = 0;
                     // example:
                     // WPawn (b7); BRook (a8)
                     // delete Pawn -> replace with Queen of same color
@@ -375,6 +382,7 @@ public final class PositionEncoder {
                     int placedP = Piece.of(Piece.colorInt(p), Piece.ROOK);
                     PlaceOnBoard(placedP, from);
                     pieceMap[from] = (byte) placedP;
+                    fiftyMoveCounter = 0;
                 }
                 case Move.FLAG_PROMOTE_B, Move.FLAG_PROMOTE_B_CAPTURE -> {
                     //  remove the pawn
@@ -383,6 +391,7 @@ public final class PositionEncoder {
                     int placedP = Piece.of(Piece.colorInt(p), Piece.BISHOP);
                     PlaceOnBoard(placedP, from);
                     pieceMap[from] = (byte) placedP;
+                    fiftyMoveCounter = 0;
                 }
                 case Move.FLAG_PROMOTE_N, Move.FLAG_PROMOTE_N_CAPTURE -> {
                     //  remove the pawn
@@ -391,15 +400,16 @@ public final class PositionEncoder {
                     int placedP = Piece.of(Piece.colorInt(p), Piece.KNIGHT);
                     PlaceOnBoard(placedP, from);
                     pieceMap[from] = (byte) placedP;
+                    fiftyMoveCounter = 0;
                 }
 
-                default -> {
-
-                }
+                default -> {}
             }
+            if(Piece.pieceT(pieceMap[from]) == Piece.PAWN)
+                fiftyMoveCounter = 0;
 
             byte currentPerms = updateCastlePerms(from, to);
-            return UndoMoveInfo.of(move, movePiece(from, to), currentPerms);
+            return UndoMoveInfo.of(move, movePiece(from, to), currentPerms, prevCounter);
         }
 
         public void unmakeMove(int undoInfo) {
@@ -455,7 +465,7 @@ public final class PositionEncoder {
             updateHelper();
             calcMat();
             whiteToMove = !whiteToMove;
-            fiftyMoveCounter --;
+            fiftyMoveCounter = UndoMoveInfo.fiftyMoveCounter(undoInfo);
         }
 
         /**
