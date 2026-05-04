@@ -15,48 +15,20 @@ import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
 import static org.mxnik.forcechess.Pos.PositionUtils.place;
 import static org.mxnik.forcechess.Pos.PositionUtils.toFen;
 
-public class EndgameTraining {
+public class EndgameBufferBuilder {
     // seed for reproducible outcomes
     private final static int SEED = 42;
     private Random pieceCGen;
 
-    public EndgameTraining(int seed){
+    public EndgameBufferBuilder(int seed){
         pieceCGen = new Random(seed);
     }
 
-    public  EndgameTraining(){
+    public EndgameBufferBuilder(){
         pieceCGen = new Random();
     }
 
 
-    // THIS METHOD WAS TAKEN FROM GOOGLE AI
-    /**
-     * Converts WDL percentages to a centipawn evaluation score.
-     *
-     * @param winProb  The win probability for White (range: 0.0 to 1.0)
-     * @param drawProb The draw probability (range: 0.0 to 1.0)
-     * @param lossProb The loss probability for White (range: 0.0 to 1.0)
-     * @return The evaluation in centipawns (positive for White, negative for Black)
-     */
-    static int convertWdlToCentipawns(double winProb, double drawProb, double lossProb) {
-        // Step 1: Compute expected score (S) ranging from 0.0 to 1.0
-        double expectedScore = winProb + 0.5 * drawProb;
-
-        // Clip bounds to prevent Infinity or NaN errors in logarithmic calculations
-        expectedScore = Math.clamp(expectedScore, 0.0001, 0.9999);
-
-        // Step 2: Use the standard logistic/sigmoid mapping
-        // In Lc0/Stockfish, 100 cp is calibrated to roughly a 50% win chance.
-        // We use the modern sigmoid inverse formula.
-        double scoreTransform = expectedScore / (1.0 - expectedScore);
-
-        // This is a fitted scaling factor that anchors a 50% win probability to ~100 cp.
-        double scalingFactor = 290.68;
-        double centipawns = scalingFactor * Math.log(scoreTransform);
-
-        return (int) Math.round(centipawns);
-    }
-    // AI END
 
     public DiversePair<Integer, int[]> getEndgamePos(Syzygy syzygy, String fenStr) {
             //  WDL probe: just "is this a win?" (fast, no move)
@@ -105,6 +77,8 @@ public class EndgameTraining {
         placePieces((whiteToMove ? wPieceCount : bPieceCount), whiteToMove, pos);
         placePieces((!whiteToMove ? wPieceCount : bPieceCount), !whiteToMove, pos);
 
+        pos.whiteToMove = whiteToMove;
+
         return pos;
     }
 
@@ -136,27 +110,101 @@ public class EndgameTraining {
      * generates a legal position with a fixed number of pieces including both kings
      */
      String generateLegalFen(int pieceC){
+         if(pieceC > 63){
+             System.err.println("can't place more than 63 pieces");
+             return null;
+         }
+
          int whitePCount = pieceCGen.nextInt(0, pieceC - 1);    // dec for the kings
          // the rest are black pieces
          int blackPCount = (pieceC - 2) - whitePCount;      // remove two because of the kings
-
-
 
          return toFen(generateLegalPosition(whitePCount, blackPCount, pieceCGen.nextBoolean()));
     }
 
     public void trainOnEndgames() {
         try(Syzygy syzygy = Syzygy.open("boardsNBots/bots/Syzygy_Bases/Syzygy")){
-            DiversePair<Integer, int[]> res = getEndgamePos(syzygy, generateLegalFen(5));
+            String fen =  generateLegalFen(5);
+            DiversePair<Integer, int[]> res = getEndgamePos(syzygy, fen);
+            int best = res.first();
+            int[] results = res.second();
 
+            if (best != Syzygy.TB_RESULT_FAILED) {
+                int bestWdl = Syzygy.TB_GET_WDL(best);
+                int dtzStart = Syzygy.TB_GET_DTZ(best);
+                int fromSq = Syzygy.TB_GET_FROM(best);
+                int toSq = Syzygy.TB_GET_TO(best);
+                int promotes = Syzygy.TB_GET_PROMOTES(best);
+
+                System.out.println("position: " + fen);
+                System.out.printf("Best move: %d -> %d | WDL: %d | DTZ: %d%n", fromSq, toSq, bestWdl, dtzStart);
+                System.out.println("-----------------");
+
+                for (int r : results) {
+                    if (r == Syzygy.TB_RESULT_FAILED) break;
+
+                    int moveWdl  = Syzygy.TB_GET_WDL(r);
+                    int moveDtz  = Syzygy.TB_GET_DTZ(r);
+                    int moveFrom = Syzygy.TB_GET_FROM(r);
+                    int moveTo   = Syzygy.TB_GET_TO(r);
+
+                    double score = computeScore(moveWdl, moveDtz, dtzStart);
+
+                    System.out.printf("move: %d -> %d | WDL: %d | DTZ: %d | score: %.4f%n",
+                            moveFrom, moveTo, moveWdl, moveDtz, score);
+                }
+            }
         }catch (IOException e){
             System.err.println("Error when querying for position (IOException)");
             e.printStackTrace();
         }
     }
 
+    /**
+     * compute the score for a given wdl and dtz
+     * mixture of relative DTZ betterment and general wdl score
+     */
+    private static double computeScore(int wdl, int dtzCurrent, int dtzStart) {
+        double wdlBase;
+        double dtzProgress;
+
+        // DTZ progress: how much better is this move relative to where we started
+        // Guard against dtzStart == 0 (already at zeroing move)
+        double rawProgress = (dtzStart > 0) ? (1.0 - (double) dtzCurrent / dtzStart) : 0.0;
+
+        switch (wdl) {
+            case Syzygy.TB_WIN -> {          // 4 - clean win, full range
+                wdlBase = 0.5;
+                dtzProgress = Math.clamp(rawProgress, -0.5, 0.5);
+            }
+            case Syzygy.TB_CURSED_WIN -> {   // 3 - won but 50-move rule, capped so never reaches 1.0
+                wdlBase = 0.1;
+                dtzProgress = Math.clamp(rawProgress, -0.1, 0.1);
+            }
+            case Syzygy.TB_DRAW -> {         // 2
+                wdlBase = 0.0;
+                dtzProgress = 0.0;
+            }
+            case Syzygy.TB_BLESSED_LOSS -> { // 1 - lost but 50-move rule saves it, mirror of cursed win
+                wdlBase = -0.1;
+                dtzProgress = Math.clamp(rawProgress, -0.1, 0.1);
+            }
+            case Syzygy.TB_LOSS -> {         // 0 - clean loss, full negative range
+                wdlBase = -0.5;
+                dtzProgress = Math.clamp(rawProgress, -0.5, 0.5);
+            }
+            default -> {
+                wdlBase = 0.0;
+                dtzProgress = 0.0;
+            }
+        }
+
+        return wdlBase + dtzProgress;
+    }
+
     public static void main(String[] args) {
-        EndgameTraining eg = new EndgameTraining();
+        EndgameBufferBuilder eg = new EndgameBufferBuilder();
+        eg.trainOnEndgames();
     }
 
 }
