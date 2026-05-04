@@ -275,7 +275,7 @@ public final class PositionEncoder {
         public long BPieces;
 
         // pieceVals
-        public static final int[] pieceVals = {0, 5, 3, 3, 0, 9, 1};        // king can't get taken so 0 since both sides always have one
+        public static final int[] pieceVals = {0, 1, 3, 3, 5, 9, 0};        // king can't get taken so 0 since both sides always have one
 
         // Castling permissions (may castle if rights arise)
         // bit 0 = WKingC
@@ -677,7 +677,7 @@ public final class PositionEncoder {
          * @param piece pieceT and color
          * @param sq square
          */
-        private void clearOnBoard(int piece, int sq) {
+        public void clearOnBoard(int piece, int sq) {
             boolean color = Piece.color(piece);
             int type      = Piece.pieceT(piece);
 
