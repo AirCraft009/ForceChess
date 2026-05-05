@@ -7,6 +7,7 @@ import org.mxnik.forcechess.DiversePair;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.MoveGen;
+import org.mxnik.forcechess.Pos.PolicyIndex;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.io.IOException;
@@ -125,7 +126,7 @@ public class EndgameBufferBuilder {
     /**
      * generates a legal position as a fenString with a fixed number of pieces including both kings
      */
-     String generateLegalFen(int pieceC){
+     public String generateLegalFen(int pieceC){
          var pos = generateLegalPosition(pieceC);
          return toFen(pos);
     }
@@ -133,7 +134,7 @@ public class EndgameBufferBuilder {
     /**
      * generates a legal position with a fixed number of pieces including both kings
      */
-    PositionEncoder.Position generateLegalPosition(int pieceC){
+    public PositionEncoder.Position generateLegalPosition(int pieceC){
         if(pieceC > 63){
             System.err.println("can't place more than 63 pieces");
             return null;
@@ -175,7 +176,7 @@ public class EndgameBufferBuilder {
                 firstPos = false;
                 moveCounter++;
 
-                float z = (float) clamp((bestWdl - 3) + 0.5, 0, 1);                    // 1 = win / 0 = cursed win
+                float z = (float) clamp((bestWdl - 3) + 0.5, -1, 1);                    // 1 = win / 0 = cursed win
 
                 int dtzStart = Syzygy.TB_GET_DTZ(best);
                 int fromSq = Syzygy.TB_GET_FROM(best);
@@ -199,7 +200,7 @@ public class EndgameBufferBuilder {
 
                     float score = computeScore(moveWdl, moveDtz, dtzStart);
                     engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveTo, movePromotes));
-                    policyV[engineMove] = score;
+                    policyV[PolicyIndex.toPolicyIndex(engineMove)] = score;
 
                     if(score > bestScore){
                         bestScore = score;
