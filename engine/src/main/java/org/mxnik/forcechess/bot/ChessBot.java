@@ -31,6 +31,13 @@ public class ChessBot implements Player {
     protected int depth = 1;                                                      // depth = 1 da root immer existiert
     private int playDepth;
 
+    public ChessBot(Evaluator evaluator, int playDepth, String fen){
+        this.evaluator = evaluator;
+        this.playDepth = playDepth;
+        pos = PositionUtils.fromFen(fen);
+        tree = new MctsTree();
+    }
+
     public ChessBot(Evaluator evaluator, int playDepth){
         this.evaluator = evaluator;
         this.playDepth = playDepth;
@@ -119,7 +126,7 @@ public class ChessBot implements Player {
         // iterate over all moves in curr pos.
         for (int i = 0; i < out.first(); i++) {
             int child = tree.addNewChild(node, moves[i]);
-            tree.p[child] = policyV[moves[i]];    // add a new node and set the policy vector
+            tree.p[child] = policyV[PolicyIndex.toPolicyIndex(moves[i])];    // add a new node and set the policy vector
         }
     }
 

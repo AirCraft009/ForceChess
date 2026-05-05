@@ -63,7 +63,7 @@ public final class Move {
     public static final int FLAG_PROMOTE_B_CAPTURE  = 0xE;
     public static final int FLAG_PROMOTE_N_CAPTURE  = 0xF;
 
-    public static final int MOVE_POSSIBILITIES = 65536;
+    public static final int MOVE_POSSIBILITIES = PolicyIndex.POLICY_SIZE;
 
 
 
