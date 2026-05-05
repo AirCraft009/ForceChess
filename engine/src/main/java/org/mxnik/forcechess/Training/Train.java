@@ -166,7 +166,7 @@ public class Train {
      *                   - checkpoints are set as filename_n_checkPoint.zip
      */
     public void train(int batchSize, int sampleBufferSize, int n, int epoch, int checkPoint, boolean saveBuffer) throws IOException {
-        SampleBuffer buffer = new SampleBuffer(sampleBufferSize, fileName + "_buffer");
+        SampleBuffer buffer = new SampleBuffer(sampleBufferSize, fileName + "_buffer", false);
         train(batchSize, sampleBufferSize, n, epoch, checkPoint, buffer, saveBuffer);
     }
 
@@ -243,14 +243,14 @@ public class Train {
 
 
 //       second stage training with model
-        Train train = new Train("D600_10_RES_BLOCKS_STALE",  false, true);
+        Train train = new Train("D400_10_RES_BLOCKS",  false, true);
         //train.diagnose();
-        SampleBuffer s = new SampleBuffer( 10000, "penalty_for_Stalemate");
+        SampleBuffer s = new SampleBuffer( 10000, "endGame_3_Pieces", true);
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
-        train.train(32,  s.length, 600, 12000, 4001, s, true);
+        train.train(32, s, 12000, 4001);
         train.saveNet();
         train.bot.selfPlayGame(400);
     }

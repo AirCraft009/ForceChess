@@ -5,6 +5,7 @@ import org.mxnik.forcechess.FileLocations;
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.Arrays;
 import java.util.Random;
 
 import static org.mxnik.forcechess.Pos.Move.MOVE_POSSIBILITIES;
@@ -24,18 +25,18 @@ public class SampleBuffer {
      * creates a sample buffer with a given capacity;
      * @param filename name used to manage the writing and reading data to file
      */
-    public SampleBuffer(int length, String filename){
+    public SampleBuffer(int length, String filename, boolean read) throws IOException {
         fullPath = BASE_PATH + filename;
         int templength = 1;
         if(length > 0)
             templength = length;
         this.length = templength;
         this.ptr = 0;
-        samples = new TrainingSample[length];
-    }
-
-    public SampleBuffer(int length){
-        this(length, "");
+        if(read){
+            readSample(length);
+        }else {
+            samples = new TrainingSample[length];
+        }
     }
 
     /**
@@ -44,16 +45,6 @@ public class SampleBuffer {
     public SampleBuffer(String filename) throws IOException {
         fullPath = BASE_PATH + filename;
         readSample();
-    }
-
-    /**
-     * creates a sampleBuffer with data from the Buffer saved at fileNam
-     * @param filename reads the data from here
-     * @param capacity max capacity (set to the one of the file if smaller)
-     */
-    public SampleBuffer(String filename, int capacity) throws IOException {
-        fullPath = BASE_PATH + filename;
-        readSample(capacity);
     }
 
     public void addSample(TrainingSample s){
@@ -86,6 +77,10 @@ public class SampleBuffer {
 
     public int getPtr(){
         return ptr;
+    }
+
+    public void setPtr(int ptr){
+        this.ptr = ptr;
     }
 
     /**
@@ -188,5 +183,14 @@ public class SampleBuffer {
             this.z = z;
         }
 
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder("TrainingSample{");
+            sb.append("tensor=").append(Arrays.toString(tensor));
+            sb.append(", pi=").append(Arrays.toString(pi));
+            sb.append(", z=").append(z);
+            sb.append('}');
+            return sb.toString();
+        }
     }
 }
