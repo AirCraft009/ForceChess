@@ -19,7 +19,7 @@ import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
  */
 public class ChessBot implements Player {
     public static final int MAX_SEARCH_DEPTH = 64;
-    public static final int MAX_MOVES_IN_POS = 256;
+    public static final int MAX_MOVES_IN_POS = 218;
 
     protected PositionEncoder.Position pos;                                        // state
     protected final MctsTree tree;                                                 // eval the states and chose with PUCT

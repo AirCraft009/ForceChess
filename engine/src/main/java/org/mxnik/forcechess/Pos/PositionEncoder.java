@@ -10,6 +10,7 @@ import java.util.Objects;
 import static org.mxnik.forcechess.RayDetection.*;
 import static org.mxnik.forcechess.RayDetection.KNIGHT_COL;
 import static org.mxnik.forcechess.ChessSquares.*;
+import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 
 /**
  * PositionEncoder
@@ -55,17 +56,20 @@ public final class PositionEncoder {
     private static final int PLANE_EN_PASSANT = 18;
     private static final int PLANE_SIDE       = 19;
     private static final int PLANE_FIFTY      = 20;
-    private static final int W_ATTACKS        = 21;
-    private static final int B_ATTACKS        = 22;
-    // TODO: make mobility layers functional
-    private static final int W_MOBILITY       = 23;
-    private static final int B_MOBILITY       = 24;
-    private short[]
+    private static final int PLANE_W_MOBILITY = 21;
+    private static final int PLANE_B_MOBILITY = 22;
+    private static final int PLANE_W_ATTACKS  = 23;
+    private static final int PLANE_B_ATTACKS  = 24;
+    private static final short[] tempBuffer = new short[MAX_MOVES_IN_POS];
 
     private PositionEncoder() {}
 
     // Public API
 
+    @Deprecated
+    /*
+    alte encode mit multiDimArrays. deprecated
+     */
     public static float[][][] encode(Position pos) {
         float[][][] tensor = new float[PLANES][SIZE][SIZE];
         encode(pos, tensor);
@@ -100,6 +104,7 @@ public final class PositionEncoder {
         encodeBitboard(pos.BRooks,   offset + PLANE_BR * PLANE_SIZE, tensor);
         encodeBitboard(pos.BQueens,  offset + PLANE_BQ * PLANE_SIZE, tensor);
         encodeBitboard(pos.BKing,    offset + PLANE_BK * PLANE_SIZE, tensor);
+
 
         // Castling rights — uniform planes
         if (pos.WKingCastle)
@@ -145,8 +150,44 @@ public final class PositionEncoder {
         // Fifty-move rule
         Arrays.fill(tensor,
                 offset + PLANE_FIFTY * PLANE_SIZE,
-                offset + TENSOR_SIZE-1,
+                offset + PLANE_W_MOBILITY * PLANE_SIZE,
                 Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
+
+        int mobW = MoveGen.generateMoves(pos, 0, true, tempBuffer);
+
+        //Mobility score white
+        Arrays.fill(tensor,
+                offset + PLANE_W_MOBILITY * PLANE_SIZE,
+                offset + PLANE_B_MOBILITY * PLANE_SIZE,
+                Math.min((float) mobW / MAX_MOVES_IN_POS, 1.0f));
+
+        //Attack score white
+        long attackBitboard = 0L;
+        for (int i = 0; i < mobW; i++) {
+            attackBitboard  |= (1L << Move.to(tempBuffer[i]));
+        }
+        attackBitboard &= pos.BPieces;
+        encodeBitboard(attackBitboard, offset + PLANE_W_ATTACKS * PLANE_SIZE, tensor);
+
+
+        int mobB = MoveGen.generateMoves(pos, 0, false, tempBuffer);
+        //Mobility score white
+        Arrays.fill(tensor,
+                offset + PLANE_B_MOBILITY * PLANE_SIZE,
+                offset + PLANE_W_ATTACKS * PLANE_SIZE,
+                Math.min((float) mobB / MAX_MOVES_IN_POS, 1.0f));
+
+        //Attack score white
+        attackBitboard = 0L;
+        for (int i = 0; i < mobW; i++) {
+            attackBitboard  |= (1L << Move.to(tempBuffer[i]));
+        }
+        attackBitboard &= pos.WPieces;
+        encodeBitboard(attackBitboard, offset + PLANE_B_ATTACKS * PLANE_SIZE, tensor);
+
+
+
+
 
         return offset + TENSOR_SIZE;
     }
@@ -932,52 +973,5 @@ public final class PositionEncoder {
             sb.append('}');
             return sb.toString();
         }
-    }
-
-
-    public static void main(String[] args) {
-        Position pos = Position.StartingPosition();
-        System.out.println(pos.Occupied);
-        float[][][] tensor = encode(pos);
-
-        System.out.println("=== Plane 0: White pawns ===");
-        for (int rank = 7; rank >= 0; rank--) {
-            for (int file = 0; file < 8; file++)
-                System.out.print((int) tensor[PLANE_WP][rank][file] + " ");
-            System.out.println("  ← rank " + (rank + 1));
-        }
-
-        System.out.println("\n=== Plane 12: White kingside castling (expect 0.0) ===");
-        System.out.println("tensor[12][0][0] = " + tensor[PLANE_CASTLE_WK][0][0]);
-
-        System.out.println("\n=== Plane 19: Side to move (expect 1.0 = white) ===");
-        System.out.println("tensor[19][0][0] = " + tensor[PLANE_SIDE][0][0]);
-
-        float[][][] buffer = new float[PLANES][SIZE][SIZE];
-        encode(pos, buffer);
-        System.out.println("\nReuse buffer test passed.");
-
-        int[] moves = new int[256];
-        int actLen = MoveGen.generatePseudoMoves(pos, 0, true, moves);
-
-
-        for (int i = 0; i < actLen; i++) {
-            System.out.printf(" from: %d -> to: %d%n",
-                    Move.from(moves[i]), Move.to(moves[i]));
-        }
-
-        pos.makeMove(moves[5]);
-        pos.makeMove(moves[14]);
-
-        int off = MoveGen.generatePseudoMoves(pos, 0, false, moves);
-        System.out.println("black");
-        for (int i = 0; i < off; i++) {
-            System.out.printf(" from: %d -> to: %d%n",
-                    Move.from(moves[i]), Move.to(moves[i]));
-        }
-        pos.makeMove(moves[4]);
-        System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
-        System.out.println(Arrays.toString(pos.pieceMap));
-
     }
 }
