@@ -28,6 +28,9 @@ public final class Move {
 
     public static boolean attackFromFlag(int flag){ return ((flag >>> 3) & 0x1) == 1L;}
     public static int baseFlag(int flag){ return (flag & 0x7);}
+    public static boolean attack(short move){
+        return Move.attackFromFlag(Move.flags(move));
+    }
 
 
     // Shifts and masks

@@ -34,7 +34,7 @@ public class EndgameBufferBuilder {
     private final static float LOSS_CLAMP = 1 - WIN_WDL_BASE;
 
     private final Random pieceCGen;
-    private final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
+    private final short[] tempBuffer = new short[MAX_MOVES_IN_POS];
     private final float[] policyV = new float[Move.MOVE_POSSIBILITIES];
 
     public EndgameBufferBuilder(int seed){
