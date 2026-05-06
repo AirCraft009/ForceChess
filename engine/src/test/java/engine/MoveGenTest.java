@@ -266,7 +266,6 @@ class MoveGenTest {
         }
 
 
-        //TODO: implement promotion
         @Test
         @DisplayName("Promotion: exactly 4 moves generated for e7-e8")
         void promotionFourVariants() {
@@ -277,7 +276,6 @@ class MoveGenTest {
             assertEquals(4, count, "4 promotion variants expected (Q, R, B, N)");
         }
 
-        //TODO: implement promotion
         @Test
         @DisplayName("Promotion-capture: 4 variants per capturable piece on rank 8")
         void promotionCapture() {
@@ -1163,8 +1161,6 @@ class MoveGenTest {
 
             @Test
             @DisplayName("Pinned knight cannot move off pin ray")
-            //TODO: figure out why a knight isn't pinned in game
-
             void pinnedKnightStaysOnRay() {
                 var pos = emptyPosition();
                 place(pos, true,  Piece.BISHOP, A4);

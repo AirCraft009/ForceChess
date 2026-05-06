@@ -299,7 +299,6 @@ public final class PositionEncoder {
      *
      */
     public static final class Position {
-        //TODO: add more bitboards (attacked squares; move counter; moves to promotion)
         //  Piece bitboards (raw longs)
         public long WPawns;
         public long WKnights;
