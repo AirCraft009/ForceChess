@@ -24,14 +24,14 @@ import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 public class EndgameBufferBuilder {
     // seed for reproducible outcomes
     private final static int SEED = 42;
-    private final static float WIN_WDL_BASE = 0.8F;
+    private final static float WIN_WDL_BASE = 0.9F;
     private final static float WIN_CLAMP = 1 - WIN_WDL_BASE;
     private final static float CURSED_WIN_WDL_BASE = 0.1F;
     private final static float CURSED_WIN_CLAMP = 0.1F;
     private final static float BLESSED_LOSS_WDL_BASE = -0.1F;
     private final static float BLESSED_LOSS_CLAMP = 0.1F;
-    private final static float LOSS_WDL_BASE = -0.8F;
-    private final static float LOSS_CLAMP = 1 + WIN_WDL_BASE;
+    private final static float LOSS_WDL_BASE = -0.9F;
+    private final static float LOSS_CLAMP = 1 - WIN_WDL_BASE;
 
     private final Random pieceCGen;
     private final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
@@ -176,7 +176,8 @@ public class EndgameBufferBuilder {
                 firstPos = false;
                 moveCounter++;
 
-                float z = (float) clamp((bestWdl - 3) + 0.5, -1, 1);                    // 1 = win / 0 = cursed win
+                // -2 to center stalemate at 0; div by 2 to get win = 1 cursed win 0.5 stalem. 0; loss -1; cursed loss -0.5;
+                float z = ((float) (bestWdl - 2) / 2);
 
                 int dtzStart = Syzygy.TB_GET_DTZ(best);
                 int fromSq = Syzygy.TB_GET_FROM(best);
@@ -287,8 +288,8 @@ public class EndgameBufferBuilder {
     }
 
     public static void main(String[] args) {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
-        eg.buildBufferOnEndgames(10000, 3, "endGame_3_Pieces");
+        EndgameBufferBuilder eg = new EndgameBufferBuilder();
+        eg.buildBufferOnEndgames(40000, 5, "endGame_5_Pieces");
     }
 
 }
