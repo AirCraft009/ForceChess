@@ -14,15 +14,13 @@ import static org.mxnik.forcechess.Pos.Piece.EMPTY_PIECE;
 
 public final class Move {
     /**
-     * encodes a move into a single integer
+     * encodes a move into a single short
      * @param from start square
      * @param to end square
      * @param flags Move flags (capture, castle etc..)
      * @return encoded move
      */
-    public static int of(int from, int to, int flags) {
-        return from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT;
-    }
+    public static short of(int from, int to, int flags) { return (short) (from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT);}
     // getter methods
     public static int from(int move)  { return move & MOVE_MASK; }
     public static int to(int move)    { return (move >>> TO_MOVE_SHIFT) & MOVE_MASK; }

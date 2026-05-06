@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.Pos;
 
 import org.mxnik.forcechess.Bitboard;
+import org.mxnik.forcechess.ChessSquares;
 import org.mxnik.forcechess.GameState;
 
 import java.util.Arrays;
@@ -28,10 +29,10 @@ import static org.mxnik.forcechess.ChessSquares.*;
  */
 public final class PositionEncoder {
 
-    public static final int PLANES = 21;
+    public static final int PLANES = 25;
     public static final int SIZE   = 8;
-    public static final int PLANE_SIZE = 64;
-    public static final int TENSOR_SIZE = PLANES * SIZE * SIZE;
+    public static final int PLANE_SIZE = SIZE * SIZE;
+    public static final int TENSOR_SIZE = PLANES * PLANE_SIZE;
 
     private static final int PLANE_WP         = 0;
     private static final int PLANE_WN         = 1;
@@ -54,6 +55,12 @@ public final class PositionEncoder {
     private static final int PLANE_EN_PASSANT = 18;
     private static final int PLANE_SIDE       = 19;
     private static final int PLANE_FIFTY      = 20;
+    private static final int W_ATTACKS        = 21;
+    private static final int B_ATTACKS        = 22;
+    // TODO: make mobility layers functional
+    private static final int W_MOBILITY       = 23;
+    private static final int B_MOBILITY       = 24;
+    private short[]
 
     private PositionEncoder() {}
 
@@ -778,13 +785,15 @@ public final class PositionEncoder {
         private byte updateCastlePerms(int from, int to){
             byte prevPerms = castlePerms;
             // these squares are fixed by the rules of chess
-            if (from == E1 || to == E1) castlePerms &= ~(W_KINGSIDE | W_QUEENSIDE);
-            if (from == H1 || to == H1) castlePerms &= ~W_KINGSIDE;
-            if (from == A1 || to == A1) castlePerms &= ~W_QUEENSIDE;
-            if (from == E8 || to == E8) castlePerms &= ~(B_KINGSIDE | B_QUEENSIDE);
-            if (from == H8 || to == H8) castlePerms &= ~B_KINGSIDE;
-            if (from == A8 || to == A8) castlePerms &= ~B_QUEENSIDE;
+            removeCastleRights(from, to, E1, W_KINGSIDE, W_QUEENSIDE, H1, A1);
+            removeCastleRights(from, to, ChessSquares.E8, B_KINGSIDE, B_QUEENSIDE, ChessSquares.H8, ChessSquares.A8);
             return prevPerms;
+        }
+
+        private void removeCastleRights(int from, int to, int e1, byte wKingside, byte wQueenside, int h1, int a1) {
+            if (from == e1 || to == e1) castlePerms &= (byte) ~(wKingside | wQueenside);
+            if (from == h1 || to == h1) castlePerms &= (byte) ~wKingside;
+            if (from == a1 || to == a1) castlePerms &= (byte) ~wQueenside;
         }
 
         private void resetCastlePerms(byte perms){
