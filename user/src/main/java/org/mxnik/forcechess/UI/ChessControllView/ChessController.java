@@ -17,6 +17,7 @@ import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.UI.Constants;
 
 import java.io.IOException;
+import java.util.concurrent.SynchronousQueue;
 
 import static org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen.getMovesFromPosition;
 
@@ -31,12 +32,11 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     private int secondClick = -1;
     private boolean pieceSelected = false;
     private byte[] currPieceMoves;
-    private volatile boolean moveReady;
+    private final SynchronousQueue<MovePacket> moveQueue = new SynchronousQueue<>();
 
 
     public ChessController(ChessScene chess, String startFen) throws CloneNotSupportedException, IOException {
         chessScene = chess;
-        moveReady = false;
         board = new Board(startFen);
         game = new ChessGame(board, this);
         chessScene.drawPieces(board);
@@ -167,7 +167,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             //condition: -> firstCLick != -1;
             pieceSelected = false;
             if (BoardHelper.contains(currPieceMoves, secondClick)) {
-                moveReady = true;
+                moveQueue.offer(new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick]!=EmptyPiece.EMPTY_PIECE));
             }
             return;
         }
@@ -207,13 +207,13 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     @Override
     public MovePacket requestMove() {
         System.out.println("player move requested");
-        while (!moveReady) {
-            Thread.onSpinWait();
-            //poll for move ready
+        try{
+             return moveQueue.take();
+        } catch (InterruptedException e) {
+            System.err.println("Errored while getting move");
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
         }
-        //System.out.println("move issued");
-        moveReady = false;
-        return new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick]!=EmptyPiece.EMPTY_PIECE);
     }
 
     @Override

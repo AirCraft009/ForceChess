@@ -230,25 +230,17 @@ public class Train {
 
 
     public static void main(String[] args) throws IOException {
-//        ChessBot randBot =  new ChessBot(new Evaluator.RandomEvaluator());
-//        SampleBuffer randBuff = new SampleBuffer(5000, "RandBuff");
-//        for (int i = 0; i < randBuff.length; i++) {
-//            i = randBot.selfPlayGame(300, i, randBuff.length, randBuff);
-//            randBot.setPos(PositionEncoder.Position.StartingPosition());
-//        }
-//        randBuff.writeSamples();
-
 
 //       second stage training with model
-        Train train = new Train("D400_10_RES_BLOCKS",  false, true);
+        Train train = new Train("D400_10_RES_BLOCKS",  true, true);
         //train.diagnose();
-        SampleBuffer s = new SampleBuffer( 10000, "endGame_3_Pieces", true);
+        SampleBuffer s = new SampleBuffer( 40000, "endGame_5_Pieces", true);
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
         System.out.println(Nd4j.getBackend().getClass().getName());
-        train.train(32, s, 12000, 4001);
+        train.train(64, s, 1000, 4001);
         train.saveNet();
         train.bot.selfPlayGame(400);
     }

@@ -186,7 +186,7 @@ public class BatchChessBot extends ChessBot{
 
     public static void main(String[] args) throws IOException {
         EndgameBufferBuilder eg = new EndgameBufferBuilder(110);
-        BatchChessBot bc = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("boardsNBots/bots/networks/D400_10_RES_BLOCKS.zip", true)), PositionUtils.fromFen("8/2b5/4q3/3k4/7K/8/8/8 w - - 0 1"), 400);
+        BatchChessBot bc = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("boardsNBots/bots/networks/D400_10_RES_BLOCKS.zip", true)), PositionUtils.fromFen("4k3/8/8/8/8/8/2R5/4K3 w - - 0 1"), 400);
         bc.selfPlayGame(400);
     }
 
