@@ -27,8 +27,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class ChessScene extends Stage {
-    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
-    private final String pathToImages = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
+    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
+    private final String pathToImages = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
     Group root;
     Constants constants;
     private ChessController controller;
@@ -39,7 +39,7 @@ public class ChessScene extends Stage {
 
     private Image[] images;
 
-    ChessScene(int sideLen) throws CloneNotSupportedException {
+    ChessScene(int sideLen, String startPos) throws CloneNotSupportedException {
         setBounds();
         basicInit(sideLen);
         generateImages();
@@ -48,8 +48,8 @@ public class ChessScene extends Stage {
         getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         try {
-            this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-            this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("boardsNBots/bots/networks/D400_10_RES_BLOCKS.zip", true)), 64));
+            this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
+            this.controller.setPlayers(controller, new ChessBot(new Evaluator.RandomEvaluator(), 1));
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");

@@ -17,7 +17,7 @@ public class BatchChessBot extends ChessBot{
     public static final float VIRTUAL_LOSS = 1F;
 
     // there to remove virtualLoss and virtualVisitCount
-    private final int[][] batchedMoves = new int[BATCH_SIZE][Move.MOVE_POSSIBILITIES];
+    private final short[][] batchedMoves = new short[BATCH_SIZE][Move.MOVE_POSSIBILITIES];
     private final DiversePair<Integer, GameState>[] endStates = new DiversePair[BATCH_SIZE];
     private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];          // all leaf-nodes affected by virtualLoss
     private final FlatArray batchedInputs;
@@ -92,7 +92,7 @@ public class BatchChessBot extends ChessBot{
                 tree.globalVisits++;
                 tree.n[node]++;
                 updateVirtual(node);
-                batchedMoves[nodeCount] = new int[0];           // empty array
+                batchedMoves[nodeCount] = new short[0];           // empty array
                 virtuallyAffectedNodes[nodeCount] = node;
                 endStates[nodeCount] = new DiversePair<>(0,GameState.StaleMate);
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);
@@ -155,7 +155,7 @@ public class BatchChessBot extends ChessBot{
 
                 // expand out all moves and set the policy
                 for (int j = 0; j < endStates[i].first(); j++) {
-                    int child = tree.addNewChild(node, batchedMoves[i][j]);
+                    int child = tree.addNewChild(node, (short) batchedMoves[i][j]);
                     tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
                 }
             }

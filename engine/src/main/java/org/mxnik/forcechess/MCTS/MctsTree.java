@@ -8,20 +8,20 @@ public final class MctsTree {
     // balances exploitation with exploration
     public static final float C_PUCT = 3.5F;
     // max amount of MctsNodes
-    public static final int POOL_SIZE = 500000;
+    public static final int POOL_SIZE =  500000;
     private static final float epsilon = 0.25f;
     private static final float alpha = 0.3f;
 
     public static final int ROOT = 0;
 
     // parallel arrays — one slot per node
-    public final int[]   parentIdx    = new int[POOL_SIZE]; // index of node above
-    public final int[]   firstChild   = new int[POOL_SIZE]; // index of first child
-    public final int[]   nextSibling  = new int[POOL_SIZE]; // linked list of children (nextSibling[node] == 0 if there are no more)
-    public final int[]   move         = new int[POOL_SIZE]; // moves for each position
+    public final int[]   parentIdx    = new int  [POOL_SIZE];   // index of node above
+    public final int[]   firstChild   = new int  [POOL_SIZE];   // index of first child
+    public final int[]   nextSibling  = new int  [POOL_SIZE];   // linked list of children (nextSibling[node] == 0 if there are no more)
+    public final short[] move         = new short[POOL_SIZE];   // moves for each position
     public final float[] w            = new float[POOL_SIZE];
     public final float[] p            = new float[POOL_SIZE];
-    public final int[]   n            = new int[POOL_SIZE];
+    public final short[] n            = new short[POOL_SIZE];
     // the mean score q can be calculated with w[x] / n[x]
 
     public int nextFree = 1; // 0 = root
@@ -32,7 +32,7 @@ public final class MctsTree {
      * @param index the node to add the child to
      * @param move the move this node repr
      */
-    public int addNewChild(int index, int move){
+    public int addNewChild(int index, short move){
         int newNode = nextFree++;
         parentIdx[newNode]   = index;
         this.move[newNode]        = move;
@@ -119,7 +119,7 @@ public final class MctsTree {
         Arrays.fill(nextSibling, 0, nextFree, 0);
         Arrays.fill(firstChild,0, nextFree, 0);
         Arrays.fill(w,0, nextFree, 0);
-        Arrays.fill(n,0, nextFree, 0);
+        Arrays.fill(n,0, nextFree, (short) 0);
         // p gets set directly
         nextFree = 1;       // set the ptr back to the start of the list
     }

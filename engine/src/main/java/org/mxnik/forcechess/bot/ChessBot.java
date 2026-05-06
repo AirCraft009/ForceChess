@@ -23,7 +23,7 @@ public class ChessBot implements Player {
 
     protected PositionEncoder.Position pos;                                        // state
     protected final MctsTree tree;                                                 // eval the states and chose with PUCT
-    protected final int[] moves = new int[MAX_MOVES_IN_POS];                       // pre-allocated move array to max search depth to avoid rapid allocs. and deallocs. in train-loop
+    protected final short[] moves = new short[MAX_MOVES_IN_POS];                       // pre-allocated move array to max search depth to avoid rapid allocs. and deallocs. in train-loop
     protected final int[] undoInfoStack = new int[MAX_SEARCH_DEPTH];               // all undoInformation in a stack so it can be accessed easily; access[cDepth - 1]
     protected final float[] moveDist = new float[Move.MOVE_POSSIBILITIES];         // will hold the distributions for all the most likely moves;
 
