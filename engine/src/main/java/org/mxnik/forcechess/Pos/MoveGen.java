@@ -157,7 +157,6 @@ public class MoveGen {
         }
 
         // King
-        // TODO: add castling
         long king = pos.WKing;
         while (!Bitboard.isEmpty(king)) {
             int sq = Bitboard.lsb(king);
