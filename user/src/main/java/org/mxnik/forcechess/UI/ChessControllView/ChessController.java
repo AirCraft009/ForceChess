@@ -6,6 +6,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyEvent;
 import org.mxnik.forcechess.*;
 import org.mxnik.forcechess.Chess.ChessGame;
@@ -14,9 +16,11 @@ import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.UI.Constants;
 
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.SynchronousQueue;
 
 import static org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen.getMovesFromPosition;
@@ -167,7 +171,38 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             //condition: -> firstCLick != -1;
             pieceSelected = false;
             if (BoardHelper.contains(currPieceMoves, secondClick)) {
-                moveQueue.offer(new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick]!=EmptyPiece.EMPTY_PIECE));
+                if(board.getBoard()[firstClick].getType() == PieceTypes.PAWN && (BoardHelper.getRow(secondClick) == 0 || BoardHelper.getRow(secondClick) == Board.sideLen-1)){
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("");
+                    alert.setHeaderText("Promote"); // oder null
+                    alert.setContentText("Choose a piece");
+
+                    ButtonType knight = new ButtonType("Knight");
+                    ButtonType bishop = new ButtonType("Bishop");
+                    ButtonType rook = new ButtonType("Rook");
+                    ButtonType queen = new ButtonType("Queen");
+
+                    alert.getButtonTypes().setAll(knight, bishop, rook, queen);
+
+                    Optional<ButtonType> result = alert.showAndWait();
+
+                    MoveType type;
+                    if (result.get() == knight){
+                        type = MoveType.PromotionN;
+                    }
+                    else if (result.get() == bishop) {
+                        type = MoveType.PromotionB;
+                    }
+                    else if (result.get() == rook) {
+                        type = MoveType.PromotionR;
+                    }
+                    else {
+                        type = MoveType.PromotionQ;
+                    }
+                    moveQueue.offer(new MovePacket(type, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
+                }else {
+                    moveQueue.offer(new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
+                }
             }
             return;
         }
