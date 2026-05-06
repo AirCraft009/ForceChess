@@ -4,9 +4,8 @@ import org.deeplearning4j.util.ModelSerializer;
 import org.mxnik.forcechess.DiversePair;
 import org.mxnik.forcechess.FlatArray;
 import org.mxnik.forcechess.GameState;
-import org.mxnik.forcechess.Pos.Move;
-import org.mxnik.forcechess.Pos.MoveGen;
-import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.mxnik.forcechess.Pos.*;
+import org.mxnik.forcechess.Training.EndgameBufferBuilder;
 import org.mxnik.forcechess.network.AlphaNet;
 
 import java.io.IOException;
@@ -26,6 +25,20 @@ public class BatchChessBot extends ChessBot{
 
     public BatchChessBot(BatchEvaluator evaluator, int playDepth) {
         super(null, playDepth);
+        this.evaluator = evaluator;
+        batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
+    }
+
+    public BatchChessBot(BatchEvaluator evaluator, String fen, int playDepth) {
+        super(null, playDepth, fen);
+        this.evaluator = evaluator;
+        batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
+    }
+
+    public BatchChessBot(BatchEvaluator evaluator, PositionEncoder.Position pos, int playDepth) {
+        super(null, playDepth);
+        this.pos = pos;
+        System.out.println(PositionUtils.toFen(pos));
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
     }
@@ -143,7 +156,7 @@ public class BatchChessBot extends ChessBot{
                 // expand out all moves and set the policy
                 for (int j = 0; j < endStates[i].first(); j++) {
                     int child = tree.addNewChild(node, batchedMoves[i][j]);
-                    tree.p[child] = results[i].policyV()[batchedMoves[i][j]];
+                    tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
                 }
             }
         }
@@ -172,7 +185,8 @@ public class BatchChessBot extends ChessBot{
 
 
     public static void main(String[] args) throws IOException {
-        BatchChessBot bc = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\boardsNBots\\bots\\networks\\D400_10_RES_BLOCKS.zip", true)),400);
+        EndgameBufferBuilder eg = new EndgameBufferBuilder(110);
+        BatchChessBot bc = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("boardsNBots/bots/networks/D400_10_RES_BLOCKS.zip", true)), PositionUtils.fromFen("4k3/8/8/8/8/8/2R5/4K3 w - - 0 1"), 400);
         bc.selfPlayGame(400);
     }
 

@@ -84,7 +84,8 @@ public class PositionUtils {
                 char p = pieces.charAt(parsePos);
                 parsePos ++;
                 if(Character.isDigit(p)){
-                    j += p - '0';
+                    // one will be added in the next loop
+                    j += (p - '0') - 1;
                     if(j > SIZE)
                         throw  new FenException("Gap between two pieces to big (more than 8 in sum): " + j, square);
                     continue;

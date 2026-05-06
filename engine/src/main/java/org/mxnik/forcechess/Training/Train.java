@@ -115,19 +115,11 @@ public class Train {
         System.out.println("Finished self play");
     }
 
-    private void trainFromBuffer(int batchSize, SampleBuffer buffer){
-        // SETUP
+    /**
+     * fit batchsize samples to the model randomly picked from the samplebuffer
+     */
+    private void trainFromBuffer(int batchSize, SampleBuffer buffer, INDArray inputs, INDArray piTargets, INDArray zTargets){
         // each sample: one position + its pi + its z
-        // inputs: [batchSize, 19, 8, 8]
-        INDArray inputs = Nd4j.zeros(batchSize, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE);
-        // policy targets: [batchSize, 65536] (the pi distribution)
-        INDArray piTargets = Nd4j.zeros(batchSize, Move.MOVE_POSSIBILITIES);
-        // value targets: [batchSize, 1] (the game outcome z)
-        INDArray zTargets = Nd4j.zeros(batchSize, 1);
-
-        // PLAY_GAMES & COLLECT_SAMPLES
-
-
         for (int i = 0; i < batchSize; i++) {
             SampleBuffer.TrainingSample s = buffer.sample();
 
@@ -146,12 +138,8 @@ public class Train {
                 new INDArray[] {piTargets, zTargets}
         ));
 
-        inputs.close();
-        piTargets.close();
-        zTargets.close();
-
         double scores = network.getModel().score();
-        System.out.printf("policy loss: %.4f\n", scores);
+        System.out.printf("network loss: %.6f\n", scores);
     }
 
     /**
@@ -199,9 +187,18 @@ public class Train {
      *                   - checkpoints are set as filename_n_checkPoint.zip
      */
     public void train(int batchSize, SampleBuffer buffer, int epoch, int checkPoint) throws IOException {
-        try {
+        // SETUP
+        // inputs: [batchSize, PLANES, 8, 8]
+        // policy targets: [batchSize, 65536] (the pi distribution)
+        // value targets: [batchSize, 1] (the game outcome z)
+        // initialize arrays ones to avoid alloc and dealloc
+        try (INDArray inputs = Nd4j.zeros(batchSize, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE);
+             INDArray piTargets = Nd4j.zeros(batchSize, Move.MOVE_POSSIBILITIES);
+             INDArray zTargets = Nd4j.zeros(batchSize, 1)) {
+
+
             for (int i = 1; i < epoch + 1; i++) {
-                trainFromBuffer(batchSize, buffer);
+                trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);
                 if (i % checkPoint == 0) {
                     saveCheckPoint();
                 }
@@ -233,24 +230,17 @@ public class Train {
 
 
     public static void main(String[] args) throws IOException {
-//        ChessBot randBot =  new ChessBot(new Evaluator.RandomEvaluator());
-//        SampleBuffer randBuff = new SampleBuffer(5000, "RandBuff");
-//        for (int i = 0; i < randBuff.length; i++) {
-//            i = randBot.selfPlayGame(300, i, randBuff.length, randBuff);
-//            randBot.setPos(PositionEncoder.Position.StartingPosition());
-//        }
-//        randBuff.writeSamples();
-
 
 //       second stage training with model
-        Train train = new Train("D400_10_RES_BLOCKS",  false, true);
+        Train train = new Train("D400_10_RES_BLOCKS",  true, true);
         //train.diagnose();
-        SampleBuffer s = new SampleBuffer( 10000, "endGame_3_Pieces", true);
+        SampleBuffer s = new SampleBuffer( 40000, "endGame_5_Pieces", true);
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
-        train.train(32, s, 12000, 4001);
+        System.out.println(Nd4j.getBackend().getClass().getName());
+        train.train(64, s, 1000, 4001);
         train.saveNet();
         train.bot.selfPlayGame(400);
     }

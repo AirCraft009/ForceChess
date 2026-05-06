@@ -7,6 +7,7 @@ import org.mxnik.forcechess.DiversePair;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.MoveGen;
+import org.mxnik.forcechess.Pos.PolicyIndex;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.io.IOException;
@@ -23,14 +24,14 @@ import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 public class EndgameBufferBuilder {
     // seed for reproducible outcomes
     private final static int SEED = 42;
-    private final static float WIN_WDL_BASE = 0.8F;
+    private final static float WIN_WDL_BASE = 0.9F;
     private final static float WIN_CLAMP = 1 - WIN_WDL_BASE;
     private final static float CURSED_WIN_WDL_BASE = 0.1F;
     private final static float CURSED_WIN_CLAMP = 0.1F;
     private final static float BLESSED_LOSS_WDL_BASE = -0.1F;
     private final static float BLESSED_LOSS_CLAMP = 0.1F;
-    private final static float LOSS_WDL_BASE = -0.8F;
-    private final static float LOSS_CLAMP = 1 + WIN_WDL_BASE;
+    private final static float LOSS_WDL_BASE = -0.9F;
+    private final static float LOSS_CLAMP = 1 - WIN_WDL_BASE;
 
     private final Random pieceCGen;
     private final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
@@ -125,7 +126,7 @@ public class EndgameBufferBuilder {
     /**
      * generates a legal position as a fenString with a fixed number of pieces including both kings
      */
-     String generateLegalFen(int pieceC){
+     public String generateLegalFen(int pieceC){
          var pos = generateLegalPosition(pieceC);
          return toFen(pos);
     }
@@ -133,7 +134,7 @@ public class EndgameBufferBuilder {
     /**
      * generates a legal position with a fixed number of pieces including both kings
      */
-    PositionEncoder.Position generateLegalPosition(int pieceC){
+    public PositionEncoder.Position generateLegalPosition(int pieceC){
         if(pieceC > 63){
             System.err.println("can't place more than 63 pieces");
             return null;
@@ -175,7 +176,8 @@ public class EndgameBufferBuilder {
                 firstPos = false;
                 moveCounter++;
 
-                float z = (float) clamp((bestWdl - 3) + 0.5, 0, 1);                    // 1 = win / 0 = cursed win
+                // -2 to center stalemate at 0; div by 2 to get win = 1 cursed win 0.5 stalem. 0; loss -1; cursed loss -0.5;
+                float z = ((float) (bestWdl - 2) / 2);
 
                 int dtzStart = Syzygy.TB_GET_DTZ(best);
                 int fromSq = Syzygy.TB_GET_FROM(best);
@@ -199,7 +201,7 @@ public class EndgameBufferBuilder {
 
                     float score = computeScore(moveWdl, moveDtz, dtzStart);
                     engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveTo, movePromotes));
-                    policyV[engineMove] = score;
+                    policyV[PolicyIndex.toPolicyIndex(engineMove)] = score;
 
                     if(score > bestScore){
                         bestScore = score;
@@ -286,8 +288,8 @@ public class EndgameBufferBuilder {
     }
 
     public static void main(String[] args) {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
-        eg.buildBufferOnEndgames(10000, 3, "endGame_3_Pieces");
+        EndgameBufferBuilder eg = new EndgameBufferBuilder();
+        eg.buildBufferOnEndgames(40000, 5, "endGame_5_Pieces");
     }
 
 }
