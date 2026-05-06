@@ -251,7 +251,7 @@ public final class PositionEncoder {
      *
      */
     public static final class Position {
-
+        //TODO: add more bitboards (attacked squares; move counter; moves to promotion)
         //  Piece bitboards (raw longs)
         public long WPawns;
         public long WKnights;
@@ -501,7 +501,7 @@ public final class PositionEncoder {
                     : checkChess(Bitboard.lsb(BKing), false);
         }
 
-        private boolean checkChess(int kingPos, boolean kingColor) {
+        boolean checkChess(int kingPos, boolean kingColor) {
             int kingRow = kingPos / SIZE;           // get Row
             int kingCol = kingPos % SIZE;           // get Col
 

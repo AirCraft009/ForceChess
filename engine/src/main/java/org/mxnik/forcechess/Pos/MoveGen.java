@@ -4,6 +4,8 @@ import org.mxnik.forcechess.Bitboard;
 import org.mxnik.forcechess.DiversePair;
 import org.mxnik.forcechess.GameState;
 
+import static org.mxnik.forcechess.Pos.PositionEncoder.Position.*;
+
 public class MoveGen {
 
     public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, boolean whiteToMove, int[] moves) {
@@ -163,6 +165,50 @@ public class MoveGen {
             offset = drainBitboard(pos.WPieces, pos.BPieces, Move.KING_LOOKUP[sq], sq, offset, moves);
         }
 
+        // CASTLES:::::: YIPPEE
+        if(pos.checkChess(true)){
+            return offset;
+        }
+
+        if (pos.queryCastlePerms(W_KINGSIDE)){
+            pos.WKingCastle = true;
+            int sq = Bitboard.lsb(pos.WKing);
+            for (int i = sq+1; i < 7; i++) {                   // iterate from the kingPos + 1 to the rookPos - 1
+                if (((pos.Occupied >> i) & 0x1) == 1L){       // a piece is blocking the way
+                    pos.WKingCastle = false;
+                    break;
+                }
+                if(pos.checkChess(i, pos.whiteToMove)){
+                    pos.WKingCastle = false;
+                    break;
+                }
+            }
+
+            if (pos.WKingCastle){
+                moves[offset++] = Move.of(sq, sq+2, Move.FLAG_CASTLE_K);
+            }
+        }
+
+        if (pos.queryCastlePerms(W_QUEENSIDE)){
+            pos.WQueenCastle = true;
+            int sq = Bitboard.lsb(pos.WKing);
+            for (int i = sq-1; i > 0; i--) {                   // iterate from the kingPos + 1 to the rookPos - 1
+                if (((pos.Occupied >> i) & 0x1) == 1L){       // a piece is blocking the way
+                    pos.WQueenCastle = false;
+                    break;
+                }
+                if(pos.checkChess(i, pos.whiteToMove)){
+                    pos.WQueenCastle = false;
+                    break;
+                }
+            }
+
+            if (pos.WQueenCastle){
+                moves[offset++] = Move.of(sq, sq-2, Move.FLAG_CASTLE_Q);
+            }
+        }
+
+
         return offset;
     }
 
@@ -253,12 +299,54 @@ public class MoveGen {
         }
 
         // King
-        // TODO: add castling
         long king = pos.BKing;
         while (!Bitboard.isEmpty(king)) {
             int sq = Bitboard.lsb(king);
             king = Bitboard.popLsb(king);
             offset = drainBitboard(pos.BPieces, pos.WPieces, Move.KING_LOOKUP[sq], sq, offset, moves);
+        }
+
+        // CASTLES:::::: YIPPEE
+        if(pos.checkChess(false)){
+            return offset;
+        }
+
+        if (pos.queryCastlePerms(B_KINGSIDE)){
+            pos.BKingCastle = true;
+            int sq = Bitboard.lsb(pos.BKing);
+            for (int i = sq+1; i < 7; i++) {                   // iterate from the kingPos + 1 to the rookPos - 1
+                if (((pos.Occupied >> i) & 0x1) == 1L){       // a piece is blocking the way
+                    pos.BKingCastle = false;
+                    break;
+                }
+                if(pos.checkChess(i, pos.whiteToMove)){
+                    pos.BKingCastle = false;
+                    break;
+                }
+            }
+
+            if (pos.BKingCastle){
+                moves[offset++] = Move.of(sq, sq+2, Move.FLAG_CASTLE_K);
+            }
+        }
+
+        if (pos.queryCastlePerms(B_QUEENSIDE)){
+            pos.BQueenCastle = true;
+            int sq = Bitboard.lsb(pos.BKing);
+            for (int i = sq-1; i > 0; i--) {                   // iterate from the kingPos + 1 to the rookPos - 1
+                if (((pos.Occupied >> i) & 0x1) == 1L){       // a piece is blocking the way
+                    pos.BQueenCastle = false;
+                    break;
+                }
+                if(pos.checkChess(i, pos.whiteToMove)){
+                    pos.BQueenCastle = false;
+                    break;
+                }
+            }
+
+            if (pos.BQueenCastle){
+                moves[offset++] = Move.of(sq, sq-2, Move.FLAG_CASTLE_Q);
+            }
         }
 
         return offset;
