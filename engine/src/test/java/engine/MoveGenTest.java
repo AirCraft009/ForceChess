@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mxnik.forcechess.ChessSquares.*;
+import static org.mxnik.forcechess.Pos.PositionEncoder.Position.W_KINGSIDE;
 
 // KI-Generiert
 
@@ -873,11 +874,13 @@ class MoveGenTest {
             place(pos, true, Piece.ROOK, sq(7, 0)); // h1
             place(pos, false, Piece.KING, sq(4, 7));
             pos.WKingCastle = true;
+            pos.castlePerms = W_KINGSIDE;
             return pos;
         }
 
         PositionEncoder.Position whiteQSReady() {
             var pos = emptyPosition();
+            pos.castlePerms = 0b1111;
             place(pos, true, Piece.KING, sq(4, 0)); // e1
             place(pos, true, Piece.ROOK, sq(0, 0)); // a1
             place(pos, false, Piece.KING, sq(4, 7));
@@ -886,32 +889,31 @@ class MoveGenTest {
         }
 
 
-        // SKIP TESTS (CASTLING NOT YET IMPLEMENTED)
+        @Test
+        @DisplayName("White O-O generated when path is clear and rights are set")
+        void whiteKingSideCastleGenerated() {
+            int[] m = genPseudo(whiteKSReady(), true);
+            assertTrue(Arrays.stream(m).anyMatch(mv ->
+                            Move.from(mv) == sq(4,0) && Move.to(mv) == sq(6,0)
+                                    && Move.baseFlag(Move.flags(mv)) == Move.FLAG_CASTLE_K),
+                    "White O-O must be generated");
+        }
 
-//        @Test
-//        @DisplayName("White O-O generated when path is clear and rights are set")
-//        void whiteKingSideCastleGenerated() {
-//            int[] m = genPseudo(whiteKSReady(), true);
-//            assertTrue(Arrays.stream(m).anyMatch(mv ->
-//                            Move.from(mv) == sq(4,0) && Move.to(mv) == sq(6,0)
-//                                    && Move.baseFlag(Move.flags(mv)) == Move.FLAG_CASTLE_K),
-//                    "White O-O must be generated");
-//        }
-//
-//        @Test
-//        @DisplayName("White O-O-O generated when path is clear and rights are set")
-//        void whiteQueenSideCastleGenerated() {
-//            int[] m = genPseudo(whiteQSReady(), true);
-//            assertTrue(Arrays.stream(m).anyMatch(mv ->
-//                            Move.from(mv) == sq(4,0) && Move.to(mv) == sq(2,0)
-//                                    && Move.baseFlag(Move.flags(mv)) == Move.FLAG_CASTLE_Q),
-//                    "White O-O-O must be generated");
-//        }
+        @Test
+        @DisplayName("White O-O-O generated when path is clear and rights are set")
+        void whiteQueenSideCastleGenerated() {
+            int[] m = genPseudo(whiteQSReady(), true);
+            assertTrue(Arrays.stream(m).anyMatch(mv ->
+                            Move.from(mv) == sq(4,0) && Move.to(mv) == sq(2,0)
+                                    && Move.baseFlag(Move.flags(mv)) == Move.FLAG_CASTLE_Q),
+                    "White O-O-O must be generated");
+        }
 
         @Test
         @DisplayName("White O-O NOT generated when f1 is occupied")
         void whiteKSBlockedF1() {
             var pos = whiteKSReady();
+            pos.castlePerms = 0b1111;
             place(pos, true, Piece.BISHOP, sq(5, 0)); // f1
             assertFalse(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
                     Move.from(mv) == sq(4, 0) && Move.to(mv) == sq(6, 0)
@@ -922,6 +924,7 @@ class MoveGenTest {
         @DisplayName("White O-O NOT generated when g1 is occupied")
         void whiteKSBlockedG1() {
             var pos = whiteKSReady();
+            pos.castlePerms = 0b1111;
             place(pos, true, Piece.KNIGHT, sq(6, 0)); // g1
             assertFalse(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
                     Move.from(mv) == sq(4, 0) && Move.to(mv) == sq(6, 0)
@@ -932,6 +935,7 @@ class MoveGenTest {
         @DisplayName("White O-O-O NOT generated when d1 is occupied")
         void whiteQSBlockedD1() {
             var pos = whiteQSReady();
+            pos.castlePerms = 0b1111;
             place(pos, true, Piece.QUEEN, sq(3, 0)); // d1
             assertFalse(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
                     Move.from(mv) == sq(4, 0) && Move.to(mv) == sq(2, 0)
@@ -942,7 +946,7 @@ class MoveGenTest {
         @DisplayName("White O-O NOT generated without castling rights")
         void whiteKSNoRights() {
             var pos = whiteKSReady();
-            pos.WKingCastle = false;
+            pos.castlePerms = 0;
             assertFalse(Arrays.stream(genPseudo(pos, true)).anyMatch(mv ->
                     Move.from(mv) == sq(4, 0) && Move.to(mv) == sq(6, 0)
                             && Move.baseFlag(Move.flags(mv)) == Move.FLAG_CASTLE_K));
