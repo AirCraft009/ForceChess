@@ -49,7 +49,7 @@ public class ChessScene extends Stage {
 
         try {
             this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-            this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("boardsNBots/bots/networks/D400_10_RES_BLOCKS.zip", true)), 64));
+            this.controller.setPlayers(controller, controller);
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");

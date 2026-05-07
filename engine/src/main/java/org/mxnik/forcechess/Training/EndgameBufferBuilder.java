@@ -3,6 +3,7 @@ package org.mxnik.forcechess.Training;
 import net.chesstango.gardel.fen.FEN;
 import net.chesstango.piazzolla.syzygy.Syzygy;
 import net.chesstango.piazzolla.syzygy.SyzygyPosition;
+import org.mxnik.forcechess.Bitboard;
 import org.mxnik.forcechess.DiversePair;
 import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.Pos.Move;
@@ -11,6 +12,7 @@ import org.mxnik.forcechess.Pos.PolicyIndex;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
 import static java.lang.Math.abs;
@@ -24,14 +26,14 @@ import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 public class EndgameBufferBuilder {
     // seed for reproducible outcomes
     private final static int SEED = 42;
-    private final static float WIN_WDL_BASE = 0.9F;
-    private final static float WIN_CLAMP = 1 - WIN_WDL_BASE;
-    private final static float CURSED_WIN_WDL_BASE = 0.1F;
-    private final static float CURSED_WIN_CLAMP = 0.1F;
-    private final static float BLESSED_LOSS_WDL_BASE = -0.1F;
-    private final static float BLESSED_LOSS_CLAMP = 0.1F;
-    private final static float LOSS_WDL_BASE = -0.9F;
-    private final static float LOSS_CLAMP = 1 - WIN_WDL_BASE;
+    private final static float WIN_WDL_BASE = 5F;
+    private final static float WIN_CLAMP = 10 - WIN_WDL_BASE;
+    private final static float CURSED_WIN_WDL_BASE = 0.5F;
+    private final static float CURSED_WIN_CLAMP = 0.5F;
+    private final static float BLESSED_LOSS_WDL_BASE = -0.5F;
+    private final static float BLESSED_LOSS_CLAMP = 0.5F;
+    private final static float LOSS_WDL_BASE = -5F;
+    private final static float LOSS_CLAMP = 10 - WIN_WDL_BASE;
 
     private final Random pieceCGen;
     private final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
@@ -182,7 +184,8 @@ public class EndgameBufferBuilder {
                 int dtzStart = Syzygy.TB_GET_DTZ(best);
                 int fromSq = Syzygy.TB_GET_FROM(best);
                 int toSq = Syzygy.TB_GET_TO(best);
-
+                int bestPromote = Syzygy.TB_GET_PROMOTES(best);
+                int syzygyBestM = Move.of(fromSq, toSq, Move.toFlags(pos, toSq, bestPromote));
 
 //                System.out.println("position: " + fen);
 //                System.out.printf("Best move: %d -> %d | WDL: %d | DTZ: %d%n", fromSq, toSq, bestWdl, dtzStart);
@@ -201,15 +204,31 @@ public class EndgameBufferBuilder {
 
                     float score = computeScore(moveWdl, moveDtz, dtzStart);
                     engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveTo, movePromotes));
-                    policyV[PolicyIndex.toPolicyIndex(engineMove)] = score;
+                    if(syzygyBestM == engineMove){
+                        score += WIN_WDL_BASE;
+                        System.out.println("correct this happens once every run: " + score);
+                    }
+                    policyV[PolicyIndex.toPolicyIndex(engineMove)] = score + ((Move.of(fromSq, toSq, Move.toFlags(pos, toSq, bestPromote)) == engineMove)? WIN_WDL_BASE : 0);
 
                     if(score > bestScore){
+                        System.out.println("new bestScore: " + score);
+                        System.out.printf("new bestMove: %d -> %d\n", Move.from(engineMove), Move.to(engineMove));
                         bestScore = score;
                         bestMove = engineMove;
                     }
                 }
-                buffer.addSample(PositionEncoder.encodeFlat(pos), softMax(policyV), z);
-//                System.out.printf("bestM: %d -> %d\n", Move.from(bestMove), Move.to(bestMove));
+
+                float[] softmaxxed = softMax(policyV, 2F);
+                buffer.addSample(PositionEncoder.encodeFlat(pos), softmaxxed, z);
+//               System.out.printf("bestM: %d -> %d\n", Move.from(bestMove), Move.to(bestMove));
+                System.out.println("new Move");
+                System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
+                System.out.println(Move.from(bestMove));
+                System.out.println(Move.to(bestMove));
+                System.out.println("best Move");
+                System.out.println(fromSq);
+                System.out.println(toSq);
+
                 pos.makeMove(bestMove);
             }else {
                 pos = generateLegalPosition(pieceC); // generate new position if position can no longer be found in table
@@ -227,15 +246,16 @@ public class EndgameBufferBuilder {
      * turns float[] into softmaxxed version of self.
      * modifies memory in place. No new float[] is allocated
      */
-    private float[] softMax(float[] values){
-        float max = values[0];
-        for (float val : values)
-            if (val > max)
-                max = val;
+    private float[] softMax(float[] targets, float temp){
+        float[] values = new float[targets.length];
+        float max = targets[0];
+        for (float val : targets)
+            if (val * temp > max)
+                max = val * temp;
 
         float sum = 0F;
-        for (int i = 0; i < values.length; i++) {
-            values[i] = (float) Math.exp(values[i] - max);          // classical SOFTMAX (projecting onto e^x)
+        for (int i = 0; i < targets.length; i++) {
+            values[i] = (float) Math.exp((targets[i] * temp) - max);          // classical SOFTMAX (projecting onto e^x)
             sum  += values[i];
         }
 
@@ -288,8 +308,8 @@ public class EndgameBufferBuilder {
     }
 
     public static void main(String[] args) {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder();
-        eg.buildBufferOnEndgames(40000, 5, "endGame_5_Pieces");
+        EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
+        eg.buildBufferOnEndgames(10, 5, "endGame_5_Pieces");
     }
 
 }
