@@ -1,8 +1,8 @@
 package org.mxnik.forcechess.Pos;
 
-import org.mxnik.forcechess.Bitboard;
-import org.mxnik.forcechess.DiversePair;
-import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.General.Bitboard;
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.Moves.GameState;
 
 import static org.mxnik.forcechess.Pos.PositionEncoder.Position.*;
 
@@ -313,7 +313,7 @@ public class MoveGen {
         if (pos.queryCastlePerms(B_KINGSIDE)){
             pos.BKingCastle = true;
             int sq = Bitboard.lsb(pos.BKing);
-            for (int i = sq+1; i < 7; i++) {                   // iterate from the kingPos + 1 to the rookPos - 1
+            for (int i = sq+1; i < 63; i++) {                 // iterate from the kingPos + 1 to the rookPos - 1
                 if (((pos.Occupied >> i) & 0x1) == 1L){       // a piece is blocking the way
                     pos.BKingCastle = false;
                     break;
@@ -332,7 +332,7 @@ public class MoveGen {
         if (pos.queryCastlePerms(B_QUEENSIDE)){
             pos.BQueenCastle = true;
             int sq = Bitboard.lsb(pos.BKing);
-            for (int i = sq-1; i > 0; i--) {                   // iterate from the kingPos + 1 to the rookPos - 1
+            for (int i = sq-1; i > 56; i--) {                 // iterate from the kingPos + 1 to the rookPos - 1
                 if (((pos.Occupied >> i) & 0x1) == 1L){       // a piece is blocking the way
                     pos.BQueenCastle = false;
                     break;

@@ -1,14 +1,14 @@
 package org.mxnik.forcechess.Pos;
 
-import org.mxnik.forcechess.Bitboard;
+import org.mxnik.forcechess.General.Bitboard;
 import org.mxnik.forcechess.ChessSquares;
-import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.Moves.GameState;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-import static org.mxnik.forcechess.RayDetection.*;
-import static org.mxnik.forcechess.RayDetection.KNIGHT_COL;
+import static org.mxnik.forcechess.Moves.RayDetection.*;
+import static org.mxnik.forcechess.Moves.RayDetection.KNIGHT_COL;
 import static org.mxnik.forcechess.ChessSquares.*;
 import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 
@@ -919,6 +919,8 @@ public final class PositionEncoder {
             for (int i = 48; i < 56; i++) {
                 p.pieceMap[i] = (byte) Piece.of(Piece.BLACK, Piece.PAWN);
             }
+
+            p.whiteToMove = true;
 
             return p;
         }

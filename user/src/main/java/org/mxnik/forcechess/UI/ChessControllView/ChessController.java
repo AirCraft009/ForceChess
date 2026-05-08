@@ -1,19 +1,22 @@
 package org.mxnik.forcechess.UI.ChessControllView;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
-import org.mxnik.forcechess.*;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.GameControl.Callback;
+import org.mxnik.forcechess.GameControl.Player;
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.Moves.GameState;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.Moves.MoveType;
 import org.mxnik.forcechess.UI.Constants;
 
 import java.io.IOException;

@@ -1,6 +1,6 @@
 package org.mxnik.forcechess.Training;
 
-import org.mxnik.forcechess.FileLocations;
+import org.mxnik.forcechess.General.FileLocations;
 
 import java.io.*;
 import java.nio.ByteBuffer;

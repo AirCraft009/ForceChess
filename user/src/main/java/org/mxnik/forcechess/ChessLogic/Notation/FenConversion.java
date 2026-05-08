@@ -1,6 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Notation;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
-import org.mxnik.forcechess.FenException;
+import org.mxnik.forcechess.General.FenException;
 
 public class FenConversion {
 

@@ -1,7 +1,7 @@
 package engine;
 
 import org.junit.jupiter.api.*;
-import org.mxnik.forcechess.Bitboard;
+import org.mxnik.forcechess.General.Bitboard;
 
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.MoveGen;
@@ -1308,11 +1308,10 @@ class MoveGenTest {
                 assertEquals(400, perft(PositionEncoder.Position.StartingPosition(), 2, true));
             }
 
-            // Depth 3 (8902) and 4 (197281) — enable once the engine is fast enough.
-            // @Test @DisplayName("Perft depth 3 = 8902")
-            // void perftD3() { assertEquals(8902, perft(startPos(), 3, true)); }
-            // @Test @DisplayName("Perft depth 4 = 197281")
-            // void perftD4() { assertEquals(197281, perft(startPos(), 4, true)); }
+             @Test @DisplayName("Perft depth 3 = 8902")
+             void perftD3() { assertEquals(8902, perft(PositionEncoder.Position.StartingPosition(), 3, true)); }
+             @Test @DisplayName("Perft depth 4 = 197281")
+             void perftD4() { assertEquals(197281, perft(PositionEncoder.Position.StartingPosition(), 4, true)); }
 
             @Test
             @DisplayName("No move has from == to in starting position")

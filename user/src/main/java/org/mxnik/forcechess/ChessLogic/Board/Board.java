@@ -1,17 +1,17 @@
 package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
-import org.mxnik.forcechess.FenException;
+import org.mxnik.forcechess.General.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
-import org.mxnik.forcechess.DiversePair;
+import org.mxnik.forcechess.General.DiversePair;
 
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
-import static org.mxnik.forcechess.RayDetection.*;
+import static org.mxnik.forcechess.Moves.RayDetection.*;
 
 public class Board {
     public static int sideLen = 8;

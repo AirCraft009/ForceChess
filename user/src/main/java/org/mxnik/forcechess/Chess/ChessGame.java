@@ -1,12 +1,11 @@
 package org.mxnik.forcechess.Chess;
 
-import org.mxnik.forcechess.Callback;
+import org.mxnik.forcechess.GameControl.Callback;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
-import org.mxnik.forcechess.GameState;
-import org.mxnik.forcechess.MovePacket;
-import org.mxnik.forcechess.Player;
-import org.mxnik.forcechess.Pos.MoveGen;
+import org.mxnik.forcechess.Moves.GameState;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.GameControl.Player;
 
 public final class ChessGame implements Runnable{
     private  Player white;

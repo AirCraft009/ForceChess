@@ -1,12 +1,10 @@
 package org.mxnik.forcechess.Pos;
 
-import org.mxnik.forcechess.Bitboard;
-import org.mxnik.forcechess.FenException;
+import org.mxnik.forcechess.General.Bitboard;
+import org.mxnik.forcechess.General.FenException;
 
 import java.util.Arrays;
-import java.util.Random;
 
-import static org.mxnik.forcechess.Pos.Move.ROW_1;
 import static org.mxnik.forcechess.Pos.Piece.*;
 import static org.mxnik.forcechess.Pos.PositionEncoder.Position.*;
 import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;

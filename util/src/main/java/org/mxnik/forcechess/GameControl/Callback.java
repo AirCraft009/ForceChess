@@ -1,4 +1,6 @@
-package org.mxnik.forcechess;
+package org.mxnik.forcechess.GameControl;
+
+import org.mxnik.forcechess.Moves.GameState;
 
 public interface Callback {
 
