@@ -60,7 +60,7 @@ public final class PositionEncoder {
     private static final int PLANE_B_MOBILITY = 22;
     private static final int PLANE_W_ATTACKS  = 23;
     private static final int PLANE_B_ATTACKS  = 24;
-    private static final short[] tempBuffer = new short[MAX_MOVES_IN_POS];
+    private static final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
 
     private PositionEncoder() {}
 
@@ -184,9 +184,6 @@ public final class PositionEncoder {
         }
         attackBitboard &= pos.WPieces;
         encodeBitboard(attackBitboard, offset + PLANE_B_ATTACKS * PLANE_SIZE, tensor);
-
-
-
 
 
         return offset + TENSOR_SIZE;
