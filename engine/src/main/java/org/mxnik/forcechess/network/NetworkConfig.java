@@ -10,6 +10,9 @@ import org.deeplearning4j.nn.weights.WeightInit;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 import org.nd4j.linalg.activations.Activation;
+import org.nd4j.linalg.api.memory.conf.WorkspaceConfiguration;
+import org.nd4j.linalg.api.memory.enums.AllocationPolicy;
+import org.nd4j.linalg.api.memory.enums.LearningPolicy;
 import org.nd4j.linalg.learning.config.Adam;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
 
@@ -220,5 +223,16 @@ public final class NetworkConfig {
         }
 
         return input;
+    }
+
+    /**
+     * configure the workspace to avoid the process detaching from the GPU every time
+     */
+    public static WorkspaceConfiguration buildWorkspace(){
+        // HELP FROM AI (CLAUDE)
+        return WorkspaceConfiguration.builder()
+                .policyAllocation(AllocationPolicy.STRICT)
+                .policyLearning(LearningPolicy.FIRST_LOOP)
+                .build();
     }
 }
