@@ -7,6 +7,7 @@ import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.Training.EndgameBufferBuilder;
 import org.mxnik.forcechess.network.AlphaNet;
+import org.mxnik.forcechess.network.NetworkConfig;
 
 import java.io.IOException;
 
@@ -17,7 +18,7 @@ public class BatchChessBot extends ChessBot{
     public static final float VIRTUAL_LOSS = 1F;
 
     // there to remove virtualLoss and virtualVisitCount
-    private final short[][] batchedMoves = new short[BATCH_SIZE][Move.MOVE_POSSIBILITIES];
+    private final int[][] batchedMoves = new int[BATCH_SIZE][Move.MOVE_POSSIBILITIES];
     private final DiversePair<Integer, GameState>[] endStates = new DiversePair[BATCH_SIZE];
     private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];          // all leaf-nodes affected by virtualLoss
     private final FlatArray batchedInputs;
@@ -92,7 +93,7 @@ public class BatchChessBot extends ChessBot{
                 tree.globalVisits++;
                 tree.n[node]++;
                 updateVirtual(node);
-                batchedMoves[nodeCount] = new short[0];           // empty array
+                batchedMoves[nodeCount] = new int[0];           // empty array
                 virtuallyAffectedNodes[nodeCount] = node;
                 endStates[nodeCount] = new DiversePair<>(0,GameState.StaleMate);
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);
@@ -155,7 +156,7 @@ public class BatchChessBot extends ChessBot{
 
                 // expand out all moves and set the policy
                 for (int j = 0; j < endStates[i].first(); j++) {
-                    int child = tree.addNewChild(node, (short) batchedMoves[i][j]);
+                    int child = tree.addNewChild(node, batchedMoves[i][j]);
                     tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
                 }
             }
@@ -186,7 +187,7 @@ public class BatchChessBot extends ChessBot{
 
     public static void main(String[] args) throws IOException {
         EndgameBufferBuilder eg = new EndgameBufferBuilder(110);
-        BatchChessBot bc = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("boardsNBots/bots/networks/D400_10_RES_BLOCKS.zip", true)), PositionUtils.fromFen("4k3/8/8/8/8/8/2R5/4K3 w - - 0 1"), 400);
+        BatchChessBot bc = new BatchChessBot(new AlphaNet(NetworkConfig.buildNet()), PositionUtils.fromFen("4k3/8/8/8/8/8/2R5/4K3 w - - 0 1"), 400);
         bc.selfPlayGame(400);
     }
 

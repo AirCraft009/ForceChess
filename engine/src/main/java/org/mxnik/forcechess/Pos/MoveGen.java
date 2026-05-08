@@ -8,7 +8,7 @@ import static org.mxnik.forcechess.Pos.PositionEncoder.Position.*;
 
 public class MoveGen {
 
-    public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, boolean whiteToMove, short[] moves) {
+    public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, boolean whiteToMove, int[] moves) {
         int newOff = generateMoves(pos, 0, whiteToMove, moves);
         if(newOff == 0){                                       // no new moves
             boolean check = pos.checkChess(!whiteToMove);           // other colored king still in chack
@@ -27,7 +27,7 @@ public class MoveGen {
      * @param whiteToMove passed separately for testing purposes
      * @return new offset
      */
-    public static int generateMoves(PositionEncoder.Position pos, int offset, boolean whiteToMove, short[] moves) {
+    public static int generateMoves(PositionEncoder.Position pos, int offset, boolean whiteToMove, int[] moves) {
         int pseudoOffset = generatePseudoMoves(pos, offset, whiteToMove, moves);
         int legalOffset = pseudoOffset;
 
@@ -62,14 +62,14 @@ public class MoveGen {
      * @param moves    pre-allocated move array (max 256 * search depth)
      * @return new offset
      */
-    public static int generatePseudoMoves(PositionEncoder.Position position, int offset, boolean whiteToMove, short[] moves) {
+    public static int generatePseudoMoves(PositionEncoder.Position position, int offset, boolean whiteToMove, int[] moves) {
         if (whiteToMove) return generateMovesW(position, offset, moves);
         return generateMovesB(position, offset, moves);
     }
 
     // White
 
-    private static int generateMovesW(PositionEncoder.Position pos, int offset, short[] moves) {
+    private static int generateMovesW(PositionEncoder.Position pos, int offset, int[] moves) {
         // Pawn pushes — can't land on any occupied square
         long singleP = (pos.WPawns << PositionEncoder.SIZE) & ~pos.Occupied;
         // log. and with single push because every double push has to also have a single push avail. if not then pawn + firstRank = blocked
@@ -214,7 +214,7 @@ public class MoveGen {
 
     // Black
 
-    private static int generateMovesB(PositionEncoder.Position pos, int offset, short[] moves) {
+    private static int generateMovesB(PositionEncoder.Position pos, int offset, int[] moves) {
         // Pawn pushes — can't land on any occupied square
         long singleP = (pos.BPawns >>> PositionEncoder.SIZE) & ~pos.Occupied;
         // log. and with single push because every double push has to also have a single push avail. if not then pawn + firstRank = blocked
@@ -414,7 +414,7 @@ public class MoveGen {
      * tagging each move as capture or quiet based on enemy occupancy.
      */
     private static int drainBitboard(long ownPieces, long enemyPieces, long endPositions,
-                                     int startSq, int offset, short[] moves) {
+                                     int startSq, int offset, int[] moves) {
         endPositions &= ~ownPieces; // never land on own pieces
 
         while (endPositions != 0L) {
@@ -435,7 +435,7 @@ public class MoveGen {
      * The source square is recovered by subtracting the move offset.
      */
     private static int formatPawnMoves(long bitBoard, int moveOffset, int offset,
-                                       int flags, short[] moves) {
+                                       int flags, int[] moves) {
         while (bitBoard != 0L) {
             int sq = Bitboard.lsb(bitBoard);
             bitBoard = Bitboard.popLsb(bitBoard);
