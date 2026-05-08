@@ -3,7 +3,7 @@ package org.mxnik.forcechess.Training;
 
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.util.ModelSerializer;
-import org.mxnik.forcechess.FileLocations;
+import org.mxnik.forcechess.General.FileLocations;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 import org.mxnik.forcechess.bot.BatchChessBot;

@@ -1,4 +1,4 @@
-package org.mxnik.forcechess;
+package org.mxnik.forcechess.General;
 
 public class FlatArray {
     public final float[] arr;

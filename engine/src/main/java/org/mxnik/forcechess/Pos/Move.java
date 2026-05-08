@@ -7,8 +7,8 @@ package org.mxnik.forcechess.Pos;
 // └─> bits(12-14) Type, bit 15 (is a capture)
 
 import net.chesstango.piazzolla.syzygy.Syzygy;
-import org.mxnik.forcechess.MovePacket;
-import org.mxnik.forcechess.MoveType;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.Moves.MoveType;
 
 import static org.mxnik.forcechess.Pos.Piece.EMPTY_PIECE;
 

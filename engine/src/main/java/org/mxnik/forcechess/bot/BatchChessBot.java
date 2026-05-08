@@ -1,9 +1,8 @@
 package org.mxnik.forcechess.bot;
 
-import org.deeplearning4j.util.ModelSerializer;
-import org.mxnik.forcechess.DiversePair;
-import org.mxnik.forcechess.FlatArray;
-import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.General.FlatArray;
+import org.mxnik.forcechess.Moves.GameState;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.Training.EndgameBufferBuilder;
 import org.mxnik.forcechess.network.AlphaNet;
@@ -68,12 +67,24 @@ public class BatchChessBot extends ChessBot{
     /**
      * returns the move with the highest visit count after n (to the closest batch) moves
      */
+    @Override
     public int bestMoveUCB(int n){
         // an entire batch is evaluated at once
         for (int i = 0; i < n; i+=BATCH_SIZE) {
             simulate();
         }
         return tree.move[tree.highestVisitNode(0)];
+    }
+
+    /**
+     * returns the move with the highest visit count after n moves
+     */
+    @Override
+    public int bestMove(int n){
+        for (int i = 0; i < n; i+=BATCH_SIZE) {
+            simulate();
+        }
+        return tree.move[tree.highestScoreChild(ROOT)];
     }
 
 
@@ -183,6 +194,7 @@ public class BatchChessBot extends ChessBot{
             node = tree.parentIdx[node];
         }
     }
+
 
 
     public static void main(String[] args) throws IOException {

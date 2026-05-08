@@ -2,12 +2,12 @@ package org.mxnik.forcechess.bot;
 
 import org.deeplearning4j.util.ModelSerializer;
 import org.mxnik.forcechess.MCTS.MctsTree;
-import org.mxnik.forcechess.MovePacket;
-import org.mxnik.forcechess.Player;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.GameControl.Player;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.network.AlphaNet;
 import org.mxnik.forcechess.Training.SampleBuffer;
-import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.Moves.GameState;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +29,7 @@ public class ChessBot implements Player {
 
     protected final Evaluator evaluator;
     protected int depth = 1;                                                      // depth = 1 da root immer existiert
-    private int playDepth;
+    protected int playDepth;
 
     public ChessBot(Evaluator evaluator, int playDepth, String fen){
         this.evaluator = evaluator;

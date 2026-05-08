@@ -1,22 +1,13 @@
 package org.mxnik.forcechess.network;
 
-import org.datavec.api.util.RecordUtils;
 import org.deeplearning4j.nn.conf.WorkspaceMode;
 import org.deeplearning4j.nn.graph.ComputationGraph;
-import org.mxnik.forcechess.GameState;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.bot.BatchEvaluator;
-import org.mxnik.forcechess.bot.ChessBot;
-import org.mxnik.forcechess.bot.Evaluator;
-import org.nd4j.linalg.api.memory.MemoryWorkspace;
 import org.nd4j.linalg.api.memory.conf.WorkspaceConfiguration;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
-
-import java.util.Arrays;
-
-import static org.mxnik.forcechess.network.NetworkConfig.RES_BLOCKS;
 
 /**
  * The neural net used for evaluating position and returning the bestMoveUCB

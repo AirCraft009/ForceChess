@@ -1,14 +1,12 @@
 package engine;
 
-import org.bytedeco.libfreenect._freenect_device;
 import org.junit.jupiter.api.*;
-import org.mxnik.forcechess.Bitboard;
+import org.mxnik.forcechess.General.Bitboard;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.MoveGen;
 import org.mxnik.forcechess.Pos.Piece;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
-import javax.management.MXBean;
 import static org.mxnik.forcechess.ChessSquares.*;
 
 import java.util.Arrays;
