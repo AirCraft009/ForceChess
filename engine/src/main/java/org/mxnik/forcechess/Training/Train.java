@@ -1,8 +1,10 @@
 package org.mxnik.forcechess.Training;
 
 
+import org.bytedeco.javacv.FrameFilter;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.util.ModelSerializer;
+import org.mxnik.forcechess.General.ConsoleBar;
 import org.mxnik.forcechess.General.FileLocations;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.PositionEncoder;
@@ -103,8 +105,11 @@ public class Train {
      */
     public void selfPlayGames(int size, int moveDepth, SampleBuffer buffer) throws IOException {
         try {
-            for (int i = buffer.getPtr(); i < size; i++) {
-                i = bot.selfPlayGame(moveDepth, i, size, buffer);
+            System.out.println();
+            System.out.println("\tStarting self-play game session: ");
+            System.out.println("-".repeat(ConsoleBar.WIDTH + 2));
+            for (int i = 0; i + buffer.getPtr() < size; i++) {
+                i = bot.selfPlayGame(moveDepth, i, size - buffer.getPtr(), buffer);
                 bot.resetCore();
                 bot.setPos(PositionEncoder.Position.StartingPosition());
             }
@@ -112,6 +117,7 @@ public class Train {
             System.err.println("crashed during self-play buffer progress was saved\n error: " + e);
             buffer.writeSamples();
         }
+        System.out.println();
         System.out.println("Finished self play");
     }
 
@@ -138,8 +144,7 @@ public class Train {
                 new INDArray[] {piTargets, zTargets}
         ));
 
-        double scores = network.getModel().score();
-        System.out.printf("network loss: %.6f\n", scores);
+
     }
 
     /**
@@ -154,9 +159,50 @@ public class Train {
      *                   - checkpoints are set as filename_n_checkPoint.zip
      */
     public void train(int batchSize, int sampleBufferSize, int n, int epoch, int checkPoint, boolean saveBuffer) throws IOException {
-        SampleBuffer buffer = new SampleBuffer(sampleBufferSize, fileName + "_buffer", false);
+        SampleBuffer buffer = new SampleBuffer(sampleBufferSize, fileName, false);
         train(batchSize, sampleBufferSize, n, epoch, checkPoint, buffer, saveBuffer);
     }
+
+    /**
+     *
+     * Trains the AI-model after playing selfPlayGames
+     *
+     * @param batchSize how big the batch is that the training is used on
+     * @param sampleBufferSize amount of positions in the SampleBuffer from the self-play
+     * @param n how many MCTS evals per move
+     * @param epoch how many times the net will be trained (uses the same sample buffer)
+     * @param checkPoint how many batches have to be played till a checkpoint is saved <p></p>
+     *                   - checkpoints are set as filename_n_checkPoint.zip
+     * @param sequences how many times the process should be repeated (self-play + training)
+     */
+    public void train(int batchSize, int sampleBufferSize, int n, int epoch, int checkPoint, int sequences, boolean saveBuffer) throws IOException {
+        SampleBuffer buffer = new SampleBuffer(sampleBufferSize * sequences, fileName, false);
+        for (int i = 0; i < sequences; i++) {
+            train(batchSize, sampleBufferSize, n, epoch, checkPoint, buffer, saveBuffer);
+        }
+
+    }
+
+    /**
+     *
+     * Trains the AI-model after playing selfPlayGames
+     *
+     * @param batchSize how big the batch is that the training is used on
+     * @param n how many MCTS evals per move
+     * @param epoch how many times the net will be trained (uses the same sample buffer)
+     * @param checkPoint how many batches have to be played till a checkpoint is saved <p></p>
+     *                   - checkpoints are set as filename_n_checkPoint.zip
+     * @param sequences how many times the process should be repeated (self-play + training)
+     */
+    public void train(int batchSize, SampleBuffer buffer, int increment, int n, int epoch, int checkPoint, int sequences, boolean saveBuffer) throws IOException {
+        System.out.println("Starting sequential training");
+        for (int i = 0; i < sequences; i++) {
+            System.out.printf("sequence %d out of %d\n", i, sequences);
+            train(batchSize, buffer.getPtr()+increment, n, epoch, checkPoint, buffer, saveBuffer);
+        }
+
+    }
+
 
     /**
      * Trains the AI-model with a given SampleBuffer that is then expanded
@@ -177,6 +223,10 @@ public class Train {
         train(batchSize, buffer, epoch, checkPoint);
     }
 
+
+
+
+
     /**
      * Trains the AI-model with a given SampleBuffer
      *
@@ -196,13 +246,17 @@ public class Train {
              INDArray piTargets = Nd4j.zeros(batchSize, Move.MOVE_POSSIBILITIES);
              INDArray zTargets = Nd4j.zeros(batchSize, 1)) {
 
-
+            System.out.println("\tstartLoss: " + network.getModel().score());
+            System.out.println("-".repeat(ConsoleBar.WIDTH + 2));
             for (int i = 1; i < epoch + 1; i++) {
                 trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);
-                if (i % checkPoint == 0) {
+                ConsoleBar.render((double) i / epoch, 2);
+                if (checkPoint > 0 && i % checkPoint == 0) {
                     saveCheckPoint();
                 }
             }
+            System.out.println("\tendLoss: " + network.getModel().score());
+            System.out.println("-".repeat(ConsoleBar.WIDTH + 2));
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("crashed during training, buffer progress and network were saved");
@@ -232,16 +286,24 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("D400_10_RES_BLOCKS",  true, true);
+        Train train = new Train("D400_10_RES_BLOCKS",  false, true);
         //train.diagnose();
-        SampleBuffer s = new SampleBuffer( 40000, "endGame_5_Pieces", true);
+        SampleBuffer s = new SampleBuffer( 150000, "endGame_4_Pieces", true);
         System.out.println(s.length);
         if(s.length == 0){
             return;
         }
         System.out.println(Nd4j.getBackend().getClass().getName());
-        train.train(64, s, 1000, 4001);
+
+        for (int i = 0; i < 10; i++) {
+            try{
+                train.train(128, s, 15000, 5001);
+                break;
+            }catch (Exception e){
+                train.saveNet();
+                System.err.printf("encountered exception will try again: try %d/%d\n", i, 10);
+            }
+        }
         train.saveNet();
-        train.bot.selfPlayGame(400);
     }
 }

@@ -34,7 +34,7 @@ public class EndgameBufferBuilder {
     private final static float LOSS_WDL_BASE = -9F;
     private final static float LOSS_CLAMP = 10 - WIN_WDL_BASE;
     private final static float BEST_MOVE_VALUE = 11F;
-    private final static float SOFTMAX_TEMP = 0.8F;
+    private final static float SOFTMAX_TEMP = 2F;
 
     private final Random pieceCGen;
     private final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
@@ -235,7 +235,7 @@ public class EndgameBufferBuilder {
                 buffer.addSample(PositionEncoder.encodeFlat(pos), softMax(policyV, SOFTMAX_TEMP), z);
                 // play actual best Move (syzygy) or the one found via own scoring
                 pos.makeMove(playBest ? bestPossMove : bestMove);
-                ConsoleBar.render((double) moveCounter /moveCount);
+                ConsoleBar.render((double) moveCounter /moveCount, 2);
             }else {
                 pos = generateLegalPosition(pieceC); // generate new position if position can no longer be found in table
                 firstPos = true;
@@ -247,7 +247,7 @@ public class EndgameBufferBuilder {
             System.err.println("Error when querying for position (IOException)");
             e.printStackTrace();
         }
-        System.out.printf("Finished set %d/%d\n", moveCount, moveCount);
+        System.out.printf("\nFinished set %d/%d\n", moveCount, moveCount);
     }
 
     /**
@@ -317,8 +317,8 @@ public class EndgameBufferBuilder {
     }
 
     public static void main(String[] args) {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
-        eg.buildBufferOnEndgames(100000, 4, true, "endGame_5_Pieces");
+        EndgameBufferBuilder eg = new EndgameBufferBuilder(67);
+        eg.buildBufferOnEndgames(150000, 4, true, "endGame_4_Pieces");
     }
 
 }

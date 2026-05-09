@@ -8,7 +8,7 @@ public class ChessApplication extends Application {
 
     @Override
     public void start(Stage primaryStage) throws CloneNotSupportedException {
-        new ChessScene(9, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+        new ChessScene(8, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
     }
 
     public static void main(String[] args) {

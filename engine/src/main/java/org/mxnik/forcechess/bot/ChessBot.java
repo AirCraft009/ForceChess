@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.bot;
 
 import org.deeplearning4j.util.ModelSerializer;
+import org.mxnik.forcechess.General.ConsoleBar;
 import org.mxnik.forcechess.MCTS.MctsTree;
 import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.GameControl.Player;
@@ -212,7 +213,6 @@ public class ChessBot implements Player {
         int startPtr = buffer.getPtr();
 
         GameState g = pos.getState(pos.whiteToMove);
-        System.out.println("startGame");
         int move;
         while (g == GameState.Continue && startoffset < end){       // loop until Check/stalemate or full buffer
 
@@ -220,9 +220,9 @@ public class ChessBot implements Player {
             expandRoot();
             move = bestMoveUCB(n);
             buffer.addSample(flat, moveDist.clone(), z); // record the moveDist. and z value
-
+            ConsoleBar.render((double) startoffset /end, 2);
             pos.makeMove(move);
-            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+
             resetCore();
             g = pos.getState(pos.whiteToMove);
             startoffset ++;
