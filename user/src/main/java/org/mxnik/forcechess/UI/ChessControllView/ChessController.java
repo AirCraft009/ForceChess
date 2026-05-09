@@ -1,14 +1,11 @@
 package org.mxnik.forcechess.UI.ChessControllView;
 
 import javafx.application.Platform;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
 import org.mxnik.forcechess.*;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
@@ -20,7 +17,6 @@ import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.UI.Constants;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.concurrent.SynchronousQueue;
 
 import static org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen.getMovesFromPosition;
@@ -130,6 +126,20 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
     }
 
+    public void handlePromotionPress(int i, Stage stage){
+        MoveType type = switch (i){
+            case 0 -> MoveType.PromotionN;
+            case 1 -> MoveType.PromotionB;
+            case 2 -> MoveType.PromotionR;
+            case 3 -> MoveType.PromotionQ;
+            default -> null;
+        };
+        if(type == null)
+            return;
+        stage.close();
+        moveQueue.offer(new MovePacket(type, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
+    }
+
     public void handleKeyEvent(KeyEvent event) {
         Object source = event.getSource();
         if(event.getEventType() != KeyEvent.KEY_PRESSED){
@@ -172,34 +182,15 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             pieceSelected = false;
             if (BoardHelper.contains(currPieceMoves, secondClick)) {
                 if(board.getBoard()[firstClick].getType() == PieceTypes.PAWN && (BoardHelper.getRow(secondClick) == 0 || BoardHelper.getRow(secondClick) == Board.sideLen-1)){
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("");
-                    alert.setHeaderText("Promote"); // oder null
-                    alert.setContentText("Choose a piece");
+                    double clickedX = BoardHelper.getCol(secondClick) * chessScene.constants.BlockS + (double) chessScene.constants.BlockS /2;
+                    double clickedY = (Board.sideLen-BoardHelper.getRow(secondClick)) * chessScene.constants.BlockS - (double) chessScene.constants.BlockS /2;
 
-                    ButtonType knight = new ButtonType("Knight");
-                    ButtonType bishop = new ButtonType("Bishop");
-                    ButtonType rook = new ButtonType("Rook");
-                    ButtonType queen = new ButtonType("Queen");
+                    double sceneY = chessScene.getY() + (chessScene.getHeight() - chessScene.getScene().getHeight());
 
-                    alert.getButtonTypes().setAll(knight, bishop, rook, queen);
+                    double x = chessScene.getX() + clickedX + chessScene.constants.WidthStart;
+                    double y = sceneY + clickedY + chessScene.constants.HeightStart;
 
-                    Optional<ButtonType> result = alert.showAndWait();
-
-                    MoveType type;
-                    if (result.get() == knight){
-                        type = MoveType.PromotionN;
-                    }
-                    else if (result.get() == bishop) {
-                        type = MoveType.PromotionB;
-                    }
-                    else if (result.get() == rook) {
-                        type = MoveType.PromotionR;
-                    }
-                    else {
-                        type = MoveType.PromotionQ;
-                    }
-                    moveQueue.offer(new MovePacket(type, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
+                    chessScene.showPromotionStage(board.getBoard()[firstClick].getColor(), x, y);
                 }else {
                     moveQueue.offer(new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
                 }
