@@ -12,10 +12,10 @@ import org.mxnik.forcechess.Pos.PolicyIndex;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Random;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.clamp;
+import static java.lang.Math.*;
 import static org.mxnik.forcechess.Pos.Piece.*;
 import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
 import static org.mxnik.forcechess.Pos.PositionUtils.place;
@@ -33,7 +33,7 @@ public class EndgameBufferBuilder {
     private final static float BLESSED_LOSS_CLAMP = 1F;
     private final static float LOSS_WDL_BASE = -9F;
     private final static float LOSS_CLAMP = 10 - WIN_WDL_BASE;
-    private final static float BEST_MOVE_VALUE = 11F;
+    private final static float BEST_MOVE_VALUE = Syzygy.TB_WIN + 3;
     private final static float SOFTMAX_TEMP = 2F;
 
     private final Random pieceCGen;
@@ -85,8 +85,8 @@ public class EndgameBufferBuilder {
 
         // make sure it's not in the same position or adjacent
 
-        if(abs(K_B_Pos / SIZE - K_W_Pos/SIZE) < 2 || abs(K_B_Pos % SIZE - K_W_Pos % SIZE) < 2){
-            K_B_Pos = (K_W_Pos + 2) % 64;
+        while(abs(K_B_Pos / SIZE - K_W_Pos/SIZE) < 2 || abs(K_B_Pos % SIZE - K_W_Pos % SIZE) < 2){
+            K_B_Pos = (K_W_Pos + pieceCGen.nextInt(0, 2000)) % 64;
         }
 
         place(pos, true, KING, K_W_Pos);
@@ -121,7 +121,7 @@ public class EndgameBufferBuilder {
                 while ((pos.checkChess(!whiteToMove) || pType == PAWN && (sq / SIZE == 0 || sq / SIZE == 7))) {
                     pos.clearOnBoard(pType, sq);
                     pos.updateHelper();
-                    sq = (sq + 1) % 64;    // place 1 to the right (all spaces are tested within 64 times);
+                    sq = (sq + pieceCGen.nextInt(0,10000)) % 64;    // place a random amount of squares to the right (all spaces are tested within 64 times);
                     if(((pos.Occupied >> sq) & 0x1) == 1L)
                         continue;
                     place(pos, whiteToMove, pType, sq);
@@ -162,10 +162,8 @@ public class EndgameBufferBuilder {
      *
      * @param moveCount end length of the SampleBuffer
      * @param pieceC amount of pieces
-     * @param playBest play the best move (after syzygy) every turn (stricter less diverse) <p>
-     *                 or play the best move calculated via the formular (more diverse depending on params - maybe to little differentiation)
      */
-    public void buildBufferOnEndgames(int moveCount, int pieceC, boolean playBest, String file) {
+    public void buildBufferOnEndgames(int moveCount, int pieceC, boolean onlyWins, String file) {
         System.out.println("\tBuilding Buffer on Endgames");
         System.out.printf("\tBuilding set with %d moves\n", moveCount);
         System.out.println("-".repeat(ConsoleBar.WIDTH + 2));
@@ -187,9 +185,9 @@ public class EndgameBufferBuilder {
             int[] results = res.second();
 
             if (best != Syzygy.TB_RESULT_FAILED && results[0] != Syzygy.TB_RESULT_FAILED) {
-                int bestWdl = Syzygy.TB_GET_WDL(best);      // check for wins
-                if(firstPos && bestWdl < 3){// stalemate or worse
-                    pos = generateLegalPosition(pieceC); // generate new position
+                int bestWdl = Syzygy.TB_GET_WDL(best);                  // check for wins
+                if(onlyWins && firstPos && bestWdl != Syzygy.TB_WIN){   // not a win
+                    pos = generateLegalPosition(pieceC);                // generate new position
                     continue;
                 }
                 firstPos = false;
@@ -207,34 +205,36 @@ public class EndgameBufferBuilder {
 //                System.out.println("position: " + fen);
 //                System.out.printf("Best move: %d -> %d | WDL: %d | DTZ: %d%n", fromSq, toSq, bestWdl, bestDtzStart);
 //                System.out.println("-----------------");
-                int bestMove = 0;
-                float bestScore = Float.NEGATIVE_INFINITY;
+                Arrays.fill(policyV, Float.NEGATIVE_INFINITY);
                 for (int r : results) {
                     if (r == Syzygy.TB_RESULT_FAILED) break;
                     int moveWdl = Syzygy.TB_GET_WDL(r);
-                    int moveDtz = Syzygy.TB_GET_DTZ(r);
                     int moveFrom = Syzygy.TB_GET_FROM(r);
                     int moveTo = Syzygy.TB_GET_TO(r);
                     int movePromotes = Syzygy.TB_GET_PROMOTES(r);
 
 
-                    float score = computeScore(moveWdl, moveDtz, bestDtzStart);
+                    float score = (moveWdl - Syzygy.TB_DRAW);
+                    if (!pos.whiteToMove) {
+                        moveFrom = moveFrom ^ 56;  // flip square vertically
+                        moveTo   = moveTo   ^ 56;
+                    }
                     engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveTo, movePromotes));
                     policyV[PolicyIndex.toPolicyIndex(engineMove)] = score;
-
-                    if(score > bestScore){
-                        bestScore = score;
-                        bestMove = engineMove;
-                    }
                 }
 
 
+                // flip because board is also flipped
+                if (!pos.whiteToMove) {
+                    bestFromSq = bestFromSq ^ 56;  // flip square vertically
+                    bestToSq   = bestToSq   ^ 56;
+                }
                 int bestPossMove = Move.of(bestFromSq, bestToSq, Move.toFlags(pos, bestToSq, bestPromotes));
                 policyV[PolicyIndex.toPolicyIndex(bestPossMove)] = BEST_MOVE_VALUE;
                 // soften slightly with lower temperature
                 buffer.addSample(PositionEncoder.encodeFlat(pos), softMax(policyV, SOFTMAX_TEMP), z);
                 // play actual best Move (syzygy) or the one found via own scoring
-                pos.makeMove(playBest ? bestPossMove : bestMove);
+                pos.makeMove(bestPossMove);
                 ConsoleBar.render((double) moveCounter /moveCount, 2);
             }else {
                 pos = generateLegalPosition(pieceC); // generate new position if position can no longer be found in table
@@ -243,11 +243,13 @@ public class EndgameBufferBuilder {
             }
         }
             buffer.writeSamples();
+            buffer = null;
         }catch (IOException e){
             System.err.println("Error when querying for position (IOException)");
             e.printStackTrace();
         }
         System.out.printf("\nFinished set %d/%d\n", moveCount, moveCount);
+        System.gc();        // try to clean up buffer
     }
 
     /**
@@ -274,51 +276,15 @@ public class EndgameBufferBuilder {
         return values;
     }
 
-    /**
-     * compute the score for a given wdl and dtz
-     * mixture of relative DTZ betterment and general wdl score
-     */
-    private static float computeScore(int wdl, int dtzCurrent, int dtzStart) {
-        double wdlBase;
-        double dtzProgress;
-
-        // DTZ progress: how much better is this move relative to where we started
-        // Guard against dtzStart == 0 (already at zeroing move)
-        double rawProgress = (dtzStart > 0) ? (1.0 - (double) dtzCurrent / dtzStart) : 0.0;
-
-        switch (wdl) {
-            case Syzygy.TB_WIN -> {          // 4 - clean win, full range
-                wdlBase = WIN_WDL_BASE;
-                dtzProgress = clamp(rawProgress, -WIN_CLAMP, WIN_CLAMP);
-            }
-            case Syzygy.TB_CURSED_WIN -> {   // 3 - won but 50-move rule, capped so never reaches 1.0
-                wdlBase = CURSED_WIN_WDL_BASE;
-                dtzProgress = clamp(rawProgress, -CURSED_WIN_CLAMP, CURSED_WIN_CLAMP);
-            }
-            case Syzygy.TB_DRAW -> {         // 2
-                wdlBase = 0.0;
-                dtzProgress = 0.0;
-            }
-            case Syzygy.TB_BLESSED_LOSS -> { // 1 - lost but 50-move rule saves it, mirror of cursed win
-                wdlBase = BLESSED_LOSS_WDL_BASE;
-                dtzProgress = clamp(rawProgress, -BLESSED_LOSS_CLAMP, BLESSED_LOSS_CLAMP);
-            }
-            case Syzygy.TB_LOSS -> {         // 0 - clean loss, full negative range
-                wdlBase = LOSS_WDL_BASE;
-                dtzProgress = clamp(rawProgress, -LOSS_CLAMP, LOSS_CLAMP);
-            }
-            default -> {
-                wdlBase = 0.0;
-                dtzProgress = 0.0;
-            }
-        }
-
-        return (float) (wdlBase + dtzProgress);
-    }
 
     public static void main(String[] args) {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder(67);
-        eg.buildBufferOnEndgames(150000, 4, true, "endGame_4_Pieces");
+        EndgameBufferBuilder eg = new EndgameBufferBuilder();
+        // 3 - pieces easy mates ( train bot to get easy mates )
+        eg.buildBufferOnEndgames(150000, 3, false, "endGame_3_Pieces");
+        // 4 - pieces still easy mates (often sided mates; coordinate more pieces)
+        eg.buildBufferOnEndgames(150000, 4, false, "endGame_4_Pieces");
+        // 5 - pieces harder mates ( more balanced positions; complicated mates)
+        eg.buildBufferOnEndgames(150000, 5, false, "endGame_5_Pieces");
     }
 
 }
