@@ -30,7 +30,7 @@ import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
  */
 public final class PositionEncoder {
 
-    public static final int PLANES = 25;
+    public static final int PLANES = 23;
     public static final int SIZE   = 8;
     public static final int PLANE_SIZE = SIZE * SIZE;
     public static final int TENSOR_SIZE = PLANES * PLANE_SIZE;
@@ -51,15 +51,13 @@ public final class PositionEncoder {
     private static final int PLANE_CASTLE_WQ  = 13;
     private static final int PLANE_CASTLE_BK  = 14;
     private static final int PLANE_CASTLE_BQ  = 15;
-    private static final int PLANE_DOUBLE_PW  = 16;
-    private static final int PLANE_DOUBLE_PB  = 17;
-    private static final int PLANE_EN_PASSANT = 18;
-    private static final int PLANE_SIDE       = 19;
-    private static final int PLANE_FIFTY      = 20;
-    private static final int PLANE_W_MOBILITY = 21;
-    private static final int PLANE_B_MOBILITY = 22;
-    private static final int PLANE_W_ATTACKS  = 23;
-    private static final int PLANE_B_ATTACKS  = 24;
+    private static final int PLANE_EN_PASSANT = 16;
+    private static final int PLANE_SIDE       = 17;
+    private static final int PLANE_FIFTY      = 18;
+    private static final int PLANE_W_MOBILITY = 19;
+    private static final int PLANE_B_MOBILITY = 20;
+    private static final int PLANE_W_ATTACKS  = 21;
+    private static final int PLANE_B_ATTACKS  = 22;
     private static final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
 
     private PositionEncoder() {}
@@ -82,6 +80,7 @@ public final class PositionEncoder {
         return tensor;
     }
 
+
     /**
      * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
      * - starting at the given offset
@@ -90,54 +89,79 @@ public final class PositionEncoder {
         // Only clear this slice, not the whole tensor
         Arrays.fill(tensor, offset, offset + TENSOR_SIZE - 1, 0);
 
-        // Piece planes 0–11
-        encodeBitboard(pos.WPawns,   offset + PLANE_WP * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WKnights, offset + PLANE_WN * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WBishops, offset + PLANE_WB * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WRooks,   offset + PLANE_WR * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WQueens,  offset + PLANE_WQ * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WKing,    offset + PLANE_WK * PLANE_SIZE, tensor);
+        // Piece planes 0–11 (flipped depending on side to move
+        int whiteMod = pos.whiteToMove? 0 : 6;                  // choose other planes when flipped
+        encodeBitboard(pos.whiteToMove? pos.WPawns : Bitboard.flip(pos.WPawns),
+                offset + (PLANE_WP + whiteMod) * PLANE_SIZE, tensor);
 
-        encodeBitboard(pos.BPawns,   offset + PLANE_BP * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BKnights, offset + PLANE_BN * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BBishops, offset + PLANE_BB * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BRooks,   offset + PLANE_BR * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BQueens,  offset + PLANE_BQ * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BKing,    offset + PLANE_BK * PLANE_SIZE, tensor);
+        encodeBitboard(pos.whiteToMove? pos.WKnights : Bitboard.flip(pos.WKnights),
+                offset + (PLANE_WN + whiteMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.WBishops : Bitboard.flip(pos.WBishops),
+                offset + (PLANE_WB + whiteMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.WRooks : Bitboard.flip(pos.WRooks),
+                offset + (PLANE_WR + whiteMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.WQueens : Bitboard.flip(pos.WQueens),
+                offset + (PLANE_WQ + whiteMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.WKing : Bitboard.flip(pos.WKing),
+                offset + (PLANE_WK  + whiteMod) * PLANE_SIZE, tensor);
+
+
+        int blackMod = pos.whiteToMove? 0 : -6;
+        encodeBitboard(pos.whiteToMove? pos.BPawns : Bitboard.flip(pos.BPawns),
+                offset + (PLANE_BP + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BKnights : Bitboard.flip(pos.BKnights),
+                offset + (PLANE_BN + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BBishops : Bitboard.flip(pos.BBishops),
+                offset + (PLANE_BB + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BRooks : Bitboard.flip(pos.BRooks),
+                offset + (PLANE_BR + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BQueens : Bitboard.flip(pos.BQueens),
+                offset + (PLANE_BQ + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BKing : Bitboard.flip(pos.BKing),
+                offset + (PLANE_BK + blackMod) * PLANE_SIZE, tensor);
 
 
         // Castling rights — uniform planes
+        int WC_Mod = pos.whiteToMove? 0 : 2;
         if (pos.WKingCastle)
             Arrays.fill(tensor,
-                    offset + PLANE_CASTLE_WK * PLANE_SIZE,
-                    offset + PLANE_CASTLE_WQ * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_WK + WC_Mod) * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_WQ + WC_Mod) * PLANE_SIZE,
                     1.0f);
 
         if (pos.WQueenCastle)
             Arrays.fill(tensor,
-                    offset + PLANE_CASTLE_WQ * PLANE_SIZE,
-                    offset + PLANE_CASTLE_BK * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_WQ + WC_Mod) * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_BK + WC_Mod) * PLANE_SIZE,
                     1.0f);
 
+        int BC_Mod = pos.whiteToMove? 0 : -2;
         if (pos.BKingCastle)
             Arrays.fill(tensor,
-                    offset + PLANE_CASTLE_BK * PLANE_SIZE,
-                    offset + PLANE_CASTLE_BQ * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_BK + BC_Mod) * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_BQ + BC_Mod) * PLANE_SIZE,
                     1.0f);
 
         if (pos.BQueenCastle)
             Arrays.fill(tensor,
-                    offset + PLANE_CASTLE_BQ * PLANE_SIZE,
-                    offset + PLANE_DOUBLE_PW * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_BQ + BC_Mod) * PLANE_SIZE,
+                    offset + (PLANE_EN_PASSANT + BC_Mod) * PLANE_SIZE,
                     1.0f);
 
-        // Double pawn move planes
-        encodeBitboard(pos.WDoublePawnMove, offset + PLANE_DOUBLE_PW * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BDoublePawnMove, offset + PLANE_DOUBLE_PB * PLANE_SIZE, tensor);
 
         // En passant — single square
         if (pos.enPassantSquare >= 0) {
-            tensor[offset + PLANE_EN_PASSANT * PLANE_SIZE + pos.enPassantSquare] = 1.0f;
+            tensor[offset + PLANE_EN_PASSANT * PLANE_SIZE +
+                    (pos.whiteToMove ? pos.enPassantSquare : pos.enPassantSquare ^ 56)] = 1.0f;
         }
 
         // Side to move
@@ -156,9 +180,10 @@ public final class PositionEncoder {
         int mobW = MoveGen.generateMoves(pos, 0, true, tempBuffer);
 
         //Mobility score white
+        int W_Mod = pos.whiteToMove? 0 : 1;
         Arrays.fill(tensor,
-                offset + PLANE_W_MOBILITY * PLANE_SIZE,
-                offset + PLANE_B_MOBILITY * PLANE_SIZE,
+                offset + (PLANE_W_MOBILITY + W_Mod) * PLANE_SIZE,
+                offset + (PLANE_B_MOBILITY + W_Mod) * PLANE_SIZE,
                 Math.min((float) mobW / MAX_MOVES_IN_POS, 1.0f));
 
         //Attack score white
@@ -167,23 +192,26 @@ public final class PositionEncoder {
             attackBitboard  |= (1L << Move.to(tempBuffer[i]));
         }
         attackBitboard &= pos.BPieces;
-        encodeBitboard(attackBitboard, offset + PLANE_W_ATTACKS * PLANE_SIZE, tensor);
+        attackBitboard = pos.whiteToMove? attackBitboard : Bitboard.flip(attackBitboard);
+        encodeBitboard(attackBitboard, offset + (PLANE_W_ATTACKS + W_Mod) * PLANE_SIZE, tensor);
 
 
         int mobB = MoveGen.generateMoves(pos, 0, false, tempBuffer);
         //Mobility score white
+        int B_Mod = pos.whiteToMove? 0 : -1;
         Arrays.fill(tensor,
-                offset + PLANE_B_MOBILITY * PLANE_SIZE,
-                offset + PLANE_W_ATTACKS * PLANE_SIZE,
+                offset + (PLANE_B_MOBILITY + B_Mod) * PLANE_SIZE,
+                offset + (PLANE_W_ATTACKS  + B_Mod)* PLANE_SIZE,
                 Math.min((float) mobB / MAX_MOVES_IN_POS, 1.0f));
 
         //Attack score white
         attackBitboard = 0L;
-        for (int i = 0; i < mobW; i++) {
+        for (int i = 0; i < mobB; i++) {
             attackBitboard  |= (1L << Move.to(tempBuffer[i]));
         }
         attackBitboard &= pos.WPieces;
-        encodeBitboard(attackBitboard, offset + PLANE_B_ATTACKS * PLANE_SIZE, tensor);
+        attackBitboard = pos.whiteToMove? attackBitboard : Bitboard.flip(attackBitboard);
+        encodeBitboard(attackBitboard, offset + (PLANE_B_ATTACKS + B_Mod) * PLANE_SIZE, tensor);
 
 
         return offset + TENSOR_SIZE;
@@ -224,10 +252,6 @@ public final class PositionEncoder {
         if (pos.WQueenCastle) fillPlane(tensor[PLANE_CASTLE_WQ], 1.0f);
         if (pos.BKingCastle)  fillPlane(tensor[PLANE_CASTLE_BK], 1.0f);
         if (pos.BQueenCastle) fillPlane(tensor[PLANE_CASTLE_BQ], 1.0f);
-
-        // Double pawn move planes
-        encodeBitboard(pos.WDoublePawnMove, tensor[PLANE_DOUBLE_PW]);
-        encodeBitboard(pos.BDoublePawnMove, tensor[PLANE_DOUBLE_PB]);
 
         // En passant — single square
         if (pos.enPassantSquare >= 0) {

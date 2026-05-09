@@ -10,15 +10,16 @@ import java.util.function.IntConsumer;
  */
 public final class Bitboard {
     // Move a piece
-    public static long set(long board, int square)   { return board |=  (1L << square); }
-    public static long clear(long board, int square) { return board &= ~(1L << square); }
-    public static boolean get(long board, int square){ return (board >>> square & 1L) == 1L; }
+    public static long    set(long board, int square)   { return board |=  (1L << square); }
+    public static long    clear(long board, int square) { return board &= ~(1L << square); }
+    public static boolean get(long board, int square)   { return (board >>> square & 1L) == 1L; }
 
     // Chess-specific ops — these are where the value is
     public static boolean isEmpty(long board)          { return board == 0L; }
+    public static long    flip(long board)             { return Long.reverseBytes(board);}
     public static int     popCount(long board)         { return Long.bitCount(board); }
     public static int     lsb(long board)              { return Long.numberOfTrailingZeros(board); }
-    public static long popLsb(long board)            { return board & (board - 1); } // returns new board, lsb() gets the square
+    public static long    popLsb(long board)           { return board & (board - 1); } // returns new board, lsb() gets the square
 
     /**
      * Iterate over all set squares — core of move generation
