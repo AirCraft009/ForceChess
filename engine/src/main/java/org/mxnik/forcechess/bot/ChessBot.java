@@ -99,9 +99,9 @@ public class ChessBot implements Player {
 
             if (tree.firstChild[node] == 0) {
                 Evaluator.Result v = evaluator.evaluate(pos);
+                tree.w[node] += v.value();
                 expand(node, v.policyV());               // add all moves to the end
                 tree.n[node]++;
-                tree.w[node] += v.value();
                 return node;
             }
             int bestC = tree.findBestChild(node);
@@ -121,7 +121,7 @@ public class ChessBot implements Player {
         var out = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, moves);
 
         if(out.second() != GameState.Continue)
-            return;
+            tree.w[node] += 1;
 
 
         // iterate over all moves in curr pos.

@@ -139,4 +139,8 @@ public final class Move {
         return (base | ((attack)? 1 : 0) << 3);
     }
 
+    public static String format(int move){
+        return String.format("Move: %d -> %d; flag: %s", Move.from(move), Move.to(move), MoveType.fromFlagVal((baseFlag(flags(move)))));
+    }
+
 }

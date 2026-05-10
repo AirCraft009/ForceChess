@@ -95,6 +95,11 @@ public class SampleBuffer {
         }
     }
 
+    public void combineBuffers(SampleBuffer b){
+        samples = Arrays.copyOf(samples, length + b.length);
+        if (b.ptr >= 0) System.arraycopy(b.samples, 0, samples, ptr, b.ptr);
+    }
+
     private void readSample(int gLength) throws IOException {
         try (DataInputStream is = new DataInputStream(
                 new BufferedInputStream(new FileInputStream(fullPath + ".bin")))) {
