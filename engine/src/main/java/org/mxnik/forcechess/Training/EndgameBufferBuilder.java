@@ -6,10 +6,7 @@ import net.chesstango.piazzolla.syzygy.SyzygyPosition;
 import org.mxnik.forcechess.General.ConsoleBar;
 import org.mxnik.forcechess.General.DiversePair;
 import org.mxnik.forcechess.Moves.GameState;
-import org.mxnik.forcechess.Pos.Move;
-import org.mxnik.forcechess.Pos.MoveGen;
-import org.mxnik.forcechess.Pos.PolicyIndex;
-import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
 import org.nd4j.linalg.api.ndarray.INDArray;
@@ -86,8 +83,8 @@ public class EndgameBufferBuilder {
         var pos = PositionEncoder.Position.emptyPosition();
 
         // reserve the 0 spot for checking illegals
-        int K_W_Pos = pieceCGen.nextInt(1, 64);
-        int K_B_Pos = pieceCGen.nextInt(1, 64);
+        int K_W_Pos = pieceCGen.nextInt(0, 64);
+        int K_B_Pos = pieceCGen.nextInt(0, 64);
 
         // make sure it's not in the same position or adjacent
 
@@ -111,31 +108,30 @@ public class EndgameBufferBuilder {
         for (int i = 0; i < pCount; i++) {
             // loop through until the position is valid
             int pType;
-            int sq;
+            int sq = 0;
 
             pos.updateHelper();
             pType = pieceCGen.nextInt(PAWN, KING);
-            sq = pieceCGen.nextInt(1, 64);
-
-            place(pos, whiteToMove, pType, sq);
+            int piece = Piece.of(whiteToMove, pType);
 
             // loop reasons:
             // side not to move (black) can't be in check
             // pawns on the first or last rank
             // overlapping with other pieces
-            if(((pos.Occupied >> sq) & 0x1) == 1L) {
-                while ((pos.checkChess(!whiteToMove) || pType == PAWN && (sq / SIZE == 0 || sq / SIZE == 7))) {
-                    pos.clearOnBoard(pType, sq);
+            while (true) {
+                do sq = (sq + pieceCGen.nextInt(0, 10000)) % 64;
+                while (((pos.Occupied >> sq) & 0x1) == 1L || pType == PAWN && (sq / SIZE == 0 || sq / SIZE == 7));
+                byte preVP = pos.pieceMap[sq];
+                place(pos, whiteToMove, pType, sq);
+
+                if(pos.checkChess(!whiteToMove)){
+                    pos.clearOnBoard(piece, sq);
+                    pos.pieceMap[sq] = preVP;
                     pos.updateHelper();
-                    sq = (sq + pieceCGen.nextInt(0,10000)) % 64;    // place a random amount of squares to the right (all spaces are tested within 64 times);
-                    if(((pos.Occupied >> sq) & 0x1) == 1L)
-                        continue;
-                    place(pos, whiteToMove, pType, sq);
+                    continue;
                 }
+                break;
             }
-
-
-
         }
     }
 
@@ -167,11 +163,14 @@ public class EndgameBufferBuilder {
      */
     public PositionEncoder.Position generateMateInOne(int pieceC){
         PositionEncoder.Position pos;
+        int counter = 0;
+
         outerLoop:
         while (true) {
             pos = generateLegalPosition(pieceC);
             var moveC = MoveGen.generateMoves(pos, 0, pos.whiteToMove, tempBuffer);
             GameState s;
+            counter ++;
             for (int i = 0; i < moveC; i++) {
                 int unmake = pos.makeMove(tempBuffer[i]);
                 s = pos.getState(pos.whiteToMove);
@@ -213,7 +212,7 @@ public class EndgameBufferBuilder {
 
             if (best != Syzygy.TB_RESULT_FAILED && results[0] != Syzygy.TB_RESULT_FAILED) {
                 int bestWdl = Syzygy.TB_GET_WDL(best);                  // check for wins
-                if(onlyWins && firstPos && bestWdl != Syzygy.TB_WIN){   // not a win
+                if(firstPos && (onlyWins &&  bestWdl != Syzygy.TB_WIN) || bestWdl == Syzygy.TB_DRAW){   // not a win
                     pos = positionGenerator.apply(pieceC);                // generate new position
                     continue;
                 }
@@ -250,14 +249,18 @@ public class EndgameBufferBuilder {
                     policyV[PolicyIndex.toPolicyIndex(engineMove)] = score;
                 }
 
+                // flipped from and two in case of !whiteToMove
+                int PCorrectedF = bestFromSq;
+                int PCorrectedT = bestToSq;
 
                 // flip because board is also flipped
                 if (!pos.whiteToMove) {
-                    bestFromSq = bestFromSq ^ 56;  // flip square vertically
-                    bestToSq   = bestToSq   ^ 56;
+                    PCorrectedF = bestFromSq ^ 56;  // flip square vertically
+                    PCorrectedT   = bestToSq   ^ 56;
                 }
                 int bestPossMove = Move.of(bestFromSq, bestToSq, Move.toFlags(pos, bestToSq, bestPromotes));
-                policyV[PolicyIndex.toPolicyIndex(bestPossMove)] = BEST_MOVE_VALUE;
+                int bestFlippedMove = Move.of(PCorrectedF, PCorrectedT, Move.toFlags(pos, bestToSq, bestPromotes));
+                policyV[PolicyIndex.toPolicyIndex(bestFlippedMove)] = BEST_MOVE_VALUE;
                 // soften slightly with lower temperature
                 buffer.addSample(PositionEncoder.encodeFlat(pos), softMax(policyV, SOFTMAX_TEMP), z);
                 // play actual best Move (syzygy) or the one found via own scoring
@@ -304,19 +307,17 @@ public class EndgameBufferBuilder {
 
 
     public static void main(String[] args) throws IOException {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder();
-//         3 - pieces easy mate in one ( train bot to get easy mates )
-        var b = eg.buildBufferOnEndgames(10000, 3, true, eg::generateMateInOne, "MixedBuffer");
-//         4 - pieces mate in one
-        b.combineBuffers(eg.buildBufferOnEndgames(10000, 4, true, eg::generateMateInOne, "endGame_4_Pieces_M1"));
-        // 3 piece easy mates != mate in one
-        b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, eg::generateLegalPosition ,"endGame_3_Pieces"));
-        // 4 - pieces still easy mates (often sided mates; coordinate more pieces)
-        b.combineBuffers(eg.buildBufferOnEndgames(10000, 4, false, eg::generateLegalPosition ,"endGame_4_Pieces"));
-        // 5 - pieces harder mates ( more balanced positions; complicated mates)
-        b.combineBuffers(eg.buildBufferOnEndgames(10000, 5, false,eg::generateLegalPosition, "endGame_5_Pieces"));
+        EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
+        for (int i = 0; i < 1; i++) {
+            var b =          eg.buildBufferOnEndgames(30000, 3, true, eg::generateLegalPosition, "BalancedBuffer"+i);
+            b.combineBuffers(eg.buildBufferOnEndgames(40000, 4, true, eg::generateLegalPosition, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(45000, 5, false, eg::generateLegalPosition, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, eg::generateMateInOne, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(10000, 4, false, eg::generateMateInOne, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(10000, 5, false, eg::generateMateInOne, ""));
 
-        b.writeSamples();
+            b.writeSamples();
+        }
 //            var pos = fromFen("4k3/7Q/4K3/8/8/8/8/8 w - - 0 1");
 //        SampleBuffer buffer = new SampleBuffer(1, "", false);
 //

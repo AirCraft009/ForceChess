@@ -32,11 +32,11 @@ public final class NetworkConfig {
     private static final int VAL_HIDDEN    = 64;
 
     // Training
-    private static final double LR         = 1e-3;
-    private static final int    SEED       = 41;
+    private static final double LR         = 5e-4;
+    private static final int    SEED       = 42;
 
     // Activations / losses
-    private static final Activation                 ACT        = Activation.RELU;
+    private static final Activation                 ACT        = Activation.LEAKYRELU;
     private static final LossFunctions.LossFunction POL_LOSS = LossFunctions.LossFunction.MCXENT;
     private static final LossFunctions.LossFunction VAL_LOSS = LossFunctions.LossFunction.MSE;
 
@@ -122,12 +122,12 @@ public final class NetworkConfig {
 
         g.addLayer("val-conv",
                         new ConvolutionLayer.Builder(1, 1)
-                                .nIn(CONV_OUT).nOut(1)
+                                .nIn(CONV_OUT).nOut(8)
                                 .activation(Activation.IDENTITY).hasBias(false)
                                 .build(), towerOut)
 
                 .addLayer("val-bn",
-                        new BatchNormalization.Builder().nOut(1).build(), "val-conv")
+                        new BatchNormalization.Builder().nOut(8).build(), "val-conv")
 
                 .addLayer("val-act",
                         new ActivationLayer(ACT), "val-bn")
@@ -141,7 +141,7 @@ public final class NetworkConfig {
                 // hasBias=true + Xavier prevents tanh saturation at init
                 .addLayer("val-dense",
                         new DenseLayer.Builder()
-                                .nIn(1).nOut(VAL_HIDDEN)
+                                .nIn(8).nOut(VAL_HIDDEN)
                                 .weightInit(WeightInit.XAVIER)
                                 .activation(ACT)
                                 .hasBias(true)

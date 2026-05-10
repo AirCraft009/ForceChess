@@ -330,9 +330,12 @@ public class Train {
                 StatsStorage statsStorage = new InMemoryStatsStorage();
                 uiServer.attach(statsStorage);
                 train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
-                SampleBuffer s = new SampleBuffer("MixedBuffer");
-                train.train(512, s, 2000, 501);
-
+                SampleBuffer s = new SampleBuffer("BalancedBuffer0");
+                train.train(10, s, 100, 501);
+                s = new SampleBuffer("BalancedBuffer0");
+                train.train(10, s, 100, 501);
+                s = new SampleBuffer("BalancedBuffer0");
+                train.train(10, s, 100, 501);
                 break;
             }catch (Exception e){
                 train.saveNet();
