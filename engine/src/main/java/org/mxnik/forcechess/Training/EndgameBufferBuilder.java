@@ -10,16 +10,22 @@ import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.MoveGen;
 import org.mxnik.forcechess.Pos.PolicyIndex;
 import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.mxnik.forcechess.bot.ChessBot;
+import org.mxnik.forcechess.network.AlphaNet;
+import org.nd4j.linalg.api.ndarray.INDArray;
+import org.nd4j.linalg.dataset.MultiDataSet;
+import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.lang.Math.*;
 import static org.mxnik.forcechess.Pos.Piece.*;
 import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
-import static org.mxnik.forcechess.Pos.PositionUtils.place;
-import static org.mxnik.forcechess.Pos.PositionUtils.toFen;
+import static org.mxnik.forcechess.Pos.PositionUtils.*;
 import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 
 public class EndgameBufferBuilder {
@@ -33,8 +39,8 @@ public class EndgameBufferBuilder {
     private final static float BLESSED_LOSS_CLAMP = 1F;
     private final static float LOSS_WDL_BASE = -9F;
     private final static float LOSS_CLAMP = 10 - WIN_WDL_BASE;
-    private final static float BEST_MOVE_VALUE = Syzygy.TB_WIN + 3;
-    private final static float SOFTMAX_TEMP = 2F;
+    private final static float BEST_MOVE_VALUE = Syzygy.TB_WIN + 1F;
+    private final static float SOFTMAX_TEMP = 1.2F;
 
     private final Random pieceCGen;
     private final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
@@ -157,13 +163,34 @@ public class EndgameBufferBuilder {
     }
 
     /**
+     * might take long (simple loop over position till mate in one)
+     */
+    public PositionEncoder.Position generateMateInOne(int pieceC){
+        PositionEncoder.Position pos;
+        outerLoop:
+        while (true) {
+            pos = generateLegalPosition(pieceC);
+            var moveC = MoveGen.generateMoves(pos, 0, pos.whiteToMove, tempBuffer);
+            GameState s;
+            for (int i = 0; i < moveC; i++) {
+                int unmake = pos.makeMove(tempBuffer[i]);
+                s = pos.getState(pos.whiteToMove);
+                pos.unmakeMove(unmake);
+                if(s == GameState.CheckMate)
+                    break outerLoop;
+            }
+        }
+        return pos;
+    }
+
+    /**
      *
      * Builds a SampleBuffer from games loaded via the Syzygy Library
      *
      * @param moveCount end length of the SampleBuffer
      * @param pieceC amount of pieces
      */
-    public void buildBufferOnEndgames(int moveCount, int pieceC, boolean onlyWins, String file) {
+    public SampleBuffer buildBufferOnEndgames(int moveCount, int pieceC, boolean onlyWins, Function<Integer, PositionEncoder.Position> positionGenerator, String file) {
         System.out.println("\tBuilding Buffer on Endgames");
         System.out.printf("\tBuilding set with %d moves\n", moveCount);
         System.out.println("-".repeat(ConsoleBar.WIDTH + 2));
@@ -172,11 +199,11 @@ public class EndgameBufferBuilder {
             SampleBuffer buffer = new SampleBuffer(moveCount, file, false);
             int engineMove = 0;
             int moveCounter = 0;
-            var pos = generateLegalPosition(pieceC);
+            var pos = positionGenerator.apply(pieceC);
             boolean firstPos = true;
         while (moveCounter < moveCount) {
             if (pos.getState(pos.whiteToMove) != GameState.Continue){
-                pos = generateLegalPosition(pieceC); // generate new position after mate or stalemate
+                pos = positionGenerator.apply(pieceC); // generate new position after mate or stalemate
                 firstPos = true;
             }
             String fen = toFen(pos);
@@ -187,7 +214,7 @@ public class EndgameBufferBuilder {
             if (best != Syzygy.TB_RESULT_FAILED && results[0] != Syzygy.TB_RESULT_FAILED) {
                 int bestWdl = Syzygy.TB_GET_WDL(best);                  // check for wins
                 if(onlyWins && firstPos && bestWdl != Syzygy.TB_WIN){   // not a win
-                    pos = generateLegalPosition(pieceC);                // generate new position
+                    pos = positionGenerator.apply(pieceC);                // generate new position
                     continue;
                 }
                 firstPos = false;
@@ -237,19 +264,18 @@ public class EndgameBufferBuilder {
                 pos.makeMove(bestPossMove);
                 ConsoleBar.render((double) moveCounter /moveCount, 2);
             }else {
-                pos = generateLegalPosition(pieceC); // generate new position if position can no longer be found in table
+                pos = positionGenerator.apply(pieceC); // generate new position if position can no longer be found in table
                 firstPos = true;
                 //System.out.println("failed movegen or syzygy pull");
             }
         }
-            buffer.writeSamples();
-            buffer = null;
+        System.out.printf("\nFinished set %d/%d\n", moveCount, moveCount);
+        return buffer;
         }catch (IOException e){
             System.err.println("Error when querying for position (IOException)");
             e.printStackTrace();
         }
-        System.out.printf("\nFinished set %d/%d\n", moveCount, moveCount);
-        System.gc();        // try to clean up buffer
+        return null;
     }
 
     /**
@@ -266,7 +292,7 @@ public class EndgameBufferBuilder {
 
         float sum = 0F;
         for (int i = 0; i < values.length; i++) {
-            values[i] = (float) Math.exp(targets[i] * temp - max);          // classical SOFTMAX (projecting onto e^x)
+            values[i] = (float) exp(targets[i] * temp - max);          // classical SOFTMAX (projecting onto e^x)
             sum  += values[i];
         }
 
@@ -277,14 +303,102 @@ public class EndgameBufferBuilder {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         EndgameBufferBuilder eg = new EndgameBufferBuilder();
-        // 3 - pieces easy mates ( train bot to get easy mates )
-        eg.buildBufferOnEndgames(150000, 3, false, "endGame_3_Pieces");
+//         3 - pieces easy mate in one ( train bot to get easy mates )
+        var b = eg.buildBufferOnEndgames(10000, 3, true, eg::generateMateInOne, "MixedBuffer");
+//         4 - pieces mate in one
+        b.combineBuffers(eg.buildBufferOnEndgames(10000, 4, true, eg::generateMateInOne, "endGame_4_Pieces_M1"));
+        // 3 piece easy mates != mate in one
+        b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, eg::generateLegalPosition ,"endGame_3_Pieces"));
         // 4 - pieces still easy mates (often sided mates; coordinate more pieces)
-        eg.buildBufferOnEndgames(150000, 4, false, "endGame_4_Pieces");
+        b.combineBuffers(eg.buildBufferOnEndgames(10000, 4, false, eg::generateLegalPosition ,"endGame_4_Pieces"));
         // 5 - pieces harder mates ( more balanced positions; complicated mates)
-        eg.buildBufferOnEndgames(150000, 5, false, "endGame_5_Pieces");
-    }
+        b.combineBuffers(eg.buildBufferOnEndgames(10000, 5, false,eg::generateLegalPosition, "endGame_5_Pieces"));
 
+        b.writeSamples();
+//            var pos = fromFen("4k3/7Q/4K3/8/8/8/8/8 w - - 0 1");
+//        SampleBuffer buffer = new SampleBuffer(1, "", false);
+//
+//        try (Syzygy syzygy = Syzygy.open("boardsNBots/bots/Syzygy_Bases/Syzygy")) {
+//            var t = eg.getEndgamePos(syzygy, "4k3/7Q/4K3/8/8/8/8/8 w - - 0 1");
+//            int best = t.first();
+//            int[] results = t.second();
+//
+//            if (best != Syzygy.TB_RESULT_FAILED) {
+//                int bestWdl = Syzygy.TB_GET_WDL(best);
+//
+//                float z = ((float) (bestWdl - 2) / 2);
+//
+//
+//                int engineMove;
+//                int bestDtzStart = Syzygy.TB_GET_DTZ(best);
+//                int bestFromSq = Syzygy.TB_GET_FROM(best);
+//                int bestToSq = Syzygy.TB_GET_TO(best);
+//                int bestPromotes = Syzygy.TB_GET_PROMOTES(best);
+//
+//
+////                System.out.println("position: " + fen);
+////                System.out.printf("Best move: %d -> %d | WDL: %d | DTZ: %d%n", fromSq, toSq, bestWdl, bestDtzStart);
+////                System.out.println("-----------------");
+//                Arrays.fill(eg.policyV, Float.NEGATIVE_INFINITY);
+//                for (int r : results) {
+//                    if (r == Syzygy.TB_RESULT_FAILED) break;
+//                    int moveWdl = Syzygy.TB_GET_WDL(r);
+//                    int moveFrom = Syzygy.TB_GET_FROM(r);
+//                    int moveTo = Syzygy.TB_GET_TO(r);
+//                    int movePromotes = Syzygy.TB_GET_PROMOTES(r);
+//
+//
+//                    float score = (moveWdl - Syzygy.TB_DRAW);
+//                    if (!pos.whiteToMove) {
+//                        moveFrom = moveFrom ^ 56;  // flip square vertically
+//                        moveTo = moveTo ^ 56;
+//                    }
+//                    engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveTo, movePromotes));
+//                    eg.policyV[PolicyIndex.toPolicyIndex(engineMove)] = score;
+//                }
+//
+//
+//                // flip because board is also flipped
+//                if (!pos.whiteToMove) {
+//                    bestFromSq = bestFromSq ^ 56;  // flip square vertically
+//                    bestToSq = bestToSq ^ 56;
+//                }
+//                int bestPossMove = Move.of(bestFromSq, bestToSq, Move.toFlags(pos, bestToSq, bestPromotes));
+//                eg.policyV[PolicyIndex.toPolicyIndex(bestPossMove)] = BEST_MOVE_VALUE;
+//                // soften slightly with lower temperature
+//                float[] vals = eg.softMax(eg.policyV, 1.2F);
+//
+//                float max = 0;
+//                int maxIdx = -1;
+//                int nonZero = 0;
+//                for (int i = 0; i < vals.length; i++) {
+//                    if (vals[i] > 0) {
+//                        nonZero++;
+//                        System.out.println("idx " + i + " = " + vals[i]);
+//                        if (vals[i] > max) { max = vals[i]; maxIdx = i; }
+//                    }
+//                }
+//
+//                int m = MoveGen.generateMoves(pos, 0, true, eg.tempBuffer);
+//
+//                for (int i = 0; i < m; i++) {
+//                    int move = eg.tempBuffer[i];
+//                    if (PolicyIndex.toPolicyIndex(move) == maxIdx) {
+//                        System.out.println("best move: " + Move.format(move));
+//                    }
+//                }
+//
+//                buffer.addSample(PositionEncoder.encodeFlat(pos), vals, z);
+//            }
+//        }
+//
+//        Train train = new Train("D400_10_RES_BLOCKS", true);
+//        train.train(128, buffer, 60, 0);
+//        System.out.println("Loss of op: " + train.getLoss());
+//
+//        ChessBot b = new ChessBot(train.getNetwork(), 1, "4k3/7Q/4K3/8/8/8/8/8 w - - 0 1");
+//        System.out.println(Move.format(b.bestMove(300)));
+    }
 }

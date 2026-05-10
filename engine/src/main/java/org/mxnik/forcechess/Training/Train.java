@@ -2,7 +2,11 @@ package org.mxnik.forcechess.Training;
 
 
 import org.bytedeco.javacv.FrameFilter;
+import org.deeplearning4j.core.storage.StatsStorage;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.deeplearning4j.ui.api.UIServer;
+import org.deeplearning4j.ui.model.stats.StatsListener;
+import org.deeplearning4j.ui.model.storage.InMemoryStatsStorage;
 import org.deeplearning4j.util.ModelSerializer;
 import org.mxnik.forcechess.General.ConsoleBar;
 import org.mxnik.forcechess.General.FileLocations;
@@ -19,6 +23,8 @@ import org.nd4j.linalg.factory.Nd4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Map;
 
 public class Train {
@@ -36,6 +42,7 @@ public class Train {
     public Train(String fileName) throws IOException {
         this(fileName, true, false);
     }
+
 
     /**
      * Reads the model from the file specified (no extensions)
@@ -122,12 +129,26 @@ public class Train {
     }
 
     /**
-     * fit batchsize samples to the model randomly picked from the samplebuffer
+     * fit batchsize samples to the model randomly picked from the sample buffer
      */
     private void trainFromBuffer(int batchSize, SampleBuffer buffer, INDArray inputs, INDArray piTargets, INDArray zTargets){
         // each sample: one position + its pi + its z
         for (int i = 0; i < batchSize; i++) {
             SampleBuffer.TrainingSample s = buffer.sample();
+
+//            float sum = 0;
+//            float max = 0;
+//            float count = 0;
+//            for (float f : s.pi) {
+//                sum += f;
+//                count += (f == 0)? 0 : 1;
+//                if (f > max) max = f;
+//            }
+//
+//            System.out.println("sum: " + sum);
+//            System.out.println("max: " + max);
+//            System.out.println("moves: " + count);
+//            System.out.println("uniform would be: " + (1.0f / count));
 
             try (INDArray tensorSlice = Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c');
                  INDArray piRow     = Nd4j.create(s.pi);
@@ -138,6 +159,8 @@ public class Train {
                 zTargets.putRow(i, zRow);
             }
         }
+        // scale down zTargets because piTargets are way smaller in comp.
+        zTargets.muli(0.2);
 
         network.getModel().fit(new MultiDataSet(
                 new INDArray[] {inputs},
@@ -282,25 +305,38 @@ public class Train {
         }
     }
 
+    public double getLoss(){
+        return network.getModel().score();
+    }
+
+    public AlphaNet getNetwork(){
+        return network;
+    }
+
 
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("D400_10_RES_BLOCKS",  false, true);
+        Train train = new Train("Reduced_Bonus_10",  false, true);
         //train.diagnose();
-        SampleBuffer s = new SampleBuffer( 150000, "endGame_4_Pieces", true);
-        System.out.println(s.length);
-        if(s.length == 0){
-            return;
-        }
+
         System.out.println(Nd4j.getBackend().getClass().getName());
 
         for (int i = 0; i < 10; i++) {
             try{
-                train.train(128, s, 15000, 5001);
+
+                // Monitor
+                UIServer uiServer = UIServer.getInstance();
+                StatsStorage statsStorage = new InMemoryStatsStorage();
+                uiServer.attach(statsStorage);
+                train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
+                SampleBuffer s = new SampleBuffer("MixedBuffer");
+                train.train(512, s, 2000, 501);
+
                 break;
             }catch (Exception e){
                 train.saveNet();
+                System.out.println(e);
                 System.err.printf("encountered exception will try again: try %d/%d\n", i, 10);
             }
         }
