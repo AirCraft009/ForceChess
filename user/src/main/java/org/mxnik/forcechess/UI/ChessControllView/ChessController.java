@@ -196,6 +196,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        System.gc();
 
         Platform.runLater(() -> {
               chessScene.drawPieces(board);
