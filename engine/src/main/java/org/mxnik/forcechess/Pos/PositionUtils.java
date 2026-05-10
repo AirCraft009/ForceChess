@@ -260,7 +260,7 @@ public class PositionUtils {
         // fifty move counter
         fenBuilder.append(pos.fiftyMoveCounter).append(" ");
 
-        // temporarily write 1 only as this isn't important to us
+        // temporarily write 1 only as this isn't important rn
         fenBuilder.append("1");
         return fenBuilder.toString();
     }

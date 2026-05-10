@@ -542,12 +542,12 @@ public final class PositionEncoder {
          * if called with white (true) and white is in Checkmate it will return GameState.Checkmate
          */
         public GameState getState(boolean color){
+            if(fiftyMoveCounter >= 100){
+                return GameState.FiftyMove;
+            }
             boolean isChecked = checkChess(color);
             boolean hasMoves = Check.hasMoves(this, whiteToMove);
 
-            if(fiftyMoveCounter > 100){
-                return GameState.FiftyMove;
-            }
 
             if (isChecked){
                 if(hasMoves){
@@ -749,13 +749,11 @@ public final class PositionEncoder {
             }
         }
 
+
         /**
-         * Clears a square on the bitboard corresponding to the given piece byte. <p>
-         * Also clears the pieceMap
-         * @param piece pieceT and color
-         * @param sq square
+         * Removes a piece only on the bitboard level
          */
-        public void clearOnBoard(int piece, int sq) {
+        public void removeOnBoard(int piece, int sq){
             boolean color = Piece.color(piece);
             int type      = Piece.pieceT(piece);
 
@@ -782,6 +780,16 @@ public final class PositionEncoder {
                     default -> throw new InvalidPieceTypeException("clearOnBoard: unknown black piece type " + type);
                 }
             }
+        }
+
+        /**
+         * Clears a square on the bitboard corresponding to the given piece byte. <p>
+         * Also clears the pieceMap
+         * @param piece pieceT and color
+         * @param sq square
+         */
+        public void clearOnBoard(int piece, int sq) {
+            removeOnBoard(piece, sq);
             pieceMap[sq] = 0;
         }
 
