@@ -134,7 +134,7 @@ public class Train {
     private void trainFromBuffer(int batchSize, SampleBuffer buffer, INDArray inputs, INDArray piTargets, INDArray zTargets){
         // each sample: one position + its pi + its z
         for (int i = 0; i < batchSize; i++) {
-            SampleBuffer.TrainingSample s = buffer.sample();
+            SampleBuffer.TrainingSample s = buffer.getNext();
 
 //            float sum = 0;
 //            float max = 0;
@@ -269,6 +269,7 @@ public class Train {
              INDArray piTargets = Nd4j.zeros(batchSize, Move.MOVE_POSSIBILITIES);
              INDArray zTargets = Nd4j.zeros(batchSize, 1)) {
 
+            trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);
             System.out.println("\tstartLoss: " + network.getModel().score());
             System.out.println("-".repeat(ConsoleBar.WIDTH + 2));
             for (int i = 1; i < epoch + 1; i++) {
@@ -317,32 +318,32 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("Reduced_Bonus_10",  false, true);
+        Train train = new Train("Endgame",  true, true);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
 
-        for (int i = 0; i < 10; i++) {
-            try{
+        try{
+            // Monitor
+            UIServer uiServer = UIServer.getInstance();
+            StatsStorage statsStorage = new InMemoryStatsStorage();
+            uiServer.attach(statsStorage);
+            train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
 
-                // Monitor
-                UIServer uiServer = UIServer.getInstance();
-                StatsStorage statsStorage = new InMemoryStatsStorage();
-                uiServer.attach(statsStorage);
-                train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
-                SampleBuffer s = new SampleBuffer("BalancedBuffer0");
-                train.train(10, s, 100, 501);
-                s = new SampleBuffer("BalancedBuffer0");
-                train.train(10, s, 100, 501);
-                s = new SampleBuffer("BalancedBuffer0");
-                train.train(10, s, 100, 501);
-                break;
-            }catch (Exception e){
-                train.saveNet();
-                System.out.println(e);
-                System.err.printf("encountered exception will try again: try %d/%d\n", i, 10);
+            for (int j = 1; j < 6; j++) {
+                SampleBuffer s = new SampleBuffer("BalancedBuffer"+j);
+                s.shuffel();
+                System.gc();
+                train.train(512, s, 290, -1);
+                train.saveCheckPoint();
             }
+
+        }catch (Exception e){
+            train.saveNet();
+            System.out.println(e);
+            System.err.println("encountered exception");
         }
         train.saveNet();
+        System.out.println("saved Network");
     }
 }

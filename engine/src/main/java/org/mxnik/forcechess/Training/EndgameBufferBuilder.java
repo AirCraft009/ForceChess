@@ -308,13 +308,13 @@ public class EndgameBufferBuilder {
 
     public static void main(String[] args) throws IOException {
         EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
-        for (int i = 0; i < 1; i++) {
+        for (int i = 2; i < 6; i++) {
             var b =          eg.buildBufferOnEndgames(30000, 3, true, eg::generateLegalPosition, "BalancedBuffer"+i);
-            b.combineBuffers(eg.buildBufferOnEndgames(40000, 4, true, eg::generateLegalPosition, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(45000, 5, false, eg::generateLegalPosition, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(35000, 4, true, eg::generateLegalPosition, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(40000, 5, false, eg::generateLegalPosition, ""));
             b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, eg::generateMateInOne, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(10000, 4, false, eg::generateMateInOne, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(10000, 5, false, eg::generateMateInOne, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(15000, 4, false, eg::generateMateInOne, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(15000, 5, false, eg::generateMateInOne, ""));
 
             b.writeSamples();
         }

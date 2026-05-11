@@ -5,39 +5,36 @@ import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.bot.BatchEvaluator;
+import org.nd4j.linalg.api.buffer.DataType;
 import org.nd4j.linalg.api.memory.conf.WorkspaceConfiguration;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
+import java.io.Closeable;
+import java.io.IOException;
+
 /**
  * The neural net used for evaluating position and returning the bestMoveUCB
  */
-public final class AlphaNet implements BatchEvaluator {
+public final class AlphaNet implements BatchEvaluator, Closeable {
     private final ComputationGraph model;
     private final float[] flat;
-    private final WorkspaceConfiguration conf;
+    private final INDArray input = Nd4j.create(
+            new int[]{BatchChessBot.BATCH_SIZE, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, DataType.FLOAT16);
 
-
-    /**
-     * Net Evaluator & Batchevaluator leveraging a given model by giving it the ability to use batching and normal interference
-     * @param model initialized model
-     */
-    public AlphaNet(ComputationGraph model, WorkspaceConfiguration conf) {
-        this.model = model;
-        model.getConfiguration().setInferenceWorkspaceMode(WorkspaceMode.ENABLED);
-        this.conf = conf;
-        Nd4j.getMemoryManager().setAutoGcWindow(5000);
-        flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
-
-    }
 
     /**
      * Net Evaluator & Batchevaluator leveraging a given model by giving it the ability to use batching and normal interference
      * @param model initialized model
      */
     public AlphaNet(ComputationGraph model) {
-        this(model, NetworkConfig.buildWorkspace());
+        this.model = model;
+        model.getConfiguration().setInferenceWorkspaceMode(WorkspaceMode.ENABLED);
+        Nd4j.getMemoryManager().setAutoGcWindow(5000);
+        flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
+
     }
+
 
 
 
@@ -73,8 +70,7 @@ public final class AlphaNet implements BatchEvaluator {
     @Override
     public Result[] evaluateBatch(float[] inputs) {
         Result[] results = new Result[BatchChessBot.BATCH_SIZE];
-        INDArray input = Nd4j.create(
-                new int[]{BatchChessBot.BATCH_SIZE, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE});
+
         input.data().setData(inputs);
         INDArray[] out = model.output(false, input);
 
@@ -84,8 +80,6 @@ public final class AlphaNet implements BatchEvaluator {
 
         out[0].close();
         out[1].close();
-
-        input.close();
 
         return results;
     }
@@ -104,5 +98,11 @@ public final class AlphaNet implements BatchEvaluator {
             }
         }
         return maxMove;
+    }
+
+
+    @Override
+    public void close() throws IOException {
+        input.close();
     }
 }
