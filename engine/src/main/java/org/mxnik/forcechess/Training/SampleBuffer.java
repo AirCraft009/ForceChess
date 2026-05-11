@@ -6,6 +6,8 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import static org.mxnik.forcechess.Pos.Move.MOVE_POSSIBILITIES;
@@ -20,6 +22,7 @@ public class SampleBuffer {
     private final float DECAY = 0.0F;
     public final static String BASE_PATH = FileLocations.SAMPLE_LOCATIONS;
     private final static float lambda = 0.8F;
+    private int samplePtr = 0;
 
     /**
      * creates a sample buffer with a given capacity;
@@ -52,6 +55,10 @@ public class SampleBuffer {
         ptr++;
     }
 
+    public void shuffel(){
+        List<TrainingSample> sList = Arrays.asList(samples);        // asList only takes ptr (in place shuffel)
+        Collections.shuffle(sList);
+    }
 
     /**
      * add a sample to the Buffer
@@ -70,10 +77,25 @@ public class SampleBuffer {
         return weight * term + (1 - weight) * mcts;
     }
 
+    /**
+     * returns a random value from the array
+     */
     public TrainingSample sample(){
         int ind = random.nextInt(ptr);
         return samples[ind];
     }
+
+    /**
+     * get Trainingset at sample
+     */
+    public TrainingSample sample(int ind){
+        return samples[ind];
+    }
+
+    public TrainingSample getNext(){
+        return samples[samplePtr % ptr];
+    }
+
 
     public int getPtr(){
         return ptr;
