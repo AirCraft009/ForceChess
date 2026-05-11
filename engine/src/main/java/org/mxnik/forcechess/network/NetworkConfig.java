@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.network;
 
+import onnx.Onnx;
 import org.deeplearning4j.nn.conf.ComputationGraphConfiguration;
 import org.deeplearning4j.nn.conf.NeuralNetConfiguration;
 import org.deeplearning4j.nn.conf.graph.ElementWiseVertex;
@@ -9,6 +10,7 @@ import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.deeplearning4j.nn.weights.WeightInit;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.nd4j.autodiff.samediff.SameDiff;
 import org.nd4j.linalg.activations.Activation;
 import org.nd4j.linalg.api.memory.conf.WorkspaceConfiguration;
 import org.nd4j.linalg.api.memory.enums.AllocationPolicy;
@@ -33,7 +35,7 @@ public final class NetworkConfig {
 
     // Training
     private static final double LR         = 5e-4;
-    private static final int    SEED       = 42;
+    private static final int    SEED       = 12;
 
     // Activations / losses
     private static final Activation                 ACT        = Activation.LEAKYRELU;
@@ -166,6 +168,7 @@ public final class NetworkConfig {
             String paramKey = "rb-c2-" + i + "_W";
             comp.getParam(paramKey).assign(0.0).close();
         }
+
         return comp;
     }
 
