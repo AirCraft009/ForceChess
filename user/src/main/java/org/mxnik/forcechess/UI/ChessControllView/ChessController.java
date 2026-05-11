@@ -181,6 +181,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             //condition: -> firstCLick != -1;
             pieceSelected = false;
             if (BoardHelper.contains(currPieceMoves, secondClick)) {
+                //Promotion: Call the method to show the promotion window
+
                 if(board.getBoard()[firstClick].getType() == PieceTypes.PAWN && (BoardHelper.getRow(secondClick) == 0 || BoardHelper.getRow(secondClick) == Board.sideLen-1)){
                     double clickedX = BoardHelper.getCol(secondClick) * chessScene.constants.BlockS + (double) chessScene.constants.BlockS /2;
                     double clickedY = (Board.sideLen-BoardHelper.getRow(secondClick)) * chessScene.constants.BlockS - (double) chessScene.constants.BlockS /2;

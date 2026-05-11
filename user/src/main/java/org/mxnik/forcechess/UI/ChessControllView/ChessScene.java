@@ -261,6 +261,11 @@ public class ChessScene extends Stage {
     }
 
 
+    /**
+     * Shows a Popup-Window that is used to choose the piece to promote to
+     * @param white what player is doing this move
+     * @param x,y the position of the popup-window
+     */
     public void showPromotionStage(boolean white, double x, double y){
         x -= constants.BlockS * 2;
         y -= (double) constants.BlockS / 2;
