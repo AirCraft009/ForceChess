@@ -216,8 +216,8 @@ public class EndgameBufferBuilder {
                     pos = positionGenerator.apply(pieceC);                // generate new position
                     continue;
                 }
+
                 firstPos = false;
-                moveCounter++;
 
                 // -2 to center stalemate at 0; div by 2 to get win = 1 cursed win 0.5 stalemate. 0; loss -1; cursed loss -0.5;
                 float z = ((float) (bestWdl - 2) / 2);
@@ -226,6 +226,13 @@ public class EndgameBufferBuilder {
                 int bestFromSq = Syzygy.TB_GET_FROM(best);
                 int bestToSq = Syzygy.TB_GET_TO(best);
                 int bestPromotes = Syzygy.TB_GET_PROMOTES(best);
+
+                if(onlyWins && bestWdl != Syzygy.TB_WIN){       // skip moves of the other position because they just fill up buffer space
+                    pos.makeMove(Move.of(bestFromSq, bestToSq, Move.toFlags(pos, bestToSq, bestPromotes)));
+                    continue;
+                }
+
+                moveCounter++;
 
 
 //                System.out.println("position: " + fen);
@@ -307,14 +314,12 @@ public class EndgameBufferBuilder {
 
 
     public static void main(String[] args) throws IOException {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
-        for (int i = 2; i < 6; i++) {
-            var b =          eg.buildBufferOnEndgames(30000, 3, true, eg::generateLegalPosition, "BalancedBuffer"+i);
-            b.combineBuffers(eg.buildBufferOnEndgames(35000, 4, true, eg::generateLegalPosition, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(40000, 5, false, eg::generateLegalPosition, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, eg::generateMateInOne, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(15000, 4, false, eg::generateMateInOne, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(15000, 5, false, eg::generateMateInOne, ""));
+        EndgameBufferBuilder eg = new EndgameBufferBuilder();
+
+        for (int i = 0; i < 6; i++) {
+            var b =          eg.buildBufferOnEndgames(50000, 3, true, eg::generateLegalPosition, "BalancedBuffer"+i);
+            b.combineBuffers(eg.buildBufferOnEndgames(50000, 4, true, eg::generateLegalPosition, ""));
+            b.combineBuffers(eg.buildBufferOnEndgames(50000, 5, true, eg::generateLegalPosition, ""));
 
             b.writeSamples();
         }

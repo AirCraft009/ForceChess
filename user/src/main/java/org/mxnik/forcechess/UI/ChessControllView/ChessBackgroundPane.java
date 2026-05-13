@@ -1,7 +1,6 @@
 package org.mxnik.forcechess.UI.ChessControllView;
 
 import javafx.scene.paint.Color;
-import javafx.scene.paint.Paint;
 import javafx.scene.shape.Rectangle;
 
 public class ChessBackgroundPane extends Rectangle {
