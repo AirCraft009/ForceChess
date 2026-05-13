@@ -49,8 +49,8 @@ public class ChessScene extends Stage {
         getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         try {
-            this.controller = new ChessController(this, "4k3/Q5Q/4K3/8/8/8/8/8 w 0 0 0 8");
-            this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\boardsNBots\\bots\\networks\\Endgame.zip")), "4k3/7Q/4K3/8/8/8/8/8 w - - 0 1", 640), controller);
+            this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNRs w 0 0 0 8");
+            this.controller.setPlayers(controller, controller);
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");
