@@ -270,7 +270,8 @@ public class ChessBot implements Player {
 //        System.out.println("bot move requested");
 //        System.out.println("All moves in position");
         int rMove = bestMove(playDepth);
-
+        var r = getEvaluator().evaluate(pos);
+        System.out.println("Net rates positions: " + r.value());
         //System.out.printf("Black: %d -> %d\n", Move.from(rMove), Move.to(rMove));
         pos.makeMove(rMove);
         //System.out.println(Bitboard.visualiseBitboard(pos.Occupied));

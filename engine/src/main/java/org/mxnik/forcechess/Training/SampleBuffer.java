@@ -56,8 +56,12 @@ public class SampleBuffer {
     }
 
     public void shuffel(){
-        List<TrainingSample> sList = Arrays.asList(samples);        // asList only takes ptr (in place shuffel)
-        Collections.shuffle(sList);
+        for (int i = 0; i < ptr; i++) {
+            int newIdx = random.nextInt(ptr);
+            var temp = samples[newIdx];
+            samples[newIdx] = samples[i];
+            samples[i] = temp;
+        }
     }
 
     /**
@@ -93,7 +97,7 @@ public class SampleBuffer {
     }
 
     public TrainingSample getNext(){
-        return samples[samplePtr % ptr];
+        return samples[samplePtr++ % ptr];
     }
 
 

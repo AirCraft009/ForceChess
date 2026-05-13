@@ -242,6 +242,7 @@ public class Train {
         selfPlayGames(sampleBufferSize, n, buffer);
         if(saveBuffer)
             buffer.writeSamples();
+        buffer.shuffel();
 
         train(batchSize, buffer, epoch, checkPoint);
     }
@@ -268,6 +269,8 @@ public class Train {
         try (INDArray inputs = Nd4j.zeros(batchSize, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE);
              INDArray piTargets = Nd4j.zeros(batchSize, Move.MOVE_POSSIBILITIES);
              INDArray zTargets = Nd4j.zeros(batchSize, 1)) {
+
+            buffer.shuffel();
 
             trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);
             System.out.println("\tstartLoss: " + network.getModel().score());
@@ -318,25 +321,29 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("Endgame",  true, true);
+        Train train = new Train("Endgame_1_checkPoint",  true, true);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
+
+
 
         try{
             // Monitor
             UIServer uiServer = UIServer.getInstance();
             StatsStorage statsStorage = new InMemoryStatsStorage();
             uiServer.attach(statsStorage);
-            train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
+            train.network.getModel().setListeners(new StatsListener(statsStorage, 5));
 
-            for (int j = 1; j < 6; j++) {
-                SampleBuffer s = new SampleBuffer("BalancedBuffer"+j);
-                s.shuffel();
-                System.gc();
-                train.train(512, s, 290, -1);
+            for (int i = 2; i < 6; i++) {
+                SampleBuffer b = new SampleBuffer("BalancedBuffer"+i);
+                train.train(512, b ,290,-1);
                 train.saveCheckPoint();
+                train.saveNet();
+                b = null;
+                System.gc();
             }
+
 
         }catch (Exception e){
             train.saveNet();
