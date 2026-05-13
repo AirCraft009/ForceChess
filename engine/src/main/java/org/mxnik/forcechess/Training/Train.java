@@ -122,7 +122,7 @@ public class Train {
             }
         } catch (Exception e) {
             System.err.println("crashed during self-play buffer progress was saved\n error: " + e);
-            buffer.writeSamples();
+            buffer.writeSamples(true);
         }
         System.out.println();
         System.out.println("Finished self play");
@@ -241,7 +241,7 @@ public class Train {
     public void train(int batchSize, int sampleBufferSize, int n, int epoch, int checkPoint, SampleBuffer buffer, boolean saveBuffer) throws IOException {
         selfPlayGames(sampleBufferSize, n, buffer);
         if(saveBuffer)
-            buffer.writeSamples();
+            buffer.writeSamples(false);
 
         train(batchSize, buffer, epoch, checkPoint);
     }
@@ -284,7 +284,7 @@ public class Train {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("crashed during training, buffer progress and network were saved");
-            buffer.writeSamples();
+            buffer.writeSamples(false);
             saveNet();
         }
     }

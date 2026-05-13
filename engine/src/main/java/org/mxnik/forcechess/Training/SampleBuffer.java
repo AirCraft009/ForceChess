@@ -93,7 +93,7 @@ public class SampleBuffer {
     }
 
     public TrainingSample getNext(){
-        return samples[samplePtr % ptr];
+        return samples[samplePtr++ % ptr];
     }
 
 
@@ -163,9 +163,9 @@ public class SampleBuffer {
         readSample(0);
     }
 
-    public void writeSamples() throws IOException {
+    public void writeSamples(boolean append) throws IOException {
         try (DataOutputStream os = new DataOutputStream(
-                new BufferedOutputStream(new FileOutputStream(fullPath + ".bin")))) {
+                new BufferedOutputStream(new FileOutputStream(fullPath + ".bin", append)))) {
 
             os.writeInt(length);
             os.writeInt(ptr);
