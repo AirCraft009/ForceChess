@@ -131,7 +131,7 @@ public class Train {
     /**
      * fit batchsize samples to the model randomly picked from the sample buffer
      */
-    private void trainFromBuffer(int batchSize, SampleBuffer buffer, INDArray inputs, INDArray piTargets, INDArray zTargets){
+    private void trainFromBuffer(int batchSize, TrainingsBuffer buffer, INDArray inputs, INDArray piTargets, INDArray zTargets){
         // each sample: one position + its pi + its z
         for (int i = 0; i < batchSize; i++) {
             SampleBuffer.TrainingSample s = buffer.getNext();
@@ -259,7 +259,7 @@ public class Train {
      * @param checkPoint how many batches have to be played till a checkpoint is saved <p></p>
      *                   - checkpoints are set as filename_n_checkPoint.zip
      */
-    public void train(int batchSize, SampleBuffer buffer, int epoch, int checkPoint) throws IOException {
+    public void train(int batchSize, TrainingsBuffer buffer, int epoch, int checkPoint) throws IOException {
         // SETUP
         // inputs: [batchSize, PLANES, 8, 8]
         // policy targets: [batchSize, 65536] (the pi distribution)
@@ -269,9 +269,10 @@ public class Train {
              INDArray piTargets = Nd4j.zeros(batchSize, Move.MOVE_POSSIBILITIES);
              INDArray zTargets = Nd4j.zeros(batchSize, 1)) {
 
-            trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);
+            trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);        // train loop to initialize loss
             System.out.println("\tstartLoss: " + network.getModel().score());
             System.out.println("-".repeat(ConsoleBar.WIDTH + 2));
+
             for (int i = 1; i < epoch + 1; i++) {
                 trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);
                 ConsoleBar.render((double) i / epoch, 2);
@@ -284,7 +285,6 @@ public class Train {
         } catch (Exception e) {
             e.printStackTrace();
             System.err.println("crashed during training, buffer progress and network were saved");
-            buffer.writeSamples(false);
             saveNet();
         }
     }
@@ -331,11 +331,9 @@ public class Train {
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
 
 
-            for (int i = 0; i < 10; i++) {
-                SampleBuffer s = new SampleBuffer(0, "Stockfish", false);
-                s.readSampleChunk(i * 27000, 27000, 27000);
-                s.shuffel();
-                train.train(512, s, 52, -1);
+            for (int i = 0; i < 2; i++) {
+                StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_data.csv");
+                train.train(512, buffer, 1953, 200);
                 train.saveCheckPoint();
                 System.gc();
             }
