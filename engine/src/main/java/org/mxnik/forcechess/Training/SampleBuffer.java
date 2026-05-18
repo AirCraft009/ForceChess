@@ -13,7 +13,7 @@ import java.util.Random;
 import static org.mxnik.forcechess.Pos.Move.MOVE_POSSIBILITIES;
 import static org.mxnik.forcechess.Pos.PositionEncoder.TENSOR_SIZE;
 
-public class SampleBuffer {
+public class SampleBuffer implements TrainingsBuffer{
     public int length;
     private int ptr;
     private TrainingSample[] samples;

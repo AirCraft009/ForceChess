@@ -1,11 +1,7 @@
 package org.mxnik.forcechess.Training;
 
 import au.com.bytecode.opencsv.CSVReader;
-import net.chesstango.gardel.fen.FEN;
-import org.bytedeco.libfreenect._freenect_context;
-import org.joda.time.format.ISODateTimeFormat;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.mxnik.forcechess.General.ConsoleBar;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.bot.ChessBot;
@@ -15,7 +11,7 @@ import java.util.Arrays;
 
 import static org.mxnik.forcechess.Pos.PositionUtils.fromFen;
 
-public class StockfishBufferBuilder {
+public class StockfishBuffer implements TrainingsBuffer {
     private final String Path;
     private PositionEncoder.Position pos;
     private CSVReader reader;
@@ -32,12 +28,13 @@ public class StockfishBufferBuilder {
     public static final int SOURCE = 7;
 
 
-    public StockfishBufferBuilder(String fileP) throws FileNotFoundException {
+    public StockfishBuffer(String fileP) throws IOException {
         if(fileP == null){
             throw new IllegalArgumentException("Can't pass null as an argument for fileP");
         }
         this.Path = fileP;
         reader = new CSVReader(new BufferedReader(new FileReader(fileP)));
+        reader.readNext();      // skip first line (only shows the different attr.)
     }
 
     private void skipLines(int count) throws IOException {
@@ -51,7 +48,7 @@ public class StockfishBufferBuilder {
      * - line<br>
      * - features
      *
-     * @throws IOException if bad things happen EOF exceptions are caught
+     * @throws IOException if bad things happen. EOF exceptions are caught
      */
     public String[][] readSets(int count) throws IOException {
         String[][] lines = new String[count][];
@@ -66,28 +63,36 @@ public class StockfishBufferBuilder {
         return lines;
     }
 
-    public SampleBuffer buildBufferFromLines(int count, int chunkSize, SampleBuffer s) throws IOException{
-        int chunkCont = count / chunkSize;
-        s.flushToFile(false);
-        System.out.print("Building buffer from file: chunked");
-        for (int i = 0; i < chunkCont; i++) {
-            System.out.printf("\nchunk %d: %d -> %d\n", i, i * chunkSize, (i + 1) * chunkSize);
-            buildBufferFromLines(chunkSize, s).flushToFile(true);
+    public SampleBuffer.TrainingSample getNext(){
+        String[] line;
+        try {
+             line = reader.readNext();
+        }catch (EOFException e){
+            System.err.println("End of File was reached");
+            return null;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
-        return s;
+
+        pos = fromFen(line[FEN_POS]);
+        int off = MoveGen.generateMoves(pos, 0, true, tempMove);
+        int zVal = Integer.parseInt(line[SCORE_CP]);
+        float[] dist =  getMoveDist(line[TOP_MOVES_JSON], off, zVal);
+        return new SampleBuffer.TrainingSample(PositionEncoder.encodeFlat(pos), dist, (float) zVal /100);
     }
 
-    public SampleBuffer buildBufferFromLines(int count, SampleBuffer s) throws IOException {
+    public SampleBuffer.TrainingSample[] getNextFew(int count) throws IOException {
+        SampleBuffer.TrainingSample[] samples = new SampleBuffer.TrainingSample[count];
         String[][] lines = readSets(count+1);
         for (int i = 1; i < count+1; i++) {
             pos = fromFen(lines[i][FEN_POS]);
             int off = MoveGen.generateMoves(pos, 0, true, tempMove);
             int zVal = Integer.parseInt(lines[i][SCORE_CP]);
             float[] dist =  getMoveDist(lines[i][TOP_MOVES_JSON], off, zVal);
-            s.addSample(PositionEncoder.encodeFlat(pos), dist, (float) zVal /100);
+            samples[i-1] = new SampleBuffer.TrainingSample(PositionEncoder.encodeFlat(pos), dist, (float) zVal /100);
             ConsoleBar.render((i - (double) 1) / count, 2);
         }
-        return s;
+        return samples;
     }
 
     public float[] getMoveDist(String jsonMoves, int off, int cp){
@@ -117,17 +122,8 @@ public class StockfishBufferBuilder {
 
 
 
-    public SampleBuffer buildBufferFromLines(int count, String fileName) throws IOException {
-        return buildBufferFromLines(count, new SampleBuffer(count, fileName, false));
-    }
-
-    public SampleBuffer buildBufferFromLines(int count, int chunk, String fileName) throws IOException {
-            return buildBufferFromLines(count, chunk, new SampleBuffer(count, fileName, false));
-        }
-
     public static void main(String[] args) throws IOException {
-        StockfishBufferBuilder st = new StockfishBufferBuilder("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_data.csv");
-        st.buildBufferFromLines(270000, 27000, "Stockfish");
+        StockfishBuffer st = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_data.csv");
     }
 
 

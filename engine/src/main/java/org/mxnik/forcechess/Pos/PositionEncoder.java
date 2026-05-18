@@ -63,17 +63,6 @@ public final class PositionEncoder {
     private PositionEncoder() {}
 
     // Public API
-
-    @Deprecated
-    /*
-    alte encode mit multiDimArrays. deprecated
-     */
-    public static float[][][] encode(Position pos) {
-        float[][][] tensor = new float[PLANES][SIZE][SIZE];
-        encode(pos, tensor);
-        return tensor;
-    }
-
     public static float[] encodeFlat(Position pos) {
         float[] tensor = new float[TENSOR_SIZE];
         encode(pos, tensor);
@@ -224,61 +213,6 @@ public final class PositionEncoder {
         encode(0, pos, tensor);
     }
 
-
-
-    /**
-     * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
-     */
-    public static void encode(Position pos, float[][][] tensor) {
-        clearTensor(tensor);
-
-        // Piece planes 0–11
-        encodeBitboard(pos.WPawns,   tensor[PLANE_WP]);
-        encodeBitboard(pos.WKnights, tensor[PLANE_WN]);
-        encodeBitboard(pos.WBishops, tensor[PLANE_WB]);
-        encodeBitboard(pos.WRooks,   tensor[PLANE_WR]);
-        encodeBitboard(pos.WQueens,  tensor[PLANE_WQ]);
-        encodeBitboard(pos.WKing,    tensor[PLANE_WK]);
-
-        encodeBitboard(pos.BPawns,   tensor[PLANE_BP]);
-        encodeBitboard(pos.BKnights, tensor[PLANE_BN]);
-        encodeBitboard(pos.BBishops, tensor[PLANE_BB]);
-        encodeBitboard(pos.BRooks,   tensor[PLANE_BR]);
-        encodeBitboard(pos.BQueens,  tensor[PLANE_BQ]);
-        encodeBitboard(pos.BKing,    tensor[PLANE_BK]);
-
-        // Castling rights — uniform planes
-        if (pos.WKingCastle)  fillPlane(tensor[PLANE_CASTLE_WK], 1.0f);
-        if (pos.WQueenCastle) fillPlane(tensor[PLANE_CASTLE_WQ], 1.0f);
-        if (pos.BKingCastle)  fillPlane(tensor[PLANE_CASTLE_BK], 1.0f);
-        if (pos.BQueenCastle) fillPlane(tensor[PLANE_CASTLE_BQ], 1.0f);
-
-        // En passant — single square
-        if (pos.enPassantSquare >= 0) {
-            int rank = pos.enPassantSquare >>> 3;
-            int file = pos.enPassantSquare & 7;
-            tensor[PLANE_EN_PASSANT][rank][file] = 1.0f;
-        }
-
-        // Side to move
-        if (pos.whiteToMove) fillPlane(tensor[PLANE_SIDE], 1.0f);
-
-        // Fifty-move rule
-        fillPlane(tensor[PLANE_FIFTY], Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
-    }
-
-    // Private helpers
-
-    private static void encodeBitboard(long bitboard, float[][] plane) {
-        long b = bitboard;
-        while (b != 0L) {
-            int sq   = Bitboard.lsb(b);
-            int rank = sq >>> 3;
-            int file = sq & 7;
-            plane[rank][file] = 1.0f;
-            b = Bitboard.popLsb(b); // returns board with LSB cleared
-        }
-    }
 
     private static void encodeBitboard(long bitboard, int offset, float[] plane) {
         long b = bitboard;
