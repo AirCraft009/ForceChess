@@ -37,7 +37,7 @@ public class StockfishBuffer implements TrainingsBuffer {
         reader.readNext();      // skip first line (only shows the different attr.)
     }
 
-    private void skipLines(int count) throws IOException {
+    public void skipLines(int count) throws IOException {
         for (int i = 0; i < count; i++) {
             reader.readNext();
         }
