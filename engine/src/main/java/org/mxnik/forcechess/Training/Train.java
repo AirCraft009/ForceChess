@@ -318,7 +318,7 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("Endgame",  true, true);
+        Train train = new Train("Full_GameStockFish",  false, true);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
@@ -330,17 +330,20 @@ public class Train {
             uiServer.attach(statsStorage);
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
 
-            for (int j = 1; j < 6; j++) {
-                SampleBuffer s = new SampleBuffer("BalancedBuffer"+j);
+
+            for (int i = 0; i < 10; i++) {
+                SampleBuffer s = new SampleBuffer(0, "Stockfish", false);
+                s.readSampleChunk(i * 27000, 27000, 27000);
                 s.shuffel();
-                System.gc();
-                train.train(512, s, 290, -1);
+                train.train(512, s, 52, -1);
                 train.saveCheckPoint();
+                System.gc();
             }
+            train.saveNet();
 
         }catch (Exception e){
             train.saveNet();
-            System.out.println(e);
+            e.printStackTrace();
             System.err.println("encountered exception");
         }
         train.saveNet();
