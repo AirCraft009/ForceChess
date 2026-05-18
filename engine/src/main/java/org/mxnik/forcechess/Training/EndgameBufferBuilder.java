@@ -199,7 +199,7 @@ public class EndgameBufferBuilder {
      * turns float[] into softmaxxed version of self.
      * modifies memory in place. No new float[] is allocated
      */
-    private static float[] softMax(float[] targets, float temp){
+    public static float[] softMax(float[] targets, float temp){
         float[] values = new float[targets.length];
 
         float max = targets[0] * temp;
