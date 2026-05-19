@@ -29,8 +29,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class ChessScene extends Stage {
-    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
-    private final String pathToImages = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
+    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
     Constants constants;
@@ -42,7 +41,7 @@ public class ChessScene extends Stage {
 
     private Image[] images;
 
-    ChessScene(int sideLen) throws CloneNotSupportedException {
+    public ChessScene(int sideLen) throws CloneNotSupportedException {
         setBounds();
         basicInit(sideLen);
         generateImages();
