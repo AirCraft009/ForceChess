@@ -8,7 +8,26 @@ import math
 import csv
 import json
 import argparse
+import threading
 
+
+class Position_worker():
+    def __init__(self, filepath):
+        self.thread = threading.Thread(target=self.run, kwargs={"filepath": filepath})
+        self.notif_next_queue = threading.Queue()           # Queue to send the isready signal to the next position_worker in line
+        self.get_notif_queue = None
+    
+    def setPrevWorker(self, prev_worker: position_worker):
+        self.get_notif_queue = prev_worker.get_notif_queue  # get notification from the last position_worker
+        
+    def start():
+        self.thread.start()
+        
+    def run(self, filepath):
+        pass
+        
+        
+    
 
 def load_positions(filepath):
     dctx = zstd.ZstdDecompressor()

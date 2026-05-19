@@ -159,8 +159,8 @@ public class Train {
                 zTargets.putRow(i, zRow);
             }
         }
-        // scale down zTargets because piTargets are way smaller in comp.
-        zTargets.muli(0.2);
+          // scale down zTargets because piTargets are way smaller in comp.
+//        zTargets.muli(0.2);
 
         network.getModel().fit(new MultiDataSet(
                 new INDArray[] {inputs},
@@ -318,7 +318,7 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("Hugging_Face_Buff",  false, true);
+        Train train = new Train("Hugging_Face_Buff",  true, true);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
@@ -331,8 +331,9 @@ public class Train {
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
 
             StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_hf_data.csv");
-            for (int i = 0; i < 2; i++) {
-                train.train(512, buffer, 2460, 400);
+            buffer.skipLines(1000);
+            for (int i = 2; i > 0; i--) {
+                train.train(512, buffer, 17470 - (1000 * (i -  1)) , 1000);
                 train.saveCheckPoint();
                 System.gc();
                 buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_hf_data.csv");
