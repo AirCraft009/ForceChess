@@ -1,0 +1,135 @@
+import msgpack
+import zstandard as zstd
+import io
+from huggingface_hub import snapshot_download
+import os
+from pathlib import Path
+import math 
+import csv
+import json
+import argparse
+import threading
+
+
+class Position_worker():
+    def __init__(self, filepath):
+        self.thread = threading.Thread(target=self.run, kwargs={"filepath": filepath})
+        self.notif_next_queue = threading.Queue()           # Queue to send the isready signal to the next position_worker in line
+        self.get_notif_queue = None
+    
+    def setPrevWorker(self, prev_worker: position_worker):
+        self.get_notif_queue = prev_worker.get_notif_queue  # get notification from the last position_worker
+        
+    def start():
+        self.thread.start()
+        
+    def run(self, filepath):
+        pass
+        
+        
+    
+
+def load_positions(filepath):
+    dctx = zstd.ZstdDecompressor()
+    records = []
+    with open(filepath, 'rb') as f:
+        with dctx.stream_reader(f) as reader:
+            unpacker = msgpack.Unpacker(reader, raw=False)
+            for record in unpacker:
+                records.append(record)
+    return records
+
+def clamp(n, min_value, max_value):
+    return max(min_value, min(n, max_value))
+
+def makeScore(score: int, mate):
+    score = (score - 0.5) * 200       # center score at 0 for equal position; scale up to cp (-100 - 100)
+    
+    if mate == None:
+        return int(score)                # return basic score
+        
+    
+    if(mate == "#"):
+        return int(score)        # score will be -1 or 1
+    
+    if(not type(mate) == int):
+        print("ERROR OCCURRED: MATE NOT A NUMBER AFTER CHECKS")
+        return int(score)
+    
+    mate = (mate) * 2                        # The further away from mate the worse the score is (win); The further the better the score will be (loss) 
+    return  int(clamp(score - mate, -100, 100))
+    
+
+def process_files(files, output_path="output.csv"):
+    with open(output_path, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=['fen', 'best_move', 'top_moves_json', 'score_cp'])
+        writer.writeheader()
+
+        for filename in files:
+            if not Path.is_file(filename):
+                continue
+            print("starting file:")
+            count = 0
+            for record in load_positions(filepath=filename):
+                fen = record['fen']
+                moves = record['moves']
+
+                best_move = None
+                best_score = -math.inf
+                top_moves = []
+
+                for move, eval in moves.items():
+                    score = makeScore(eval['win_prob'], eval['mate'])
+                    top_moves.append({"move": move, "cp": score})
+
+                    if eval['win_prob'] > best_score:
+                        best_score = eval['win_prob']
+                        best_move = move
+                        best_cp = score
+
+                writer.writerow({
+                    'fen': fen,
+                    'best_move': best_move,
+                    'top_moves_json': json.dumps(top_moves),
+                    'score_cp': best_cp
+                })
+                count += 1
+                if count % 100 == 0:
+                    csvfile.flush()
+                
+                
+            print("finished file:")
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Generate chess FEN + policy/value labels using a hugging face dataset"
+    )
+    parser.add_argument("--download",  type=bool, default=False,
+                    help="Should download the files from hugging face (mostly on first call)")
+    
+    parser.add_argument("--output",  type=str, default="chess_training_hf_data.csv",
+                    help="File to write to (csv)")
+
+    args = parser.parse_args()
+    
+    # Download If not existent
+    if args.download:
+        api_key = os.getenv('HF_TOKEN')
+        print(api_key)
+        snapshot_download(
+            repo_id="prdev/chessbench-full-policy-value",
+            repo_type="dataset",
+            allow_patterns=["train-000**-of-01024.msgpack.zst"],  # first 5 shards
+            local_dir="./data",
+            token=api_key
+        )
+
+        
+        
+    files = list(Path("./data").iterdir())
+    
+    process_files(files, args.output)
+    
+if __name__ == "__main__":
+    main()
+        

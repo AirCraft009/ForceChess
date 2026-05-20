@@ -99,7 +99,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
         byte[] moves = currentMoveState.first()[buttonField];
 
-        chessScene.resetBoard();        // clear pieces and highlights before setting them again
+        chessScene.clearHighlights();        // clear pieces and highlights before setting them again
 
         if(!pieceSelected) {
             firstClick = buttonField;
@@ -109,7 +109,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
 
 
-        handleSquare(hasPiece);
+        var packet = handleSquare(hasPiece);
 
         ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(buttonField);
         if(pieceSelected){
@@ -117,7 +117,9 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
         currPieceMoves = moves;
 
-        chessScene.drawPieces(board);
+        if(packet != null) {
+            moveQueue.offer(packet);
+        }
     }
 
     public void handleActionEvent(ActionEvent event){
@@ -165,18 +167,20 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      * handles if to set the flag for moveReady
      * @param hasPiece does the square contain a piece
      */
-    public void handleSquare(boolean hasPiece){
+    public MovePacket handleSquare(boolean hasPiece){
         if (pieceSelected) {
             //condition: -> firstCLick != -1;
             pieceSelected = false;
             if (BoardHelper.contains(currPieceMoves, secondClick)) {
-                moveQueue.offer(new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick]!=EmptyPiece.EMPTY_PIECE));
+                return new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick]!=EmptyPiece.EMPTY_PIECE);
             }
-            return;
+            return null;
         }
         if (hasPiece) {
             pieceSelected = true;
         }
+
+        return null;
     }
 
     @Override
