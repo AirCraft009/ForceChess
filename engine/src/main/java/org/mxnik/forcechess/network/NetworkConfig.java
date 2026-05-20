@@ -109,13 +109,21 @@ public final class NetworkConfig {
                                 .hasBias(true)
                                 .build(), "pol-act")
 
+                .addLayer("pol-hidden",
+                        new DenseLayer.Builder()
+                                .nIn(POL_HIDDEN).nOut(POL_HIDDEN)
+                                .weightInit(WeightInit.XAVIER)
+                                .activation(ACT)
+                                .hasBias(true)
+                                .build(), "pol-flat")
+
                 .addLayer("policy",
                         new OutputLayer.Builder(POL_LOSS)
                                 .nIn(POL_HIDDEN).nOut(Move.MOVE_POSSIBILITIES)
                                 .weightInit(WeightInit.XAVIER)       // Xavier on output — avoids softmax collapse
                                 .activation(Activation.SOFTMAX)
                                 .hasBias(true)
-                                .build(), "pol-flat");
+                                .build(), "pol-hidden");
 
         // Value Head
 

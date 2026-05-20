@@ -123,7 +123,7 @@ public class StockfishBuffer implements TrainingsBuffer {
 
 
     public static void main(String[] args) throws IOException {
-        StockfishBuffer st = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_data.csv");
+        StockfishBuffer st = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
     }
 
 
