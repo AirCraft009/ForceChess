@@ -14,7 +14,12 @@ import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
+import org.mxnik.forcechess.GameControl.*;
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.Moves.GameState;
+import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.UI.Constants;
+import org.mxnik.forcechess.Moves.MoveType;
 
 import java.io.IOException;
 import java.util.concurrent.SynchronousQueue;
