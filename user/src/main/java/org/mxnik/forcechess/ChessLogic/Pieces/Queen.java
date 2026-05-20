@@ -7,7 +7,7 @@ import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.DOWN;
 
-public class Queen extends Piece{
+public class Queen extends Piece {
     public final static int dirCount = 8;
     private static byte[] moveSet = new byte[(Board.sideLen - 1) * 4];
     static {

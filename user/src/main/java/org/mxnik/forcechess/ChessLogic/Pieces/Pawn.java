@@ -7,7 +7,7 @@ import java.util.Arrays;
 import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
-public class Pawn extends Piece{
+public class Pawn extends Piece {
     public final static int dirCount = 3;
     private static final byte[] moveSet = new byte[4];
     private static final byte[] captureMoves = new byte[2];
