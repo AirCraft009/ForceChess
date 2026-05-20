@@ -3,6 +3,10 @@ package org.mxnik.forcechess.FileHandling;
 import java.io.File;
 
 public class TextFileHandler {
+    /**
+     * @param folder the path of the folder
+     * @return the content of the folder specified by the {@code folder}
+     */
     public static String[] getFolderContents(String folder) {
         String[] contents = null;
         File folderFile = new File(folder);
