@@ -129,11 +129,11 @@ public final class Move {
     public static int toFlags(PositionEncoder.Position pos, int to, int promotes){
         boolean attack = pos.pieceMap[to] != EMPTY_PIECE;
         int base = switch (promotes){
-            case Syzygy.TB_PROMOTES_BISHOP -> FLAG_PROMOTE_B;
-            case Syzygy.TB_PROMOTES_KNIGHT -> FLAG_PROMOTE_N;
-            case Syzygy.TB_PROMOTES_ROOK -> FLAG_PROMOTE_R;
-            case Syzygy.TB_PROMOTES_QUEEN -> FLAG_PROMOTE_Q;
-            case Syzygy.TB_PROMOTES_NONE -> FLAG_GENERIC;
+            case 3 -> FLAG_PROMOTE_B;
+            case 4 -> FLAG_PROMOTE_N;
+            case 2 -> FLAG_PROMOTE_R;
+            case 1 -> FLAG_PROMOTE_Q;
+            case 0 -> FLAG_GENERIC;
             default -> throw new IllegalStateException("Unexpected Syzygy promotion value: " + promotes);
         };
         return (base | ((attack)? 1 : 0) << 3);
