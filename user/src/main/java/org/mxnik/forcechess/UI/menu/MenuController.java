@@ -10,11 +10,17 @@ public class MenuController implements EventHandler<Event> {
         this.menuScene = menuScene;
     }
 
+    /**
+     * Handles all button clicks in the menu scene
+     * @param event
+     */
     private void handleActionEvent(ActionEvent event) {
         Object source = event.getSource();
 
         if(source == menuScene.pvp){
-            new PvPPopup();
+            new PvPPopup(menuScene.stage);
+        }else if(source == menuScene.pvb){
+            new PvBPopup(menuScene.stage);
         }
     }
 

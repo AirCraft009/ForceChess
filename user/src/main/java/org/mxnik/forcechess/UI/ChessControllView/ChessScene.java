@@ -16,19 +16,20 @@ import javafx.stage.StageStyle;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
+import org.mxnik.forcechess.Player;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.bot.BatchEvaluator;
 import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.bot.Evaluator;
-import org.mxnik.forcechess.network.AlphaNet;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public class ChessScene extends Stage {
+public class ChessScene {
+    public final Stage stage;
+
     private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
@@ -41,17 +42,19 @@ public class ChessScene extends Stage {
 
     private Image[] images;
 
-    public ChessScene(int sideLen) throws CloneNotSupportedException {
+    public ChessScene(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB) throws CloneNotSupportedException {
+        this.stage = stage;
+
         setBounds();
         basicInit(sideLen);
         generateImages();
 
-        getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
-        getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
+        stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
+        stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         try {
-            this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-            this.controller.setPlayers(controller, controller);
+            this.controller = new ChessController(this, stage, fen);
+            setPlayers(playerStrW, playerStrB);
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");
@@ -61,7 +64,7 @@ public class ChessScene extends Stage {
 
         drawBoard();
         root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
-        this.setOnCloseRequest(e ->
+        stage.setOnCloseRequest(e ->
                 {
                     cleanUp();
                     Platform.exit();
@@ -72,14 +75,29 @@ public class ChessScene extends Stage {
         this.controller.start();
     }
 
+    private void setPlayers(String playerStrW, String playerStrB) throws CloneNotSupportedException {
+        if(playerStrW == null && playerStrB == null) {
+            this.controller.setPlayers(controller, controller);
+        }else if(playerStrW == null){
+            //TODO White player bot
+            this.controller.setPlayers(controller, controller);
+        }else if(playerStrB == null){
+            //TODO Black player bot
+            this.controller.setPlayers(controller, controller);
+        }else{
+            //TODO both players bot
+            this.controller.setPlayers(controller, controller);
+        }
+    }
+
     /**
      * sets the x,y & width, height properties
      */
     public void setBounds(){
-        setX(Constants.bounds.getMinX());
-        setY(Constants.bounds.getMinY());
-        setWidth(Constants.bounds.getWidth());
-        setHeight(Constants.bounds.getHeight());
+        stage.setX(Constants.bounds.getMinX());
+        stage.setY(Constants.bounds.getMinY());
+        stage.setWidth(Constants.bounds.getWidth());
+        stage.setHeight(Constants.bounds.getHeight());
     }
 
     /**
@@ -89,9 +107,9 @@ public class ChessScene extends Stage {
     public void basicInit(int sideLen){
         root = new Group();
         Scene scene = new Scene(root, 500, 500, Color.GREY);
-        setTitle("Chess");
-        setScene(scene);
-        show();
+        stage.setTitle("Chess");
+        stage.setScene(scene);
+        stage.show();
         constants = new Constants(sideLen, scene);
     }
 

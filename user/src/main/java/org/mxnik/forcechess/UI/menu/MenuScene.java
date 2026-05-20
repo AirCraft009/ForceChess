@@ -3,7 +3,6 @@ package org.mxnik.forcechess.UI.menu;
 import javafx.application.Platform;
 import javafx.event.Event;
 import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
@@ -20,11 +19,15 @@ public class MenuScene {
 
     Button pvp, pvb, bvb, train, cBoard, settings;
 
+    /**
+     * @param stage the primary stage used in the program
+     */
     public MenuScene(Stage stage) {
         this.stage = stage;
         setBounds(stage);
         basicInit(stage);
 
+        //TODO remove listeners when not needed
         stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
         stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
@@ -40,7 +43,7 @@ public class MenuScene {
     }
 
     /**
-     * sets the x,y & width, height properties
+     * sets the {@code x}, {@code y} & {@code width}, {@code height} properties
      */
     public void setBounds(Stage stage) {
         stage.setX(Constants.bounds.getMinX());
@@ -62,6 +65,9 @@ public class MenuScene {
         constants = new Constants(-1, scene);
     }
 
+    /**
+     * Create the layout of the menu scene
+     */
     public void drawMenu(){
         root.setSpacing(20);
         root.setAlignment(Pos.CENTER);
@@ -75,6 +81,11 @@ public class MenuScene {
 
         root.getChildren().addAll(pvp, pvb, bvb, train, cBoard, settings);
     }
+
+    /**
+     * @param text The text the button should display
+     * @return the formatted button
+     */
     private Button createButton(String text){
         Button button = new Button(text);
         button.addEventHandler(Event.ANY, controller);
