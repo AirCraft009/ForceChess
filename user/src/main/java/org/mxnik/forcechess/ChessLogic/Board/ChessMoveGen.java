@@ -159,13 +159,10 @@ public class ChessMoveGen {
         return checkCheckmate(cBoard, hasMoves);
     }
 
-    private static GameState checkCheckmate(Board cBoard, boolean hasMove) {
-        if(cBoard.fiftyMove >= 100)
-            return GameState.FiftyMove;
-
-        if (hasMove)
+    private static GameState checkCheckmate(Board cBoard, boolean hasMove) throws CloneNotSupportedException {
+        if (hasMove) {
             return GameState.Continue;
-
+        }
 
         // No moves: distinguish checkmate from stalemate
         boolean inCheck = cBoard.getTurn()
