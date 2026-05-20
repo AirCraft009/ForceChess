@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.Moves.GameState;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.Moves.MoveType;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -26,6 +28,18 @@ public class BoardTests {
         @DisplayName("FiftyMoveRule Stalemate")
         public void fiftyMoveStalemate() throws CloneNotSupportedException {
             b.setFiftyMove(100);        // fiftyMoveCounter at 100 should lead to stalemate
+            assertEquals(GameState.FiftyMove, ChessMoveGen.getMovesFromPosition(b).second());
+        }
+
+        @Test
+        @DisplayName("FiftyMoves Stalemate")
+        public void MakefiftyMoveStalemate() throws CloneNotSupportedException {
+            for (int i = 0; i < 25; i++) {      // make 100 moves
+                b.move(new MovePacket(MoveType.Generic, 1, 18, false));
+                b.move(new MovePacket(MoveType.Generic, 57, 42, false));
+                b.move(new MovePacket(MoveType.Generic, 18, 11, false));
+                b.move(new MovePacket(MoveType.Generic, 42, 57, false));
+            }
             assertEquals(GameState.FiftyMove, ChessMoveGen.getMovesFromPosition(b).second());
         }
     }
