@@ -275,7 +275,7 @@ public class PositionUtils {
         fieldName = fieldName.toLowerCase();
 
         int col = fieldName.charAt(0) - 'a';
-        int row = fieldName.charAt(1) - '0';
+        int row = (fieldName.charAt(1) - '0') - 1;
 
         return row * SIZE + col;
     }
