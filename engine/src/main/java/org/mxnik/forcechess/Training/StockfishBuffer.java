@@ -112,8 +112,19 @@ public class StockfishBuffer implements TrainingsBuffer {
             String moveStr = moveFromTo.toString();
             int from = PositionUtils.parseFieldName(moveStr.substring(0,2));
             int to = PositionUtils.parseFieldName(moveStr.substring(2,4));
+            int promotes = 0;
 
-            int move = Move.of(from, to, Move.toFlags(pos, to, 0));             // no promotion
+            if(moveStr.length() > 4){
+                switch (moveStr.charAt(4)){
+                    case 'b' -> promotes = 3;
+                    case 'n' -> promotes = 4;
+                    case 'r' -> promotes = 2;
+                    case 'q' -> promotes = 1;
+                    default -> throw new IllegalStateException("moveStr should never have a none promotion char (b,n,r,q) at pos 4");
+                }
+            }
+
+            int move = Move.of(from, to, Move.toFlags(pos, to, promotes));             // no promotion
             moveBuff[PolicyIndex.toPolicyIndex(move)] = (float) cpScore;
         }
 
