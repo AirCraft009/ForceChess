@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
+import org.mxnik.forcechess.ChessLogic.Moves.UndoMovePacket;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
 import org.mxnik.forcechess.General.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
@@ -9,7 +10,7 @@ import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.General.DiversePair;
 import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.Moves.MoveType;
-import org.mxnik.forcechess.Pos.Move;
+import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 import static org.mxnik.forcechess.Moves.RayDetection.*;
@@ -209,19 +210,16 @@ public class Board {
         board[from] = EmptyPiece.EMPTY_PIECE;
         board[to] = p;
 
-        if(type.flagVal > 3){
-            switch (type){
-                case PromotionN -> board[to] = new Knight(p.getColor(), true);
-                case PromotionB -> board[to] = new Bishop(p.getColor(), true);
-                case PromotionR -> board[to] = new Rook(p.getColor(), true);
-                case PromotionQ -> board[to] = new Queen(p.getColor(), true);
-            }
+
+        switch (type){
+            case PromotionN -> board[to] = new Knight(p.getColor(), true);
+            case PromotionB -> board[to] = new Bishop(p.getColor(), true);
+            case PromotionR -> board[to] = new Rook(p.getColor(), true);
+            case PromotionQ -> board[to] = new Queen(p.getColor(), true);
         }
 
-        if (p.getType() != PieceTypes.KING) {
-            return false;
-        }
-        return true;
+
+        return p.getType() == PieceTypes.KING;
     }
 
     void rawMove(int from, int to, MoveType type, boolean moved) throws CloneNotSupportedException {
@@ -246,7 +244,8 @@ public class Board {
 
     }
 
-    public void move(MovePacket packet) throws CloneNotSupportedException {
+    public UndoMovePacket move(MovePacket packet) throws CloneNotSupportedException {
+        var undoInfo = new UndoMovePacket(packet, board[packet.to()], fiftyMove);
         rawMove(packet.from(), packet.to(), packet.type(), true);
         turn = !turn;
         fiftyMove++;        // add to fifty move rule counter (counts half moves)
@@ -255,6 +254,8 @@ public class Board {
         if(packet.capture() | board[packet.to()].getType() == PieceTypes.PAWN){
             fiftyMove = 0;
         }
+
+        return undoInfo;
     }
 
     /**

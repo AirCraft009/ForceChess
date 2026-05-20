@@ -1,6 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
-public final class EmptyPiece extends Piece{
+public final class EmptyPiece extends Piece {
     public static final EmptyPiece EMPTY_PIECE= new EmptyPiece();
 
     public EmptyPiece() {

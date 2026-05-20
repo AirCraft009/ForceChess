@@ -33,7 +33,7 @@ public class BoardTests {
 
         @Test
         @DisplayName("FiftyMoves Stalemate")
-        public void MakefiftyMoveStalemate() throws CloneNotSupportedException {
+        public void MakeFiftyMoveStalemate() throws CloneNotSupportedException {
             for (int i = 0; i < 25; i++) {      // make 100 moves
                 b.move(new MovePacket(MoveType.Generic, 1, 18, false));
                 b.move(new MovePacket(MoveType.Generic, 57, 42, false));
