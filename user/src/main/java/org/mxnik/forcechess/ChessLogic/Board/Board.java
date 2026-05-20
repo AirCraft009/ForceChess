@@ -1,18 +1,14 @@
 package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
-import org.mxnik.forcechess.General.FenException;
+import org.mxnik.forcechess.ChessLogic.Pieces.*;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
-
-import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
-import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.General.DiversePair;
-import org.mxnik.forcechess.Moves.MovePacket;
-
-import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
+import org.mxnik.forcechess.General.FenException;
 import static org.mxnik.forcechess.Moves.RayDetection.*;
+import org.mxnik.forcechess.Moves.MoveType;
+import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 
 public class Board {
     public static int sideLen = 8;
@@ -29,16 +25,15 @@ public class Board {
     int kingWPos;
     int kingBPos;
     int enPassantPos;
-    int fiftyMove;
 
     int maxMoves = 0;
 
-    public Board() {
+    public Board() throws FenException {
         board = new Piece[sideLen * sideLen];
         BuildFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
     }
 
-    public Board(String fenString) {
+    public Board(String fenString) throws FenException{
         BuildFromFen(fenString);
         MoveOffsets.calculateOffset(sideLen);
     }
@@ -180,7 +175,7 @@ public class Board {
         return false;
     }
 
-    private boolean castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
+    private boolean castleFreeMove(int from, int to, MoveType type, boolean moved) throws CloneNotSupportedException {
         if (board[from] == EmptyPiece.EMPTY_PIECE) {
             return true;
         }
@@ -209,14 +204,23 @@ public class Board {
         board[from] = EmptyPiece.EMPTY_PIECE;
         board[to] = p;
 
+        if(type.flagVal > 3){
+            switch (type){
+                case PromotionN -> board[to] = new Knight(p.getColor(), true);
+                case PromotionB -> board[to] = new Bishop(p.getColor(), true);
+                case PromotionR -> board[to] = new Rook(p.getColor(), true);
+                case PromotionQ -> board[to] = new Queen(p.getColor(), true);
+            }
+        }
+
         if (p.getType() != PieceTypes.KING) {
             return false;
         }
         return true;
     }
 
-    void rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
-        if (!castleFreeMove(from, to, moved)) {
+    void rawMove(int from, int to, MoveType type, boolean moved) throws CloneNotSupportedException {
+        if (!castleFreeMove(from, to, type, moved)) {
             return;
         }
 
@@ -231,19 +235,13 @@ public class Board {
             int rookPos = (dir < 0)
                     ? from - BoardHelper.distanceLeftB(from)
                     : from + BoardHelper.distanceRightB(from);
-            rawMove(rookPos, to - dir, moved);
+            rawMove(rookPos, to - dir, type, moved);
         }
     }
 
-    public void move(MovePacket packet) throws CloneNotSupportedException {
-        rawMove(packet.from(), packet.to(), true);
+    public void move(int from, int to, MoveType type) throws CloneNotSupportedException {
+        rawMove(from, to, type, true);
         turn = !turn;
-        fiftyMove++;        // add to fifty move rule counter (counts half moves)
-
-        // check if move is a zeroing move
-        if(packet.capture() | board[packet.to()].getType() == PieceTypes.PAWN){
-            fiftyMove = 0;
-        }
     }
 
     /**
@@ -303,114 +301,6 @@ public class Board {
 
     public boolean getTurn() {
         return turn;
-    }
-
-    public static int getSideLen() {
-        return sideLen;
-    }
-
-    public static void setSideLen(int sideLen) {
-        Board.sideLen = sideLen;
-    }
-
-    public static int getSize() {
-        return size;
-    }
-
-    public static void setSize(int size) {
-        Board.size = size;
-    }
-
-    public void setTurn(boolean turn) {
-        this.turn = turn;
-    }
-
-    public int getTotalMaterial() {
-        return totalMaterial;
-    }
-
-    public void setTotalMaterial(int totalMaterial) {
-        this.totalMaterial = totalMaterial;
-    }
-
-    public int getMaxDirs() {
-        return maxDirs;
-    }
-
-    public void setMaxDirs(int maxDirs) {
-        this.maxDirs = maxDirs;
-    }
-
-    public int getAmountPieces() {
-        return amountPieces;
-    }
-
-    public void setAmountPieces(int amountPieces) {
-        this.amountPieces = amountPieces;
-    }
-
-    public MoveList getMoveList() {
-        return moveList;
-    }
-
-    public void setMoveList(MoveList moveList) {
-        this.moveList = moveList;
-    }
-
-    public int getTeamWMaterial() {
-        return teamWMaterial;
-    }
-
-    public void setTeamWMaterial(int teamWMaterial) {
-        this.teamWMaterial = teamWMaterial;
-    }
-
-    public int getTeamBMaterial() {
-        return teamBMaterial;
-    }
-
-    public void setTeamBMaterial(int teamBMaterial) {
-        this.teamBMaterial = teamBMaterial;
-    }
-
-    public int getKingWPos() {
-        return kingWPos;
-    }
-
-    public void setKingWPos(int kingWPos) {
-        this.kingWPos = kingWPos;
-    }
-
-    public int getKingBPos() {
-        return kingBPos;
-    }
-
-    public void setKingBPos(int kingBPos) {
-        this.kingBPos = kingBPos;
-    }
-
-    public int getEnPassantPos() {
-        return enPassantPos;
-    }
-
-    public void setEnPassantPos(int enPassantPos) {
-        this.enPassantPos = enPassantPos;
-    }
-
-    public int getFiftyMove() {
-        return fiftyMove;
-    }
-
-    public void setFiftyMove(int fiftyMove) {
-        this.fiftyMove = fiftyMove;
-    }
-
-    public int getMaxMoves() {
-        return maxMoves;
-    }
-
-    public void setMaxMoves(int maxMoves) {
-        this.maxMoves = maxMoves;
     }
 
     public static void main(String[] args) throws CloneNotSupportedException {
