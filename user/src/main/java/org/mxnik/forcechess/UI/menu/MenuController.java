@@ -2,6 +2,7 @@ package org.mxnik.forcechess.UI.menu;
 
 import javafx.event.*;
 import org.mxnik.forcechess.UI.Constants;
+import org.mxnik.forcechess.UI.createBoards.CreateBoardScene;
 
 public class MenuController implements EventHandler<Event> {
     MenuScene menuScene;
@@ -21,6 +22,12 @@ public class MenuController implements EventHandler<Event> {
             new PvPPopup(menuScene.stage);
         }else if(source == menuScene.pvb){
             new PvBPopup(menuScene.stage);
+        }else if(source == menuScene.bvb){
+            new BvBPopup(menuScene.stage);
+        }else if(source == menuScene.train){
+            new TrainingPopup(menuScene.stage);
+        }else if(source == menuScene.cBoard){
+            new CreateBoardScene(menuScene.stage);
         }
     }
 

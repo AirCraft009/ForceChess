@@ -7,6 +7,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.FileHandling.TextFileHandler;
 
 public abstract class MenuPopup extends Stage {
@@ -44,5 +45,28 @@ public abstract class MenuPopup extends Stage {
     protected Button getButton(String text) {
         Button button = new Button(text);
         return button;
+    }
+
+
+
+    /**
+     * @param boardSize the single allowed board size. If {@code boardSize <= 0} it contains all layouts
+     * @return a {@code ChoiceBox<String>} containing all {@code param}x{@code param} board layouts (Only possibility for bots)
+     */
+    protected ChoiceBox<String> boardCB(int boardSize) {
+        ChoiceBox<String> board = new ChoiceBox<>();
+        FenProperties.load();
+        ObservableList<String> items = FXCollections.observableArrayList(FenProperties.fenNames);
+        if(boardSize > 0) {
+            for (int i = 0; i < items.size(); i++) {
+                String correspFen = FenProperties.getFenStr(items.get(i));
+                if (correspFen.charAt(correspFen.length() - 1) != Integer.toString(boardSize).charAt(0)) {
+                    items.remove(items.get(i));
+                    i--;
+                }
+            }
+        }
+        board.setItems(items);
+        return board;
     }
 }
