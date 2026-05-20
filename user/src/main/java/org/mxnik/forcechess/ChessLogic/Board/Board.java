@@ -2,15 +2,13 @@ package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
-import org.mxnik.forcechess.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
-
-import org.mxnik.forcechess.DiversePair;
-import org.mxnik.forcechess.MoveType;
-
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.General.FenException;
+import static org.mxnik.forcechess.Moves.RayDetection.*;
+import org.mxnik.forcechess.Moves.MoveType;
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
-import static org.mxnik.forcechess.RayDetection.*;
 
 public class Board {
     public static int sideLen = 8;
@@ -30,12 +28,12 @@ public class Board {
 
     int maxMoves = 0;
 
-    public Board() {
+    public Board() throws FenException {
         board = new Piece[sideLen * sideLen];
         BuildFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
     }
 
-    public Board(String fenString) {
+    public Board(String fenString) throws FenException{
         BuildFromFen(fenString);
         MoveOffsets.calculateOffset(sideLen);
     }

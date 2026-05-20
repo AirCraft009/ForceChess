@@ -3,10 +3,11 @@ package org.mxnik.forcechess.Chess;
 import org.mxnik.forcechess.*;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
+import org.mxnik.forcechess.GameControl.*;
 import org.mxnik.forcechess.Pos.MoveGen;
 
 public final class ChessGame implements Runnable{
-    private  Player white;
+    private Player white;
     private  Player black;
     private boolean running;
     private final Board board;
