@@ -274,7 +274,9 @@ public class Train {
             System.out.println("-".repeat(ConsoleBar.WIDTH + 2));
 
             for (int i = 1; i < epoch + 1; i++) {
+//                long start = System.currentTimeMillis();
                 trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);
+//                System.out.println("iter: " + (System.currentTimeMillis() - start));
                 ConsoleBar.render((double) i / epoch, 2);
                 if (checkPoint > 0 && i % checkPoint == 0) {
                     saveCheckPoint();
@@ -318,10 +320,11 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("Hugging_Face_Buff",  true, true);
+        Train train = new Train("Hugging_Face_Buff",  false, true);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
+        System.setProperty("org.deeplearning4j.nn.layers.convolution.CudnnConvolutionHelper", "true");
 
         try{
             // Monitor
@@ -331,9 +334,8 @@ public class Train {
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
 
             StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_hf_data.csv");
-            buffer.skipLines(1000);
             for (int i = 2; i > 0; i--) {
-                train.train(512, buffer, 17470 - (1000 * (i -  1)) , 1000);
+                train.train(512, buffer, 17071, 500);
                 train.saveCheckPoint();
                 System.gc();
                 buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_hf_data.csv");
