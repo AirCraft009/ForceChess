@@ -1,7 +1,5 @@
 package org.mxnik.forcechess.UI.menu;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -34,7 +32,7 @@ public class PvBPopup extends MenuPopup {
 
         Label boardText = new Label("Board: ");
         grid.add(boardText, 0, 0);
-        ChoiceBox<String> board = boardCB();
+        ChoiceBox<String> board = boardCB(8);
         board.getSelectionModel().select("default");
         grid.add(board, 1, 0);
 
@@ -80,23 +78,5 @@ public class PvBPopup extends MenuPopup {
             }
         });
         return contButton;
-    }
-
-    /**
-     * @return a {@code ChoiceBox<String>} containing all 8x8 board layouts (Only possibility for bots)
-     */
-    private ChoiceBox<String> boardCB(){
-        ChoiceBox<String> board = new ChoiceBox<>();
-        FenProperties.load();
-        ObservableList<String> items = FXCollections.observableArrayList(FenProperties.fenNames);
-        for(int i = 0; i < items.size(); i++) {
-            String correspFen = FenProperties.getFenStr(items.get(i));
-            if(correspFen.charAt(correspFen.length()-1) != '8') {
-                items.remove(items.get(i));
-                i--;
-            }
-        }
-        board.setItems(items);
-        return board;
     }
 }
