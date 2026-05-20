@@ -1,15 +1,15 @@
 package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
+import org.mxnik.forcechess.ChessLogic.Pieces.*;
 import org.mxnik.forcechess.General.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 
-import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
-import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.General.DiversePair;
 import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.Moves.MoveType;
+import org.mxnik.forcechess.Pos.Move;
 
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 import static org.mxnik.forcechess.Moves.RayDetection.*;
@@ -180,7 +180,7 @@ public class Board {
         return false;
     }
 
-    private boolean castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
+    private boolean castleFreeMove(int from, int to, MoveType type, boolean moved) throws CloneNotSupportedException {
         if (board[from] == EmptyPiece.EMPTY_PIECE) {
             return true;
         }
@@ -209,14 +209,23 @@ public class Board {
         board[from] = EmptyPiece.EMPTY_PIECE;
         board[to] = p;
 
+        if(type.flagVal > 3){
+            switch (type){
+                case PromotionN -> board[to] = new Knight(p.getColor(), true);
+                case PromotionB -> board[to] = new Bishop(p.getColor(), true);
+                case PromotionR -> board[to] = new Rook(p.getColor(), true);
+                case PromotionQ -> board[to] = new Queen(p.getColor(), true);
+            }
+        }
+
         if (p.getType() != PieceTypes.KING) {
             return false;
         }
         return true;
     }
 
-    void rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
-        if (!castleFreeMove(from, to, moved)) {
+    void rawMove(int from, int to, MoveType type, boolean moved) throws CloneNotSupportedException {
+        if (!castleFreeMove(from, to, type, moved)) {
             return;
         }
 
@@ -231,12 +240,14 @@ public class Board {
             int rookPos = (dir < 0)
                     ? from - BoardHelper.distanceLeftB(from)
                     : from + BoardHelper.distanceRightB(from);
-            rawMove(rookPos, to - dir, moved);
+            rawMove(rookPos, to - dir, ((dir < 0)? MoveType.CastleQ : MoveType.CastleK), moved);
         }
+
+
     }
 
     public void move(MovePacket packet) throws CloneNotSupportedException {
-        rawMove(packet.from(), packet.to(), true);
+        rawMove(packet.from(), packet.to(), packet.type(), true);
         turn = !turn;
         fiftyMove++;        // add to fifty move rule counter (counts half moves)
 
