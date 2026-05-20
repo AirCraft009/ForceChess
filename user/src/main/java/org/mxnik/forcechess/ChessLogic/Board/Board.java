@@ -9,6 +9,7 @@ import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.Moves.MovePacket;
 
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 import static org.mxnik.forcechess.Moves.RayDetection.*;
@@ -28,6 +29,7 @@ public class Board {
     int kingWPos;
     int kingBPos;
     int enPassantPos;
+    int fiftyMove;
 
     int maxMoves = 0;
 
@@ -233,9 +235,15 @@ public class Board {
         }
     }
 
-    public void move(int from, int to) throws CloneNotSupportedException {
-        rawMove(from, to, true);
+    public void move(MovePacket packet) throws CloneNotSupportedException {
+        rawMove(packet.from(), packet.to(), true);
         turn = !turn;
+        fiftyMove++;        // add to fifty move rule counter (counts half moves)
+
+        // check if move is a zeroing move
+        if(packet.capture() | board[packet.to()].getType() == PieceTypes.PAWN){
+            fiftyMove = 0;
+        }
     }
 
     /**
@@ -295,6 +303,114 @@ public class Board {
 
     public boolean getTurn() {
         return turn;
+    }
+
+    public static int getSideLen() {
+        return sideLen;
+    }
+
+    public static void setSideLen(int sideLen) {
+        Board.sideLen = sideLen;
+    }
+
+    public static int getSize() {
+        return size;
+    }
+
+    public static void setSize(int size) {
+        Board.size = size;
+    }
+
+    public void setTurn(boolean turn) {
+        this.turn = turn;
+    }
+
+    public int getTotalMaterial() {
+        return totalMaterial;
+    }
+
+    public void setTotalMaterial(int totalMaterial) {
+        this.totalMaterial = totalMaterial;
+    }
+
+    public int getMaxDirs() {
+        return maxDirs;
+    }
+
+    public void setMaxDirs(int maxDirs) {
+        this.maxDirs = maxDirs;
+    }
+
+    public int getAmountPieces() {
+        return amountPieces;
+    }
+
+    public void setAmountPieces(int amountPieces) {
+        this.amountPieces = amountPieces;
+    }
+
+    public MoveList getMoveList() {
+        return moveList;
+    }
+
+    public void setMoveList(MoveList moveList) {
+        this.moveList = moveList;
+    }
+
+    public int getTeamWMaterial() {
+        return teamWMaterial;
+    }
+
+    public void setTeamWMaterial(int teamWMaterial) {
+        this.teamWMaterial = teamWMaterial;
+    }
+
+    public int getTeamBMaterial() {
+        return teamBMaterial;
+    }
+
+    public void setTeamBMaterial(int teamBMaterial) {
+        this.teamBMaterial = teamBMaterial;
+    }
+
+    public int getKingWPos() {
+        return kingWPos;
+    }
+
+    public void setKingWPos(int kingWPos) {
+        this.kingWPos = kingWPos;
+    }
+
+    public int getKingBPos() {
+        return kingBPos;
+    }
+
+    public void setKingBPos(int kingBPos) {
+        this.kingBPos = kingBPos;
+    }
+
+    public int getEnPassantPos() {
+        return enPassantPos;
+    }
+
+    public void setEnPassantPos(int enPassantPos) {
+        this.enPassantPos = enPassantPos;
+    }
+
+    public int getFiftyMove() {
+        return fiftyMove;
+    }
+
+    public void setFiftyMove(int fiftyMove) {
+        this.fiftyMove = fiftyMove;
+    }
+
+    public int getMaxMoves() {
+        return maxMoves;
+    }
+
+    public void setMaxMoves(int maxMoves) {
+        this.maxMoves = maxMoves;
     }
 
     public static void main(String[] args) throws CloneNotSupportedException {
