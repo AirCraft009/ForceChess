@@ -258,6 +258,49 @@ public class Board {
         return undoInfo;
     }
 
+    public void undoMove(UndoMovePacket undoPacket){
+        fiftyMove = undoPacket.fiftyMoveCounter();
+        turn = !turn;
+
+        MovePacket packet = undoPacket.packet();
+
+        try {
+            switch (packet.type()) {
+                case Generic -> {
+                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.to()] = undoPacket.takenP();
+                }
+                case PromotionB, PromotionN, PromotionQ, PromotionR -> {
+                    board[packet.from()] = new Pawn(turn, true);
+                    board[packet.to()] = undoPacket.takenP();
+                }
+                case EnPassant -> {
+                    int dir = Math.clamp(packet.from() - packet.to(), -1, 1) * size;       // get the direction then multiply to the size of the board
+                    int takeSq = packet.to() - dir;
+                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                    board[takeSq] = undoPacket.takenP();
+                }
+                case CastleK -> {
+                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                    int dr = BoardHelper.distanceRightB(packet.to()-1);         // rook at king prev to pos -1
+                    board[(packet.to() -1) + dr] = board[packet.to() -1].clone();    // move rook to corner
+                    board[packet.to() - 1] = EmptyPiece.EMPTY_PIECE;
+                }
+
+                case CastleQ -> {
+                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                    int dr = BoardHelper.distanceRightB(packet.to()+1);         // rook at king prev to pos +1
+                    board[(packet.to() +1) + dr] = board[packet.to() +1].clone();    // move rook to corner
+                    board[packet.to()  +1] = EmptyPiece.EMPTY_PIECE;
+                }
+            }
+
+        }catch (CloneNotSupportedException _){}
+    }
+
     /**
      * Gibt das Board in einem String zurück der ein Board in textform darstellt
      */
