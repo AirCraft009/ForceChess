@@ -3,8 +3,9 @@ package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
-import org.mxnik.forcechess.General.DiversePair;
-import org.mxnik.forcechess.Moves.GameState;
+import org.mxnik.forcechess.DiversePair;
+import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.MoveType;
 
 import java.util.Arrays;
 
@@ -128,7 +129,7 @@ public class ChessMoveGen {
             for (int j = 0; j < moves.length; j++) {
                 byte move = moves[j];
 
-                cBoard.rawMove(i, move, false);
+                cBoard.rawMove(i, move, MoveType.Generic, false);//TODO promotion
 
                 // isChecked now uses incremental ray casting instead of full
                 // move generation — the hot path is now ~80 ops instead of ~300+
