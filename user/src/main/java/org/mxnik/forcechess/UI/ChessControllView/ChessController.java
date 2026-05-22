@@ -30,7 +30,7 @@ import static org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen.getMovesFromPos
 public class ChessController implements EventHandler<Event>, Callback, Player {
     final private Stage stage;
 
-    final private ChessScene chessScene;
+    final private ChessView chessView;
     final private Board board;
     final private ChessGame game;
     private DiversePair<byte[][], GameState> currentMoveState;
@@ -41,12 +41,12 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     private final SynchronousQueue<MovePacket> moveQueue = new SynchronousQueue<>();
 
 
-    public ChessController(ChessScene chess, Stage stage, String startFen) throws CloneNotSupportedException, IOException {
+    public ChessController(ChessView chess, Stage stage, String startFen) throws CloneNotSupportedException, IOException {
         this.stage = stage;
-        chessScene = chess;
+        chessView = chess;
         board = new Board(startFen);
         game = new ChessGame(board, this);
-        chessScene.drawPieces(board);
+        chessView.drawPieces(board);
         currentMoveState = getMovesFromPosition(board);
         currPieceMoves = new byte[0];
     }
@@ -117,7 +117,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
         byte[] moves = currentMoveState.first()[buttonField];
 
-        chessScene.clearHighlights();        // clear pieces and highlights before setting them again
+        chessView.clearHighlights();        // clear pieces and highlights before setting them again
 
         if(!pieceSelected) {
             firstClick = buttonField;
@@ -129,7 +129,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
         var packet = handleSquare(hasPiece);
 
-        ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(buttonField);
+        ChessBackgroundPane oldRect = (ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(buttonField);
         if(pieceSelected){
             oldRect.setActive();
         }
@@ -176,7 +176,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     public void highlightSquares(byte[] moves){
         //
         for (byte move : moves) {
-            ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(move);
+            ChessBackgroundPane oldRect = (ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(move);
             oldRect.setActive();
         }
     }
@@ -206,15 +206,15 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             return new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE);
         }
 
-        double clickedX = BoardHelper.getCol(secondClick) * chessScene.constants.BlockS + (double) chessScene.constants.BlockS /2;
-        double clickedY = (Board.sideLen-BoardHelper.getRow(secondClick)) * chessScene.constants.BlockS - (double) chessScene.constants.BlockS /2;
+        double clickedX = BoardHelper.getCol(secondClick) * chessView.constants.BlockS + (double) chessView.constants.BlockS /2;
+        double clickedY = (Board.sideLen-BoardHelper.getRow(secondClick)) * chessView.constants.BlockS - (double) chessView.constants.BlockS /2;
 
-        double sceneY = chessScene.getY() + (chessScene.getHeight() - chessScene.getScene().getHeight());
+        double sceneY = chessView.stage.getY() + (chessView.stage.getHeight() - chessView.stage.getScene().getHeight());
 
-        double x = chessScene.getX() + clickedX + chessScene.constants.WidthStart;
-        double y = sceneY + clickedY + chessScene.constants.HeightStart;
+        double x = chessView.stage.getX() + clickedX + chessView.constants.WidthStart;
+        double y = sceneY + clickedY + chessView.constants.HeightStart;
 
-        chessScene.showPromotionStage(board.getBoard()[firstClick].getColor(), x, y);
+        chessView.showPromotionStage(board.getBoard()[firstClick].getColor(), x, y);
         return null;
     }
 
@@ -238,13 +238,13 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         System.gc();
 
         Platform.runLater(() -> {
-              chessScene.drawPieces(board);
+              chessView.drawPieces(board);
         });
     }
 
     @Override
     public void finish(GameState g) {
-        Platform.runLater(chessScene::showWinImage);
+        Platform.runLater(chessView::showWinImage);
     }
 
     @Override
@@ -268,10 +268,10 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      * scale the viewed items properly
      */
     public void resize() {
-        chessScene.constants = new Constants(chessScene.constants.sideLen, stage.getScene());
-        chessScene.backgroundLayer.getChildren().clear();
-        chessScene.clearInteractionLayer();
-        chessScene.drawBoard();
-        chessScene.drawPieces(board);
+        chessView.constants = new Constants(chessView.constants.sideLen, stage.getScene());
+        chessView.backgroundLayer.getChildren().clear();
+        chessView.clearInteractionLayer();
+        chessView.drawBoard();
+        chessView.drawPieces(board);
     }
 }

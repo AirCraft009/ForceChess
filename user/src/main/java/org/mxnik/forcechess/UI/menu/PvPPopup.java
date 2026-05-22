@@ -11,7 +11,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.mxnik.forcechess.FileHandling.FenProperties;
-import org.mxnik.forcechess.UI.ChessControllView.ChessScene;
+import org.mxnik.forcechess.UI.ChessControllView.ChessView;
 
 public class PvPPopup extends MenuPopup {
     /**
@@ -44,7 +44,7 @@ public class PvPPopup extends MenuPopup {
             String fen = FenProperties.getFenStr(board.getValue());
             int sideLen = Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
-                new ChessScene(primaryStage, fen, sideLen, null, null);
+                new ChessView(primaryStage, fen, sideLen, null, null);
             } catch (CloneNotSupportedException ex) {
                 throw new RuntimeException(ex);
             }

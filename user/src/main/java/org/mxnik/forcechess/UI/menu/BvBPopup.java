@@ -12,7 +12,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 import org.mxnik.forcechess.FileHandling.FenProperties;
-import org.mxnik.forcechess.UI.ChessControllView.ChessScene;
+import org.mxnik.forcechess.UI.ChessControllView.ChessView;
 
 public class BvBPopup extends MenuPopup {
     /**
@@ -71,7 +71,7 @@ public class BvBPopup extends MenuPopup {
             String fen = FenProperties.getFenStr(board.getValue());
             int sideLen = Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
-                new ChessScene(primaryStage, fen, sideLen, bot1.getValue(), bot2.getValue());
+                new ChessView(primaryStage, fen, sideLen, bot1.getValue(), bot2.getValue());
             } catch (CloneNotSupportedException ex) {
                 throw new RuntimeException(ex);
             }

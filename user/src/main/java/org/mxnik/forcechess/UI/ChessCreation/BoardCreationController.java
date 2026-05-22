@@ -15,12 +15,12 @@ import org.mxnik.forcechess.UI.ChessControllView.ChessBackgroundPane;
 import org.mxnik.forcechess.UI.Constants;
 
 public class BoardCreationController implements EventHandler<Event>, ChangeListener<Group> {
-    private BoardCreationScene view;
+    private BoardCreationView view;
     private Stage stage;
     private Piece[] board;
     private PieceTypes selectedPieceType;
 
-    public BoardCreationController(BoardCreationScene view, Stage stage, String fen) {
+    public BoardCreationController(BoardCreationView view, Stage stage, String fen) {
 
     }
 
