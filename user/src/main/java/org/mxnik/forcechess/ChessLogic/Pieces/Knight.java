@@ -3,7 +3,7 @@ package org.mxnik.forcechess.ChessLogic.Pieces;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 
-public class Knight extends Piece{
+public class Knight extends Piece {
     public final static int dirCount = 8;
     private static final byte[] moveSet = new byte[dirCount];
     static {

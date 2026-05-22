@@ -51,8 +51,7 @@ public final class ChessGame implements Runnable{
                     break;
                 }
                 MovePacket packet = getActivePLayer().requestMove();
-                //TODO: implemented MovePacket inner workings and connect them with board
-                board.move(packet.from(), packet.to());
+                board.move(packet);
                 getActivePLayer().getMove(packet);
                 //System.out.println("moved");
                 response.update();
