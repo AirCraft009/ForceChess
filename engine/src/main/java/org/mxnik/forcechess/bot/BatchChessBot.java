@@ -88,7 +88,8 @@ public class BatchChessBot extends ChessBot{
         for (int i = 0; i < n; i+=BATCH_SIZE) {
             simulate();
         }
-        return tree.move[tree.highestScoreChild(ROOT)];
+        outputMoveDist();
+        return tree.move[tree.findBestChild(ROOT)];
     }
 
 

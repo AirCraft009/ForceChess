@@ -16,7 +16,9 @@ import org.nd4j.linalg.api.memory.conf.WorkspaceConfiguration;
 import org.nd4j.linalg.api.memory.enums.AllocationPolicy;
 import org.nd4j.linalg.api.memory.enums.LearningPolicy;
 import org.nd4j.linalg.learning.config.Adam;
+import org.nd4j.linalg.lossfunctions.ILossFunction;
 import org.nd4j.linalg.lossfunctions.LossFunctions;
+import org.nd4j.linalg.lossfunctions.impl.LossMCXENT;
 
 public final class NetworkConfig {
 
@@ -28,7 +30,7 @@ public final class NetworkConfig {
 
     // Policy head
     private static final int POL_CHANNELS  = 32;
-    private static final int POL_HIDDEN    = 128;
+    private static final int POL_HIDDEN    = 512;
 
     // Value head
     private static final int VAL_HIDDEN    = 64;
@@ -38,6 +40,7 @@ public final class NetworkConfig {
     private static final int    SEED       = 12;
 
     // Activations / losses
+    private static final double POLICY_SCALE = 5;
     private static final Activation                 ACT        = Activation.LEAKYRELU;
     private static final LossFunctions.LossFunction POL_LOSS = LossFunctions.LossFunction.MCXENT;
     private static final LossFunctions.LossFunction VAL_LOSS = LossFunctions.LossFunction.MSE;
@@ -109,13 +112,21 @@ public final class NetworkConfig {
                                 .hasBias(true)
                                 .build(), "pol-act")
 
+                .addLayer("pol-hidden",
+                        new DenseLayer.Builder()
+                                .nIn(POL_HIDDEN).nOut(POL_HIDDEN)
+                                .weightInit(WeightInit.XAVIER)
+                                .activation(ACT)
+                                .hasBias(true)
+                                .build(), "pol-flat")
+
                 .addLayer("policy",
                         new OutputLayer.Builder(POL_LOSS)
                                 .nIn(POL_HIDDEN).nOut(Move.MOVE_POSSIBILITIES)
                                 .weightInit(WeightInit.XAVIER)       // Xavier on output — avoids softmax collapse
                                 .activation(Activation.SOFTMAX)
                                 .hasBias(true)
-                                .build(), "pol-flat");
+                                .build(), "pol-hidden");
 
         // Value Head
 
@@ -124,12 +135,12 @@ public final class NetworkConfig {
 
         g.addLayer("val-conv",
                         new ConvolutionLayer.Builder(1, 1)
-                                .nIn(CONV_OUT).nOut(8)
+                                .nIn(CONV_OUT).nOut(32)
                                 .activation(Activation.IDENTITY).hasBias(false)
                                 .build(), towerOut)
 
                 .addLayer("val-bn",
-                        new BatchNormalization.Builder().nOut(8).build(), "val-conv")
+                        new BatchNormalization.Builder().nOut(32).build(), "val-conv")
 
                 .addLayer("val-act",
                         new ActivationLayer(ACT), "val-bn")
@@ -143,7 +154,7 @@ public final class NetworkConfig {
                 // hasBias=true + Xavier prevents tanh saturation at init
                 .addLayer("val-dense",
                         new DenseLayer.Builder()
-                                .nIn(8).nOut(VAL_HIDDEN)
+                                .nIn(32).nOut(VAL_HIDDEN)
                                 .weightInit(WeightInit.XAVIER)
                                 .activation(ACT)
                                 .hasBias(true)
