@@ -3,6 +3,7 @@ package org.mxnik.forcechess.Training;
 import au.com.bytecode.opencsv.CSVReader;
 import org.json.JSONArray;
 import org.mxnik.forcechess.General.ConsoleBar;
+import org.mxnik.forcechess.General.DiversePair;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.bot.ChessBot;
 
@@ -63,7 +64,7 @@ public class StockfishBuffer implements TrainingsBuffer {
         return lines;
     }
 
-    public SampleBuffer.TrainingSample getNext(){
+    public DiversePair<SampleBuffer.TrainingSample, PositionEncoder.Position> getNext(){
         String[] line;
         try {
              line = reader.readNext();
@@ -78,8 +79,10 @@ public class StockfishBuffer implements TrainingsBuffer {
         int off = MoveGen.generateMoves(pos, 0, true, tempMove);
         int zVal = Integer.parseInt(line[SCORE_CP]);
         float[] dist =  getMoveDist(line[TOP_MOVES_JSON], off, zVal);
-        return new SampleBuffer.TrainingSample(PositionEncoder.encodeFlat(pos), dist, (float) zVal /100);
+
+        return new DiversePair<>(new SampleBuffer.TrainingSample(PositionEncoder.encodeFlat(pos), dist, (float) zVal /100), pos);
     }
+
 
     public SampleBuffer.TrainingSample[] getNextFew(int count) throws IOException {
         SampleBuffer.TrainingSample[] samples = new SampleBuffer.TrainingSample[count];
@@ -113,11 +116,23 @@ public class StockfishBuffer implements TrainingsBuffer {
             int from = PositionUtils.parseFieldName(moveStr.substring(0,2));
             int to = PositionUtils.parseFieldName(moveStr.substring(2,4));
 
-            int move = Move.of(from, to, Move.toFlags(pos, to, 0));             // no promotion
+            int promotes = 0;
+
+            if(moveStr.length() > 4){
+                switch (moveStr.charAt(4)){
+                    case 'b' -> promotes = 3;
+                    case 'n' -> promotes = 4;
+                    case 'r' -> promotes = 2;
+                    case 'q' -> promotes = 1;
+                    default -> throw new IllegalStateException("moveStr should never have a none promotion char (b,n,r,q) at pos 4");
+                }
+            }
+
+            int move = Move.of(from, to, Move.toFlags(pos, to, promotes));
             moveBuff[PolicyIndex.toPolicyIndex(move)] = (float) cpScore;
         }
 
-        return EndgameBufferBuilder.softMax(moveBuff, 1F);
+        return EndgameBufferBuilder.softMax(moveBuff, 1.2F);
     }
 
 

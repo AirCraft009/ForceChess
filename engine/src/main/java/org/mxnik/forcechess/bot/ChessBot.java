@@ -178,10 +178,24 @@ public class ChessBot implements Player {
     public float[] moveDist(){
         int node = tree.firstChild[0];
         while (node != 0){
-            moveDist[tree.move[node]] = (float) tree.n[node] / tree.globalVisits;
+            moveDist[PolicyIndex.toPolicyIndex(tree.move[node])] = (float) tree.n[node] / tree.globalVisits;
             node = tree.nextSibling[node];
         }
         return moveDist;
+    }
+
+    /**
+     * output moveDist
+     */
+    public void outputMoveDist(){
+        int node = tree.firstChild[0];
+        while (node != 0){
+            int move = tree.move[node];
+            float q = tree.n[node] == 0 ? 0f : tree.w[node] / tree.n[node];             // evaluation
+            float score = q + tree.p[node];
+            System.out.printf("moveDist: %d -> %d + %d. score: %f\n", Move.from(move), Move.to(move), Move.flags(move), (float) score);
+            node = tree.nextSibling[node];
+        }
     }
 
 
