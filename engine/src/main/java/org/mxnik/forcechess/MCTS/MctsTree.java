@@ -6,7 +6,8 @@ import static org.mxnik.forcechess.MCTS.RandNoise.dirichlet;
 
 public final class MctsTree {
     // balances exploitation with exploration
-    public static final float C_PUCT = 3.5F;
+    public static final float C_PUCT = 1.3F;
+    public static final float POLICY_WEIGHT = 1.5F;
     // max amount of MctsNodes
     public static final int POOL_SIZE =  500000;
     private static final float epsilon = 0.25f;
@@ -66,8 +67,9 @@ public final class MctsTree {
 
         while (child != 0) {
             float q = n[child] == 0 ? 0f : w[child] / n[child];             // evaluation
-            if (q > bestScore) {
-                bestScore = q;  // update bestScore
+            float score = q + POLICY_WEIGHT * p[child];
+            if (score > bestScore) {
+                bestScore = score;  // update bestScore
                 bestChild = child;  // update bestChild
             }
             child = nextSibling[child];
@@ -79,7 +81,7 @@ public final class MctsTree {
         int bestChild = -1;
         float bestScore = Float.NEGATIVE_INFINITY;      // start with the lowest score
         int child = firstChild[nodeIdx];
-        float sqrtN = (float) Math.sqrt(globalVisits);
+        float sqrtN = (float) Math.sqrt(n[nodeIdx]);
 
 
         while (child != 0) {
