@@ -32,9 +32,7 @@ public final class AlphaNet implements BatchEvaluator, Closeable {
         model.getConfiguration().setInferenceWorkspaceMode(WorkspaceMode.ENABLED);
         Nd4j.getMemoryManager().setAutoGcWindow(5000);
         flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
-
     }
-
 
 
 
