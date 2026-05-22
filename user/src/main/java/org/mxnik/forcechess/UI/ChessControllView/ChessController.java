@@ -5,12 +5,14 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
+import javafx.stage.Stage;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.GameControl.Callback;
 import org.mxnik.forcechess.GameControl.Player;
 import org.mxnik.forcechess.General.DiversePair;
@@ -66,6 +68,20 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      */
     public void cleanUp(){
         game.stop();
+    }
+
+    public void handlePromotionPress(int i, Stage stage){
+        MoveType type = switch (i){
+            case 0 -> MoveType.PromotionN;
+            case 1 -> MoveType.PromotionB;
+            case 2 -> MoveType.PromotionR;
+            case 3 -> MoveType.PromotionQ;
+            default -> null;
+        };
+        if(type == null)
+            return;
+        stage.close();
+        moveQueue.offer(new MovePacket(type, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
     }
 
     /**
@@ -168,18 +184,35 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      * @param hasPiece does the square contain a piece
      */
     public MovePacket handleSquare(boolean hasPiece){
-        if (pieceSelected) {
-            //condition: -> firstCLick != -1;
-            pieceSelected = false;
-            if (BoardHelper.contains(currPieceMoves, secondClick)) {
-                return new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick]!=EmptyPiece.EMPTY_PIECE);
+        if (!pieceSelected) {
+            if (hasPiece) {
+                pieceSelected = true;
             }
             return null;
         }
-        if (hasPiece) {
-            pieceSelected = true;
+        //condition: -> firstCLick != -1;
+        pieceSelected = false;
+        if (!BoardHelper.contains(currPieceMoves, secondClick)) {
+            return null;
+        }
+        if(  // check if the move is a promotion
+            !(board.getBoard()[firstClick].getType() == PieceTypes.PAWN
+            && (BoardHelper.getRow(secondClick) == 0
+            || BoardHelper.getRow(secondClick) == Board.sideLen-1))
+        ){
+            // return normal move if NOT
+            return new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE);
         }
 
+        double clickedX = BoardHelper.getCol(secondClick) * chessScene.constants.BlockS + (double) chessScene.constants.BlockS /2;
+        double clickedY = (Board.sideLen-BoardHelper.getRow(secondClick)) * chessScene.constants.BlockS - (double) chessScene.constants.BlockS /2;
+
+        double sceneY = chessScene.getY() + (chessScene.getHeight() - chessScene.getScene().getHeight());
+
+        double x = chessScene.getX() + clickedX + chessScene.constants.WidthStart;
+        double y = sceneY + clickedY + chessScene.constants.HeightStart;
+
+        chessScene.showPromotionStage(board.getBoard()[firstClick].getColor(), x, y);
         return null;
     }
 

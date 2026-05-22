@@ -115,7 +115,6 @@ public class StockfishBuffer implements TrainingsBuffer {
             String moveStr = moveFromTo.toString();
             int from = PositionUtils.parseFieldName(moveStr.substring(0,2));
             int to = PositionUtils.parseFieldName(moveStr.substring(2,4));
-
             int promotes = 0;
 
             if(moveStr.length() > 4){
@@ -128,7 +127,7 @@ public class StockfishBuffer implements TrainingsBuffer {
                 }
             }
 
-            int move = Move.of(from, to, Move.toFlags(pos, to, promotes));
+            int move = Move.of(from, to, Move.toFlags(pos, to, promotes));             // no promotion
             moveBuff[PolicyIndex.toPolicyIndex(move)] = (float) cpScore;
         }
 

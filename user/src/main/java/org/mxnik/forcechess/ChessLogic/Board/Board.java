@@ -1,14 +1,16 @@
 package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets;
+import org.mxnik.forcechess.ChessLogic.Moves.UndoMovePacket;
+import org.mxnik.forcechess.ChessLogic.Pieces.*;
 import org.mxnik.forcechess.General.FenException;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 
-import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
-import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.Moves.MoveType;
+import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 import static org.mxnik.forcechess.Moves.RayDetection.*;
@@ -28,6 +30,7 @@ public class Board {
     int kingWPos;
     int kingBPos;
     int enPassantPos;
+    int fiftyMove;
 
     int maxMoves = 0;
 
@@ -178,7 +181,7 @@ public class Board {
         return false;
     }
 
-    private boolean castleFreeMove(int from, int to, boolean moved) throws CloneNotSupportedException {
+    private boolean castleFreeMove(int from, int to, MoveType type, boolean moved) throws CloneNotSupportedException {
         if (board[from] == EmptyPiece.EMPTY_PIECE) {
             return true;
         }
@@ -207,14 +210,20 @@ public class Board {
         board[from] = EmptyPiece.EMPTY_PIECE;
         board[to] = p;
 
-        if (p.getType() != PieceTypes.KING) {
-            return false;
+
+        switch (type){
+            case PromotionN -> board[to] = new Knight(p.getColor(), true);
+            case PromotionB -> board[to] = new Bishop(p.getColor(), true);
+            case PromotionR -> board[to] = new Rook(p.getColor(), true);
+            case PromotionQ -> board[to] = new Queen(p.getColor(), true);
         }
-        return true;
+
+
+        return p.getType() == PieceTypes.KING;
     }
 
-    void rawMove(int from, int to, boolean moved) throws CloneNotSupportedException {
-        if (!castleFreeMove(from, to, moved)) {
+    void rawMove(int from, int to, MoveType type, boolean moved) throws CloneNotSupportedException {
+        if (!castleFreeMove(from, to, type, moved)) {
             return;
         }
 
@@ -229,13 +238,67 @@ public class Board {
             int rookPos = (dir < 0)
                     ? from - BoardHelper.distanceLeftB(from)
                     : from + BoardHelper.distanceRightB(from);
-            rawMove(rookPos, to - dir, moved);
+            rawMove(rookPos, to - dir, ((dir < 0)? MoveType.CastleQ : MoveType.CastleK), moved);
         }
+
+
     }
 
-    public void move(int from, int to) throws CloneNotSupportedException {
-        rawMove(from, to, true);
+    public UndoMovePacket move(MovePacket packet) throws CloneNotSupportedException {
+        var undoInfo = new UndoMovePacket(packet, board[packet.to()], fiftyMove);
+        rawMove(packet.from(), packet.to(), packet.type(), true);
         turn = !turn;
+        fiftyMove++;        // add to fifty move rule counter (counts half moves)
+
+        // check if move is a zeroing move
+        if(packet.capture() | board[packet.to()].getType() == PieceTypes.PAWN){
+            fiftyMove = 0;
+        }
+
+        return undoInfo;
+    }
+
+    public void undoMove(UndoMovePacket undoPacket){
+        fiftyMove = undoPacket.fiftyMoveCounter();
+        turn = !turn;
+
+        MovePacket packet = undoPacket.packet();
+
+        try {
+            switch (packet.type()) {
+                case Generic -> {
+                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.to()] = undoPacket.takenP();
+                }
+                case PromotionB, PromotionN, PromotionQ, PromotionR -> {
+                    board[packet.from()] = new Pawn(turn, true);
+                    board[packet.to()] = undoPacket.takenP();
+                }
+                case EnPassant -> {
+                    int dir = Math.clamp(packet.from() - packet.to(), -1, 1) * size;       // get the direction then multiply to the size of the board
+                    int takeSq = packet.to() - dir;
+                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                    board[takeSq] = undoPacket.takenP();
+                }
+                case CastleK -> {
+                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                    int dr = BoardHelper.distanceRightB(packet.to()-1);         // rook at king prev to pos -1
+                    board[(packet.to() -1) + dr] = board[packet.to() -1].clone();    // move rook to corner
+                    board[packet.to() - 1] = EmptyPiece.EMPTY_PIECE;
+                }
+
+                case CastleQ -> {
+                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                    int dr = BoardHelper.distanceRightB(packet.to()+1);         // rook at king prev to pos +1
+                    board[(packet.to() +1) + dr] = board[packet.to() +1].clone();    // move rook to corner
+                    board[packet.to()  +1] = EmptyPiece.EMPTY_PIECE;
+                }
+            }
+
+        }catch (CloneNotSupportedException _){}
     }
 
     /**
@@ -295,6 +358,114 @@ public class Board {
 
     public boolean getTurn() {
         return turn;
+    }
+
+    public static int getSideLen() {
+        return sideLen;
+    }
+
+    public static void setSideLen(int sideLen) {
+        Board.sideLen = sideLen;
+    }
+
+    public static int getSize() {
+        return size;
+    }
+
+    public static void setSize(int size) {
+        Board.size = size;
+    }
+
+    public void setTurn(boolean turn) {
+        this.turn = turn;
+    }
+
+    public int getTotalMaterial() {
+        return totalMaterial;
+    }
+
+    public void setTotalMaterial(int totalMaterial) {
+        this.totalMaterial = totalMaterial;
+    }
+
+    public int getMaxDirs() {
+        return maxDirs;
+    }
+
+    public void setMaxDirs(int maxDirs) {
+        this.maxDirs = maxDirs;
+    }
+
+    public int getAmountPieces() {
+        return amountPieces;
+    }
+
+    public void setAmountPieces(int amountPieces) {
+        this.amountPieces = amountPieces;
+    }
+
+    public MoveList getMoveList() {
+        return moveList;
+    }
+
+    public void setMoveList(MoveList moveList) {
+        this.moveList = moveList;
+    }
+
+    public int getTeamWMaterial() {
+        return teamWMaterial;
+    }
+
+    public void setTeamWMaterial(int teamWMaterial) {
+        this.teamWMaterial = teamWMaterial;
+    }
+
+    public int getTeamBMaterial() {
+        return teamBMaterial;
+    }
+
+    public void setTeamBMaterial(int teamBMaterial) {
+        this.teamBMaterial = teamBMaterial;
+    }
+
+    public int getKingWPos() {
+        return kingWPos;
+    }
+
+    public void setKingWPos(int kingWPos) {
+        this.kingWPos = kingWPos;
+    }
+
+    public int getKingBPos() {
+        return kingBPos;
+    }
+
+    public void setKingBPos(int kingBPos) {
+        this.kingBPos = kingBPos;
+    }
+
+    public int getEnPassantPos() {
+        return enPassantPos;
+    }
+
+    public void setEnPassantPos(int enPassantPos) {
+        this.enPassantPos = enPassantPos;
+    }
+
+    public int getFiftyMove() {
+        return fiftyMove;
+    }
+
+    public void setFiftyMove(int fiftyMove) {
+        this.fiftyMove = fiftyMove;
+    }
+
+    public int getMaxMoves() {
+        return maxMoves;
+    }
+
+    public void setMaxMoves(int maxMoves) {
+        this.maxMoves = maxMoves;
     }
 
     public static void main(String[] args) throws CloneNotSupportedException {
