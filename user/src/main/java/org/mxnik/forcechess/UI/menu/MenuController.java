@@ -1,8 +1,8 @@
 package org.mxnik.forcechess.UI.menu;
 
 import javafx.event.*;
+import org.mxnik.forcechess.UI.ChessCreation.BoardCreationScene;
 import org.mxnik.forcechess.UI.Constants;
-import org.mxnik.forcechess.UI.createBoards.CreateBoardScene;
 
 public class MenuController implements EventHandler<Event> {
     MenuScene menuScene;
@@ -27,7 +27,7 @@ public class MenuController implements EventHandler<Event> {
         }else if(source == menuScene.train){
             new TrainingPopup(menuScene.stage);
         }else if(source == menuScene.cBoard){
-            new CreateBoardScene(menuScene.stage);
+            new BoardCreationScene(menuScene.stage, "rnbqknnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR - - - - 8", 8);
         }
     }
 

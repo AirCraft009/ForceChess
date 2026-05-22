@@ -13,6 +13,7 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.deeplearning4j.util.ModelSerializer;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
@@ -22,6 +23,7 @@ import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.bot.BatchEvaluator;
 import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.bot.Evaluator;
+import org.mxnik.forcechess.network.AlphaNet;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -54,7 +56,7 @@ public class ChessScene {
 
         try {
             this.controller = new ChessController(this, stage, fen);
-            setPlayers(playerStrW, playerStrB);
+            setPlayers(playerStrW, playerStrB, fen);
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");
@@ -75,18 +77,24 @@ public class ChessScene {
         this.controller.start();
     }
 
-    private void setPlayers(String playerStrW, String playerStrB) throws CloneNotSupportedException {
-        if(playerStrW == null && playerStrB == null) {
-            this.controller.setPlayers(controller, controller);
-        }else if(playerStrW == null){
-            //TODO White player bot
-            this.controller.setPlayers(controller, controller);
-        }else if(playerStrB == null){
-            //TODO Black player bot
-            this.controller.setPlayers(controller, controller);
-        }else{
-            //TODO both players bot
-            this.controller.setPlayers(controller, controller);
+    private void setPlayers(String playerStrW, String playerStrB, String fen) throws CloneNotSupportedException {
+        try {
+            if (playerStrW == null && playerStrB == null) {
+                this.controller.setPlayers(controller, controller);
+            } else if (playerStrW == null) {
+                this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
+            } else if (playerStrB == null) {
+                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), controller);
+            } else {
+                if (playerStrW.equals(playerStrB)) {
+                    BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64);
+                    this.controller.setPlayers(bot, bot);
+                } else {
+                    this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
+                }
+            }
+        }catch (IOException e){
+            throw new RuntimeException(e);
         }
     }
 
