@@ -192,6 +192,9 @@ public class ChessBot implements Player {
         while (node != 0){
             int move = tree.move[node];
             float q = tree.n[node] == 0 ? 0f : tree.w[node] / tree.n[node];             // evaluation
+            System.out.println("n: " + tree.n[node]);
+            System.out.println("q: " + q);
+            System.out.println("w: " + tree.w[node]);
             float score = q + tree.p[node];
             System.out.printf("moveDist: %d -> %d + %d. score: %f\n", Move.from(move), Move.to(move), Move.flags(move), (float) score);
             node = tree.nextSibling[node];
