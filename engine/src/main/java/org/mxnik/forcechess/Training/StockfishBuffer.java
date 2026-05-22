@@ -3,6 +3,7 @@ package org.mxnik.forcechess.Training;
 import au.com.bytecode.opencsv.CSVReader;
 import org.json.JSONArray;
 import org.mxnik.forcechess.General.ConsoleBar;
+import org.mxnik.forcechess.General.DiversePair;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.bot.ChessBot;
 
@@ -63,7 +64,7 @@ public class StockfishBuffer implements TrainingsBuffer {
         return lines;
     }
 
-    public SampleBuffer.TrainingSample getNext(){
+    public DiversePair<SampleBuffer.TrainingSample, PositionEncoder.Position> getNext(){
         String[] line;
         try {
              line = reader.readNext();
@@ -78,8 +79,10 @@ public class StockfishBuffer implements TrainingsBuffer {
         int off = MoveGen.generateMoves(pos, 0, true, tempMove);
         int zVal = Integer.parseInt(line[SCORE_CP]);
         float[] dist =  getMoveDist(line[TOP_MOVES_JSON], off, zVal);
-        return new SampleBuffer.TrainingSample(PositionEncoder.encodeFlat(pos), dist, (float) zVal /100);
+
+        return new DiversePair<>(new SampleBuffer.TrainingSample(PositionEncoder.encodeFlat(pos), dist, (float) zVal /100), pos);
     }
+
 
     public SampleBuffer.TrainingSample[] getNextFew(int count) throws IOException {
         SampleBuffer.TrainingSample[] samples = new SampleBuffer.TrainingSample[count];
@@ -128,13 +131,13 @@ public class StockfishBuffer implements TrainingsBuffer {
             moveBuff[PolicyIndex.toPolicyIndex(move)] = (float) cpScore;
         }
 
-        return EndgameBufferBuilder.softMax(moveBuff, 1F);
+        return EndgameBufferBuilder.softMax(moveBuff, 1.2F);
     }
 
 
 
     public static void main(String[] args) throws IOException {
-        StockfishBuffer st = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_data.csv");
+        StockfishBuffer st = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
     }
 
 

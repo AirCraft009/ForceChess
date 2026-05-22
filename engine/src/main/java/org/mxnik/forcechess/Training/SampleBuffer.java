@@ -1,6 +1,8 @@
 package org.mxnik.forcechess.Training;
 
+import org.mxnik.forcechess.General.DiversePair;
 import org.mxnik.forcechess.General.FileLocations;
+import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -110,8 +112,8 @@ public class SampleBuffer implements TrainingsBuffer{
         return samples[ind];
     }
 
-    public TrainingSample getNext(){
-        return samples[samplePtr++ % ptr];
+    public DiversePair<TrainingSample, PositionEncoder.Position> getNext(){
+        return new DiversePair<>(samples[samplePtr++ % ptr], PositionEncoder.Position.emptyPosition());
     }
 
 
