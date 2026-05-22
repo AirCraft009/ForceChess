@@ -7,22 +7,20 @@ package org.mxnik.forcechess.Pos;
 // └─> bits(12-14) Type, bit 15 (is a capture)
 
 import net.chesstango.piazzolla.syzygy.Syzygy;
-import org.mxnik.forcechess.MovePacket;
-import org.mxnik.forcechess.MoveType;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.Moves.MoveType;
 
 import static org.mxnik.forcechess.Pos.Piece.EMPTY_PIECE;
 
 public final class Move {
     /**
-     * encodes a move into a single integer
+     * encodes a move into a single int
      * @param from start square
      * @param to end square
      * @param flags Move flags (capture, castle etc..)
      * @return encoded move
      */
-    public static int of(int from, int to, int flags) {
-        return from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT;
-    }
+    public static int of(int from, int to, int flags) { return (from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT);}
     // getter methods
     public static int from(int move)  { return move & MOVE_MASK; }
     public static int to(int move)    { return (move >>> TO_MOVE_SHIFT) & MOVE_MASK; }
@@ -30,6 +28,9 @@ public final class Move {
 
     public static boolean attackFromFlag(int flag){ return ((flag >>> 3) & 0x1) == 1L;}
     public static int baseFlag(int flag){ return (flag & 0x7);}
+    public static boolean attack(int move){
+        return Move.attackFromFlag(Move.flags(move));
+    }
 
 
     // Shifts and masks
@@ -128,14 +129,18 @@ public final class Move {
     public static int toFlags(PositionEncoder.Position pos, int to, int promotes){
         boolean attack = pos.pieceMap[to] != EMPTY_PIECE;
         int base = switch (promotes){
-            case Syzygy.TB_PROMOTES_BISHOP -> FLAG_PROMOTE_B;
-            case Syzygy.TB_PROMOTES_KNIGHT -> FLAG_PROMOTE_N;
-            case Syzygy.TB_PROMOTES_ROOK -> FLAG_PROMOTE_R;
-            case Syzygy.TB_PROMOTES_QUEEN -> FLAG_PROMOTE_Q;
-            case Syzygy.TB_PROMOTES_NONE -> FLAG_GENERIC;
+            case 3 -> FLAG_PROMOTE_B;
+            case 4 -> FLAG_PROMOTE_N;
+            case 2 -> FLAG_PROMOTE_R;
+            case 1 -> FLAG_PROMOTE_Q;
+            case 0 -> FLAG_GENERIC;
             default -> throw new IllegalStateException("Unexpected Syzygy promotion value: " + promotes);
         };
         return (base | ((attack)? 1 : 0) << 3);
+    }
+
+    public static String format(int move){
+        return String.format("Move: %d -> %d; flag: %s", Move.from(move), Move.to(move), MoveType.fromFlagVal((baseFlag(flags(move)))));
     }
 
 }

@@ -3,7 +3,7 @@ package org.mxnik.forcechess.Pos;
 
 // Info to unmake a move packed into an int
 // bits 0  - 15 : Move (see bit desc. in Move class)
-// bits 16 - 19 : TakenPiece (Type and Color of the taken piece -> Empty Piece if none were taken
+// bits 16 - 19 : TakenPiece (Type and Color of the taken piece -> Empty Piece if none were taken)
 // bits 20 - 23 : Prev. Castle-perms (defined in the Position class)
 // bits 24 - 29 : fiftyMoveCounter
 public final class UndoMoveInfo {

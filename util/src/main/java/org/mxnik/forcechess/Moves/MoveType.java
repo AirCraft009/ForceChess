@@ -1,4 +1,4 @@
-package org.mxnik.forcechess;
+package org.mxnik.forcechess.Moves;
 
 public enum MoveType {
     Generic(0),

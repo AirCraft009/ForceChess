@@ -3,9 +3,9 @@ package org.mxnik.forcechess.ChessLogic.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
-import org.mxnik.forcechess.DiversePair;
-import org.mxnik.forcechess.GameState;
-import org.mxnik.forcechess.MoveType;
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.Moves.GameState;
+import org.mxnik.forcechess.Moves.MoveType;
 
 import java.util.Arrays;
 
@@ -159,10 +159,13 @@ public class ChessMoveGen {
         return checkCheckmate(cBoard, hasMoves);
     }
 
-    private static GameState checkCheckmate(Board cBoard, boolean hasMove) throws CloneNotSupportedException {
-        if (hasMove) {
+    private static GameState checkCheckmate(Board cBoard, boolean hasMove) {
+        if(cBoard.fiftyMove >= 100)
+            return GameState.FiftyMove;
+
+        if (hasMove)
             return GameState.Continue;
-        }
+
 
         // No moves: distinguish checkmate from stalemate
         boolean inCheck = cBoard.getTurn()

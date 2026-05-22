@@ -1,19 +1,23 @@
 package org.mxnik.forcechess.bot;
 
-import org.deeplearning4j.util.ModelSerializer;
-import org.mxnik.forcechess.DiversePair;
-import org.mxnik.forcechess.FlatArray;
-import org.mxnik.forcechess.GameState;
+import org.deeplearning4j.nn.conf.WorkspaceMode;
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.General.FlatArray;
+import org.mxnik.forcechess.Moves.GameState;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.Training.EndgameBufferBuilder;
 import org.mxnik.forcechess.network.AlphaNet;
+import org.mxnik.forcechess.network.NetworkConfig;
+import org.nd4j.linalg.api.buffer.DataType;
+import org.opencv.dnn.Net;
 
 import java.io.IOException;
+import java.sql.SQLOutput;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 
 public class BatchChessBot extends ChessBot{
-    public static final int BATCH_SIZE = 32;
+    public static final int BATCH_SIZE = 64;
     public static final float VIRTUAL_LOSS = 1F;
 
     // there to remove virtualLoss and virtualVisitCount
@@ -67,12 +71,25 @@ public class BatchChessBot extends ChessBot{
     /**
      * returns the move with the highest visit count after n (to the closest batch) moves
      */
+    @Override
     public int bestMoveUCB(int n){
         // an entire batch is evaluated at once
         for (int i = 0; i < n; i+=BATCH_SIZE) {
             simulate();
         }
         return tree.move[tree.highestVisitNode(0)];
+    }
+
+    /**
+     * returns the move with the highest visit count after n moves
+     */
+    @Override
+    public int bestMove(int n){
+        for (int i = 0; i < n; i+=BATCH_SIZE) {
+            simulate();
+        }
+        outputMoveDist();
+        return tree.move[tree.findBestChild(ROOT)];
     }
 
 
@@ -184,10 +201,14 @@ public class BatchChessBot extends ChessBot{
     }
 
 
+
     public static void main(String[] args) throws IOException {
         EndgameBufferBuilder eg = new EndgameBufferBuilder(110);
-        BatchChessBot bc = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("boardsNBots/bots/networks/D400_10_RES_BLOCKS.zip", true)), PositionUtils.fromFen("4k3/8/8/8/8/8/2R5/4K3 w - - 0 1"), 400);
-        bc.selfPlayGame(400);
+        var net = NetworkConfig.buildNet();
+        net.getConfiguration().setInferenceWorkspaceMode(WorkspaceMode.ENABLED);
+        net.convertDataType(DataType.FLOAT16);
+        BatchChessBot bc = new BatchChessBot(new AlphaNet(net), 400);
+        bc.selfPlayGame(200);
     }
 
 }

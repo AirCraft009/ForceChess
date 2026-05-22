@@ -1,12 +1,10 @@
 package org.mxnik.forcechess.Pos;
 
-import org.mxnik.forcechess.Bitboard;
-import org.mxnik.forcechess.FenException;
+import org.mxnik.forcechess.General.Bitboard;
+import org.mxnik.forcechess.General.FenException;
 
 import java.util.Arrays;
-import java.util.Random;
 
-import static org.mxnik.forcechess.Pos.Move.ROW_1;
 import static org.mxnik.forcechess.Pos.Piece.*;
 import static org.mxnik.forcechess.Pos.PositionEncoder.Position.*;
 import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
@@ -262,7 +260,7 @@ public class PositionUtils {
         // fifty move counter
         fenBuilder.append(pos.fiftyMoveCounter).append(" ");
 
-        // temporarily write 1 only as this isn't important to us
+        // temporarily write 1 only as this isn't important rn
         fenBuilder.append("1");
         return fenBuilder.toString();
     }
@@ -277,7 +275,7 @@ public class PositionUtils {
         fieldName = fieldName.toLowerCase();
 
         int col = fieldName.charAt(0) - 'a';
-        int row = fieldName.charAt(1) - '0';
+        int row = (fieldName.charAt(1) - '0') - 1;
 
         return row * SIZE + col;
     }

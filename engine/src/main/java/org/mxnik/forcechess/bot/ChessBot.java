@@ -1,13 +1,14 @@
 package org.mxnik.forcechess.bot;
 
 import org.deeplearning4j.util.ModelSerializer;
+import org.mxnik.forcechess.General.ConsoleBar;
 import org.mxnik.forcechess.MCTS.MctsTree;
-import org.mxnik.forcechess.MovePacket;
-import org.mxnik.forcechess.Player;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.GameControl.Player;
 import org.mxnik.forcechess.Pos.*;
 import org.mxnik.forcechess.network.AlphaNet;
 import org.mxnik.forcechess.Training.SampleBuffer;
-import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.Moves.GameState;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +20,7 @@ import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
  */
 public class ChessBot implements Player {
     public static final int MAX_SEARCH_DEPTH = 64;
-    public static final int MAX_MOVES_IN_POS = 256;
+    public static final int MAX_MOVES_IN_POS = 218;
 
     protected PositionEncoder.Position pos;                                        // state
     protected final MctsTree tree;                                                 // eval the states and chose with PUCT
@@ -29,7 +30,7 @@ public class ChessBot implements Player {
 
     protected final Evaluator evaluator;
     protected int depth = 1;                                                      // depth = 1 da root immer existiert
-    private int playDepth;
+    protected int playDepth;
 
     public ChessBot(Evaluator evaluator, int playDepth, String fen){
         this.evaluator = evaluator;
@@ -98,9 +99,9 @@ public class ChessBot implements Player {
 
             if (tree.firstChild[node] == 0) {
                 Evaluator.Result v = evaluator.evaluate(pos);
+                tree.w[node] += v.value();
                 expand(node, v.policyV());               // add all moves to the end
                 tree.n[node]++;
-                tree.w[node] += v.value();
                 return node;
             }
             int bestC = tree.findBestChild(node);
@@ -120,7 +121,7 @@ public class ChessBot implements Player {
         var out = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, moves);
 
         if(out.second() != GameState.Continue)
-            return;
+            tree.w[node] += 1;
 
 
         // iterate over all moves in curr pos.
@@ -177,10 +178,24 @@ public class ChessBot implements Player {
     public float[] moveDist(){
         int node = tree.firstChild[0];
         while (node != 0){
-            moveDist[tree.move[node]] = (float) tree.n[node] / tree.globalVisits;
+            moveDist[PolicyIndex.toPolicyIndex(tree.move[node])] = (float) tree.n[node] / tree.globalVisits;
             node = tree.nextSibling[node];
         }
         return moveDist;
+    }
+
+    /**
+     * output moveDist
+     */
+    public void outputMoveDist(){
+        int node = tree.firstChild[0];
+        while (node != 0){
+            int move = tree.move[node];
+            float q = tree.n[node] == 0 ? 0f : tree.w[node] / tree.n[node];             // evaluation
+            float score = q + tree.p[node];
+            System.out.printf("moveDist: %d -> %d + %d. score: %f\n", Move.from(move), Move.to(move), Move.flags(move), (float) score);
+            node = tree.nextSibling[node];
+        }
     }
 
 
@@ -212,7 +227,6 @@ public class ChessBot implements Player {
         int startPtr = buffer.getPtr();
 
         GameState g = pos.getState(pos.whiteToMove);
-        System.out.println("startGame");
         int move;
         while (g == GameState.Continue && startoffset < end){       // loop until Check/stalemate or full buffer
 
@@ -220,9 +234,9 @@ public class ChessBot implements Player {
             expandRoot();
             move = bestMoveUCB(n);
             buffer.addSample(flat, moveDist.clone(), z); // record the moveDist. and z value
-
+            ConsoleBar.render((double) startoffset /end, 2);
             pos.makeMove(move);
-            System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
+
             resetCore();
             g = pos.getState(pos.whiteToMove);
             startoffset ++;
@@ -246,7 +260,6 @@ public class ChessBot implements Player {
         System.out.println("startGame");
         int move;
         while (g == GameState.Continue){
-            expandRoot();
             move = bestMoveUCB(n);
             pos.makeMove(move);
             System.out.printf("move: %d -> %d\n", Move.from(move), Move.to(move));
@@ -271,7 +284,8 @@ public class ChessBot implements Player {
 //        System.out.println("bot move requested");
 //        System.out.println("All moves in position");
         int rMove = bestMove(playDepth);
-
+        var r = getEvaluator().evaluate(pos);
+        System.out.println("Net rates positions: " + r.value());
         //System.out.printf("Black: %d -> %d\n", Move.from(rMove), Move.to(rMove));
         pos.makeMove(rMove);
         //System.out.println(Bitboard.visualiseBitboard(pos.Occupied));

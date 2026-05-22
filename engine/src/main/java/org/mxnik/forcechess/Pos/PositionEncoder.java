@@ -1,14 +1,16 @@
 package org.mxnik.forcechess.Pos;
 
-import org.mxnik.forcechess.Bitboard;
-import org.mxnik.forcechess.GameState;
+import org.mxnik.forcechess.General.Bitboard;
+import org.mxnik.forcechess.ChessSquares;
+import org.mxnik.forcechess.Moves.GameState;
 
 import java.util.Arrays;
 import java.util.Objects;
 
-import static org.mxnik.forcechess.RayDetection.*;
-import static org.mxnik.forcechess.RayDetection.KNIGHT_COL;
+import static org.mxnik.forcechess.Moves.RayDetection.*;
+import static org.mxnik.forcechess.Moves.RayDetection.KNIGHT_COL;
 import static org.mxnik.forcechess.ChessSquares.*;
+import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 
 /**
  * PositionEncoder
@@ -28,10 +30,10 @@ import static org.mxnik.forcechess.ChessSquares.*;
  */
 public final class PositionEncoder {
 
-    public static final int PLANES = 21;
+    public static final int PLANES = 23;
     public static final int SIZE   = 8;
-    public static final int PLANE_SIZE = 64;
-    public static final int TENSOR_SIZE = PLANES * SIZE * SIZE;
+    public static final int PLANE_SIZE = SIZE * SIZE;
+    public static final int TENSOR_SIZE = PLANES * PLANE_SIZE;
 
     private static final int PLANE_WP         = 0;
     private static final int PLANE_WN         = 1;
@@ -49,27 +51,24 @@ public final class PositionEncoder {
     private static final int PLANE_CASTLE_WQ  = 13;
     private static final int PLANE_CASTLE_BK  = 14;
     private static final int PLANE_CASTLE_BQ  = 15;
-    private static final int PLANE_DOUBLE_PW  = 16;
-    private static final int PLANE_DOUBLE_PB  = 17;
-    private static final int PLANE_EN_PASSANT = 18;
-    private static final int PLANE_SIDE       = 19;
-    private static final int PLANE_FIFTY      = 20;
+    private static final int PLANE_EN_PASSANT = 16;
+    private static final int PLANE_SIDE       = 17;
+    private static final int PLANE_FIFTY      = 18;
+    private static final int PLANE_W_MOBILITY = 19;
+    private static final int PLANE_B_MOBILITY = 20;
+    private static final int PLANE_W_ATTACKS  = 21;
+    private static final int PLANE_B_ATTACKS  = 22;
+    private static final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
 
     private PositionEncoder() {}
 
     // Public API
-
-    public static float[][][] encode(Position pos) {
-        float[][][] tensor = new float[PLANES][SIZE][SIZE];
-        encode(pos, tensor);
-        return tensor;
-    }
-
     public static float[] encodeFlat(Position pos) {
         float[] tensor = new float[TENSOR_SIZE];
         encode(pos, tensor);
         return tensor;
     }
+
 
     /**
      * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
@@ -79,53 +78,79 @@ public final class PositionEncoder {
         // Only clear this slice, not the whole tensor
         Arrays.fill(tensor, offset, offset + TENSOR_SIZE - 1, 0);
 
-        // Piece planes 0–11
-        encodeBitboard(pos.WPawns,   offset + PLANE_WP * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WKnights, offset + PLANE_WN * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WBishops, offset + PLANE_WB * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WRooks,   offset + PLANE_WR * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WQueens,  offset + PLANE_WQ * PLANE_SIZE, tensor);
-        encodeBitboard(pos.WKing,    offset + PLANE_WK * PLANE_SIZE, tensor);
+        // Piece planes 0–11 (flipped depending on side to move
+        int whiteMod = pos.whiteToMove? 0 : 6;                  // choose other planes when flipped
+        encodeBitboard(pos.whiteToMove? pos.WPawns : Bitboard.flip(pos.WPawns),
+                offset + (PLANE_WP + whiteMod) * PLANE_SIZE, tensor);
 
-        encodeBitboard(pos.BPawns,   offset + PLANE_BP * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BKnights, offset + PLANE_BN * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BBishops, offset + PLANE_BB * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BRooks,   offset + PLANE_BR * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BQueens,  offset + PLANE_BQ * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BKing,    offset + PLANE_BK * PLANE_SIZE, tensor);
+        encodeBitboard(pos.whiteToMove? pos.WKnights : Bitboard.flip(pos.WKnights),
+                offset + (PLANE_WN + whiteMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.WBishops : Bitboard.flip(pos.WBishops),
+                offset + (PLANE_WB + whiteMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.WRooks : Bitboard.flip(pos.WRooks),
+                offset + (PLANE_WR + whiteMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.WQueens : Bitboard.flip(pos.WQueens),
+                offset + (PLANE_WQ + whiteMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.WKing : Bitboard.flip(pos.WKing),
+                offset + (PLANE_WK  + whiteMod) * PLANE_SIZE, tensor);
+
+
+        int blackMod = pos.whiteToMove? 0 : -6;
+        encodeBitboard(pos.whiteToMove? pos.BPawns : Bitboard.flip(pos.BPawns),
+                offset + (PLANE_BP + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BKnights : Bitboard.flip(pos.BKnights),
+                offset + (PLANE_BN + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BBishops : Bitboard.flip(pos.BBishops),
+                offset + (PLANE_BB + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BRooks : Bitboard.flip(pos.BRooks),
+                offset + (PLANE_BR + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BQueens : Bitboard.flip(pos.BQueens),
+                offset + (PLANE_BQ + blackMod) * PLANE_SIZE, tensor);
+
+        encodeBitboard(pos.whiteToMove? pos.BKing : Bitboard.flip(pos.BKing),
+                offset + (PLANE_BK + blackMod) * PLANE_SIZE, tensor);
+
 
         // Castling rights — uniform planes
+        int WC_Mod = pos.whiteToMove? 0 : 2;
         if (pos.WKingCastle)
             Arrays.fill(tensor,
-                    offset + PLANE_CASTLE_WK * PLANE_SIZE,
-                    offset + PLANE_CASTLE_WQ * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_WK + WC_Mod) * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_WQ + WC_Mod) * PLANE_SIZE,
                     1.0f);
 
         if (pos.WQueenCastle)
             Arrays.fill(tensor,
-                    offset + PLANE_CASTLE_WQ * PLANE_SIZE,
-                    offset + PLANE_CASTLE_BK * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_WQ + WC_Mod) * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_BK + WC_Mod) * PLANE_SIZE,
                     1.0f);
 
+        int BC_Mod = pos.whiteToMove? 0 : -2;
         if (pos.BKingCastle)
             Arrays.fill(tensor,
-                    offset + PLANE_CASTLE_BK * PLANE_SIZE,
-                    offset + PLANE_CASTLE_BQ * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_BK + BC_Mod) * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_BQ + BC_Mod) * PLANE_SIZE,
                     1.0f);
 
         if (pos.BQueenCastle)
             Arrays.fill(tensor,
-                    offset + PLANE_CASTLE_BQ * PLANE_SIZE,
-                    offset + PLANE_DOUBLE_PW * PLANE_SIZE,
+                    offset + (PLANE_CASTLE_BQ + BC_Mod) * PLANE_SIZE,
+                    offset + (PLANE_EN_PASSANT + BC_Mod) * PLANE_SIZE,
                     1.0f);
 
-        // Double pawn move planes
-        encodeBitboard(pos.WDoublePawnMove, offset + PLANE_DOUBLE_PW * PLANE_SIZE, tensor);
-        encodeBitboard(pos.BDoublePawnMove, offset + PLANE_DOUBLE_PB * PLANE_SIZE, tensor);
 
         // En passant — single square
         if (pos.enPassantSquare >= 0) {
-            tensor[offset + PLANE_EN_PASSANT * PLANE_SIZE + pos.enPassantSquare] = 1.0f;
+            tensor[offset + PLANE_EN_PASSANT * PLANE_SIZE +
+                    (pos.whiteToMove ? pos.enPassantSquare : pos.enPassantSquare ^ 56)] = 1.0f;
         }
 
         // Side to move
@@ -138,8 +163,45 @@ public final class PositionEncoder {
         // Fifty-move rule
         Arrays.fill(tensor,
                 offset + PLANE_FIFTY * PLANE_SIZE,
-                offset + TENSOR_SIZE-1,
+                offset + PLANE_W_MOBILITY * PLANE_SIZE,
                 Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
+
+        int mobW = MoveGen.generateMoves(pos, 0, true, tempBuffer);
+
+        //Mobility score white
+        int W_Mod = pos.whiteToMove? 0 : 1;
+        Arrays.fill(tensor,
+                offset + (PLANE_W_MOBILITY + W_Mod) * PLANE_SIZE,
+                offset + (PLANE_B_MOBILITY + W_Mod) * PLANE_SIZE,
+                Math.min((float) mobW / MAX_MOVES_IN_POS, 1.0f));
+
+        //Attack score white
+        long attackBitboard = 0L;
+        for (int i = 0; i < mobW; i++) {
+            attackBitboard  |= (1L << Move.to(tempBuffer[i]));
+        }
+        attackBitboard &= pos.BPieces;
+        attackBitboard = pos.whiteToMove? attackBitboard : Bitboard.flip(attackBitboard);
+        encodeBitboard(attackBitboard, offset + (PLANE_W_ATTACKS + W_Mod) * PLANE_SIZE, tensor);
+
+
+        int mobB = MoveGen.generateMoves(pos, 0, false, tempBuffer);
+        //Mobility score white
+        int B_Mod = pos.whiteToMove? 0 : -1;
+        Arrays.fill(tensor,
+                offset + (PLANE_B_MOBILITY + B_Mod) * PLANE_SIZE,
+                offset + (PLANE_W_ATTACKS  + B_Mod)* PLANE_SIZE,
+                Math.min((float) mobB / MAX_MOVES_IN_POS, 1.0f));
+
+        //Attack score white
+        attackBitboard = 0L;
+        for (int i = 0; i < mobB; i++) {
+            attackBitboard  |= (1L << Move.to(tempBuffer[i]));
+        }
+        attackBitboard &= pos.WPieces;
+        attackBitboard = pos.whiteToMove? attackBitboard : Bitboard.flip(attackBitboard);
+        encodeBitboard(attackBitboard, offset + (PLANE_B_ATTACKS + B_Mod) * PLANE_SIZE, tensor);
+
 
         return offset + TENSOR_SIZE;
     }
@@ -151,65 +213,6 @@ public final class PositionEncoder {
         encode(0, pos, tensor);
     }
 
-
-
-    /**
-     * Encodes into a pre-allocated tensor — reuse this buffer in the MCTS hot path.
-     */
-    public static void encode(Position pos, float[][][] tensor) {
-        clearTensor(tensor);
-
-        // Piece planes 0–11
-        encodeBitboard(pos.WPawns,   tensor[PLANE_WP]);
-        encodeBitboard(pos.WKnights, tensor[PLANE_WN]);
-        encodeBitboard(pos.WBishops, tensor[PLANE_WB]);
-        encodeBitboard(pos.WRooks,   tensor[PLANE_WR]);
-        encodeBitboard(pos.WQueens,  tensor[PLANE_WQ]);
-        encodeBitboard(pos.WKing,    tensor[PLANE_WK]);
-
-        encodeBitboard(pos.BPawns,   tensor[PLANE_BP]);
-        encodeBitboard(pos.BKnights, tensor[PLANE_BN]);
-        encodeBitboard(pos.BBishops, tensor[PLANE_BB]);
-        encodeBitboard(pos.BRooks,   tensor[PLANE_BR]);
-        encodeBitboard(pos.BQueens,  tensor[PLANE_BQ]);
-        encodeBitboard(pos.BKing,    tensor[PLANE_BK]);
-
-        // Castling rights — uniform planes
-        if (pos.WKingCastle)  fillPlane(tensor[PLANE_CASTLE_WK], 1.0f);
-        if (pos.WQueenCastle) fillPlane(tensor[PLANE_CASTLE_WQ], 1.0f);
-        if (pos.BKingCastle)  fillPlane(tensor[PLANE_CASTLE_BK], 1.0f);
-        if (pos.BQueenCastle) fillPlane(tensor[PLANE_CASTLE_BQ], 1.0f);
-
-        // Double pawn move planes
-        encodeBitboard(pos.WDoublePawnMove, tensor[PLANE_DOUBLE_PW]);
-        encodeBitboard(pos.BDoublePawnMove, tensor[PLANE_DOUBLE_PB]);
-
-        // En passant — single square
-        if (pos.enPassantSquare >= 0) {
-            int rank = pos.enPassantSquare >>> 3;
-            int file = pos.enPassantSquare & 7;
-            tensor[PLANE_EN_PASSANT][rank][file] = 1.0f;
-        }
-
-        // Side to move
-        if (pos.whiteToMove) fillPlane(tensor[PLANE_SIDE], 1.0f);
-
-        // Fifty-move rule
-        fillPlane(tensor[PLANE_FIFTY], Math.min(pos.fiftyMoveCounter / 100.0f, 1.0f));
-    }
-
-    // Private helpers
-
-    private static void encodeBitboard(long bitboard, float[][] plane) {
-        long b = bitboard;
-        while (b != 0L) {
-            int sq   = Bitboard.lsb(b);
-            int rank = sq >>> 3;
-            int file = sq & 7;
-            plane[rank][file] = 1.0f;
-            b = Bitboard.popLsb(b); // returns board with LSB cleared
-        }
-    }
 
     private static void encodeBitboard(long bitboard, int offset, float[] plane) {
         long b = bitboard;
@@ -251,7 +254,6 @@ public final class PositionEncoder {
      *
      */
     public static final class Position {
-        //TODO: add more bitboards (attacked squares; move counter; moves to promotion)
         //  Piece bitboards (raw longs)
         public long WPawns;
         public long WKnights;
@@ -474,12 +476,12 @@ public final class PositionEncoder {
          * if called with white (true) and white is in Checkmate it will return GameState.Checkmate
          */
         public GameState getState(boolean color){
+            if(fiftyMoveCounter >= 100){
+                return GameState.FiftyMove;
+            }
             boolean isChecked = checkChess(color);
             boolean hasMoves = Check.hasMoves(this, whiteToMove);
 
-            if(fiftyMoveCounter > 100){
-                return GameState.FiftyMove;
-            }
 
             if (isChecked){
                 if(hasMoves){
@@ -681,13 +683,11 @@ public final class PositionEncoder {
             }
         }
 
+
         /**
-         * Clears a square on the bitboard corresponding to the given piece byte. <p>
-         * Also clears the pieceMap
-         * @param piece pieceT and color
-         * @param sq square
+         * Removes a piece only on the bitboard level
          */
-        public void clearOnBoard(int piece, int sq) {
+        public void removeOnBoard(int piece, int sq){
             boolean color = Piece.color(piece);
             int type      = Piece.pieceT(piece);
 
@@ -714,6 +714,16 @@ public final class PositionEncoder {
                     default -> throw new InvalidPieceTypeException("clearOnBoard: unknown black piece type " + type);
                 }
             }
+        }
+
+        /**
+         * Clears a square on the bitboard corresponding to the given piece byte. <p>
+         * Also clears the pieceMap
+         * @param piece pieceT and color
+         * @param sq square
+         */
+        public void clearOnBoard(int piece, int sq) {
+            removeOnBoard(piece, sq);
             pieceMap[sq] = 0;
         }
 
@@ -778,13 +788,15 @@ public final class PositionEncoder {
         private byte updateCastlePerms(int from, int to){
             byte prevPerms = castlePerms;
             // these squares are fixed by the rules of chess
-            if (from == E1 || to == E1) castlePerms &= ~(W_KINGSIDE | W_QUEENSIDE);
-            if (from == H1 || to == H1) castlePerms &= ~W_KINGSIDE;
-            if (from == A1 || to == A1) castlePerms &= ~W_QUEENSIDE;
-            if (from == E8 || to == E8) castlePerms &= ~(B_KINGSIDE | B_QUEENSIDE);
-            if (from == H8 || to == H8) castlePerms &= ~B_KINGSIDE;
-            if (from == A8 || to == A8) castlePerms &= ~B_QUEENSIDE;
+            removeCastleRights(from, to, E1, W_KINGSIDE, W_QUEENSIDE, H1, A1);
+            removeCastleRights(from, to, ChessSquares.E8, B_KINGSIDE, B_QUEENSIDE, ChessSquares.H8, ChessSquares.A8);
             return prevPerms;
+        }
+
+        private void removeCastleRights(int from, int to, int e1, byte wKingside, byte wQueenside, int h1, int a1) {
+            if (from == e1 || to == e1) castlePerms &= (byte) ~(wKingside | wQueenside);
+            if (from == h1 || to == h1) castlePerms &= (byte) ~wKingside;
+            if (from == a1 || to == a1) castlePerms &= (byte) ~wQueenside;
         }
 
         private void resetCastlePerms(byte perms){
@@ -874,6 +886,8 @@ public final class PositionEncoder {
                 p.pieceMap[i] = (byte) Piece.of(Piece.BLACK, Piece.PAWN);
             }
 
+            p.whiteToMove = true;
+
             return p;
         }
 
@@ -923,52 +937,5 @@ public final class PositionEncoder {
             sb.append('}');
             return sb.toString();
         }
-    }
-
-
-    public static void main(String[] args) {
-        Position pos = Position.StartingPosition();
-        System.out.println(pos.Occupied);
-        float[][][] tensor = encode(pos);
-
-        System.out.println("=== Plane 0: White pawns ===");
-        for (int rank = 7; rank >= 0; rank--) {
-            for (int file = 0; file < 8; file++)
-                System.out.print((int) tensor[PLANE_WP][rank][file] + " ");
-            System.out.println("  ← rank " + (rank + 1));
-        }
-
-        System.out.println("\n=== Plane 12: White kingside castling (expect 0.0) ===");
-        System.out.println("tensor[12][0][0] = " + tensor[PLANE_CASTLE_WK][0][0]);
-
-        System.out.println("\n=== Plane 19: Side to move (expect 1.0 = white) ===");
-        System.out.println("tensor[19][0][0] = " + tensor[PLANE_SIDE][0][0]);
-
-        float[][][] buffer = new float[PLANES][SIZE][SIZE];
-        encode(pos, buffer);
-        System.out.println("\nReuse buffer test passed.");
-
-        int[] moves = new int[256];
-        int actLen = MoveGen.generatePseudoMoves(pos, 0, true, moves);
-
-
-        for (int i = 0; i < actLen; i++) {
-            System.out.printf(" from: %d -> to: %d%n",
-                    Move.from(moves[i]), Move.to(moves[i]));
-        }
-
-        pos.makeMove(moves[5]);
-        pos.makeMove(moves[14]);
-
-        int off = MoveGen.generatePseudoMoves(pos, 0, false, moves);
-        System.out.println("black");
-        for (int i = 0; i < off; i++) {
-            System.out.printf(" from: %d -> to: %d%n",
-                    Move.from(moves[i]), Move.to(moves[i]));
-        }
-        pos.makeMove(moves[4]);
-        System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
-        System.out.println(Arrays.toString(pos.pieceMap));
-
     }
 }

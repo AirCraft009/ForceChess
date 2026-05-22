@@ -1,17 +1,21 @@
 package org.mxnik.forcechess.Training;
 
-import org.mxnik.forcechess.FileLocations;
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.General.FileLocations;
+import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 
 import static org.mxnik.forcechess.Pos.Move.MOVE_POSSIBILITIES;
 import static org.mxnik.forcechess.Pos.PositionEncoder.TENSOR_SIZE;
 
-public class SampleBuffer {
+public class SampleBuffer implements TrainingsBuffer{
     public int length;
     private int ptr;
     private TrainingSample[] samples;
@@ -20,6 +24,7 @@ public class SampleBuffer {
     private final float DECAY = 0.0F;
     public final static String BASE_PATH = FileLocations.SAMPLE_LOCATIONS;
     private final static float lambda = 0.8F;
+    private int samplePtr = 0;
 
     /**
      * creates a sample buffer with a given capacity;
@@ -33,7 +38,7 @@ public class SampleBuffer {
         this.length = templength;
         this.ptr = 0;
         if(read){
-            readSample(length);
+            readSampleChunk(0, Integer.MAX_VALUE, length);
         }else {
             samples = new TrainingSample[length];
         }
@@ -52,6 +57,28 @@ public class SampleBuffer {
         ptr++;
     }
 
+    public void shuffel(){
+        for (int i = 0; i < ptr; i++) {
+            int newInd = random.nextInt(0, ptr);
+            TrainingSample p = samples[i];
+            samples[i] = samples[newInd];
+            samples[newInd] = p;
+        }
+    }
+
+    /**
+     * writes all current samples to the file and resets samples as well as ptr
+     * @param append append to file or overwrite
+     */
+    public void flushToFile(boolean append) throws IOException {
+        writeSamples(append);
+        samples = new TrainingSample[length];
+        ptr = 0;
+    }
+
+    public void resetSamples(){
+        samplePtr = 0;
+    }
 
     /**
      * add a sample to the Buffer
@@ -70,10 +97,25 @@ public class SampleBuffer {
         return weight * term + (1 - weight) * mcts;
     }
 
+    /**
+     * returns a random value from the array
+     */
     public TrainingSample sample(){
         int ind = random.nextInt(ptr);
         return samples[ind];
     }
+
+    /**
+     * get Trainingset at sample
+     */
+    public TrainingSample sample(int ind){
+        return samples[ind];
+    }
+
+    public DiversePair<TrainingSample, PositionEncoder.Position> getNext(){
+        return new DiversePair<>(samples[samplePtr++ % ptr], PositionEncoder.Position.emptyPosition());
+    }
+
 
     public int getPtr(){
         return ptr;
@@ -95,50 +137,82 @@ public class SampleBuffer {
         }
     }
 
-    private void readSample(int gLength) throws IOException {
+    public void combineBuffers(SampleBuffer b){
+        samples = Arrays.copyOf(samples, length + b.length);
+        if (b.ptr >= 0) System.arraycopy(b.samples, 0, samples, ptr, b.ptr);
+    }
+
+    void readSampleChunk(int offset, int amount, int gLength) throws IOException {
         try (DataInputStream is = new DataInputStream(
                 new BufferedInputStream(new FileInputStream(fullPath + ".bin")))) {
 
-            length = Math.max(is.readInt(), gLength);
+            length = Math.clamp(gLength, amount, is.readInt());
             ptr = is.readInt();
 
-            samples = new TrainingSample[length];
-
+            // Clamp range
+            int start = Math.max(0, offset);
+            int end = Math.min(ptr, start + amount);
 
             int totalFloats = TENSOR_SIZE + MOVE_POSSIBILITIES + 1;
-            byte[] byteBuffer = new byte[4 * totalFloats];
+            int sampleBytes = totalFloats * 4;
+
+            // Skip samples before offset
+            long bytesToSkip = (long) start * sampleBytes;
+            long skipped = 0;
+
+            while (skipped < bytesToSkip) {
+                long s = is.skip(bytesToSkip - skipped);
+                if (s <= 0) {
+                    throw new EOFException("Unable to skip to offset");
+                }
+                skipped += s;
+            }
+
+            samples = new TrainingSample[end - start];
+
+            byte[] byteBuffer = new byte[sampleBytes];
             ByteBuffer buffer = ByteBuffer.wrap(byteBuffer);
             buffer.order(ByteOrder.BIG_ENDIAN);
 
-            for (int i = 0; i < ptr; i++) {
-                is.readFully(byteBuffer);
-                buffer.rewind();
+            int loaded = 0;
 
-                float[] tensor = new float[TENSOR_SIZE];
-                float[] pi = new float[MOVE_POSSIBILITIES];
+            try {
+                for (int i = start; i < end; i++) {
+                    is.readFully(byteBuffer);
+                    buffer.rewind();
 
-                for (int j = 0; j < TENSOR_SIZE; j++) {
-                    tensor[j] = buffer.getFloat();
+                    float[] tensor = new float[TENSOR_SIZE];
+                    float[] pi = new float[MOVE_POSSIBILITIES];
+
+                    for (int j = 0; j < TENSOR_SIZE; j++) {
+                        tensor[j] = buffer.getFloat();
+                    }
+
+                    for (int j = 0; j < MOVE_POSSIBILITIES; j++) {
+                        pi[j] = buffer.getFloat();
+                    }
+
+                    float z = buffer.getFloat();
+
+                    samples[loaded++] = new TrainingSample(tensor, pi, z);
                 }
 
-                for (int j = 0; j < MOVE_POSSIBILITIES; j++) {
-                    pi[j] = buffer.getFloat();
-                }
+                ptr = loaded;
 
-                float z = buffer.getFloat();
-
-                samples[i] = new TrainingSample(tensor, pi, z);
+            } catch (EOFException ignored) {
+                System.err.println("EOF");
+                ptr = loaded;
             }
         }
     }
 
     private void readSample() throws IOException {
-        readSample(0);
+        readSampleChunk(0, Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
-    public void writeSamples() throws IOException {
+    public void writeSamples(boolean append) throws IOException {
         try (DataOutputStream os = new DataOutputStream(
-                new BufferedOutputStream(new FileOutputStream(fullPath + ".bin")))) {
+                new BufferedOutputStream(new FileOutputStream(fullPath + ".bin", append)))) {
 
             os.writeInt(length);
             os.writeInt(ptr);
