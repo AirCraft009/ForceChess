@@ -6,7 +6,6 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.input.KeyEvent;
 import javafx.stage.Stage;
-import org.mxnik.forcechess.*;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
@@ -14,6 +13,12 @@ import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
+import org.mxnik.forcechess.GameControl.Callback;
+import org.mxnik.forcechess.GameControl.Player;
+import org.mxnik.forcechess.General.DiversePair;
+import org.mxnik.forcechess.Moves.GameState;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.Moves.MoveType;
 import org.mxnik.forcechess.UI.Constants;
 
 import java.io.IOException;
@@ -67,6 +72,20 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         game.stop();
     }
 
+    public void handlePromotionPress(int i, Stage stage){
+        MoveType type = switch (i){
+            case 0 -> MoveType.PromotionN;
+            case 1 -> MoveType.PromotionB;
+            case 2 -> MoveType.PromotionR;
+            case 3 -> MoveType.PromotionQ;
+            default -> null;
+        };
+        if(type == null)
+            return;
+        stage.close();
+        moveQueue.offer(new MovePacket(type, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
+    }
+
     /**
      * should a click be handled by the method checks if there is a piece the current player is the controller and the color is right
      */
@@ -98,7 +117,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
         byte[] moves = currentMoveState.first()[buttonField];
 
-        chessScene.resetBoard();        // clear pieces and highlights before setting them again
+        chessScene.clearHighlights();        // clear pieces and highlights before setting them again
 
         if(!pieceSelected) {
             firstClick = buttonField;
@@ -108,7 +127,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
 
 
-        handleSquare(hasPiece);
+        var packet = handleSquare(hasPiece);
 
         ChessBackgroundPane oldRect = (ChessBackgroundPane) chessScene.backgroundLayer.getChildren().get(buttonField);
         if(pieceSelected){
@@ -116,7 +135,9 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
         currPieceMoves = moves;
 
-        chessScene.drawPieces(board);
+        if(packet != null) {
+            moveQueue.offer(packet);
+        }
     }
 
     public void handleActionEvent(ActionEvent event){
@@ -126,20 +147,6 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         if (source instanceof ChessButton sourceButton){
             handleActiveChessClick(sourceButton);
         }
-    }
-
-    public void handlePromotionPress(int i, Stage stage){
-        MoveType type = switch (i){
-            case 0 -> MoveType.PromotionN;
-            case 1 -> MoveType.PromotionB;
-            case 2 -> MoveType.PromotionR;
-            case 3 -> MoveType.PromotionQ;
-            default -> null;
-        };
-        if(type == null)
-            return;
-        stage.close();
-        moveQueue.offer(new MovePacket(type, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
     }
 
     public void handleKeyEvent(KeyEvent event) {
@@ -178,32 +185,37 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      * handles if to set the flag for moveReady
      * @param hasPiece does the square contain a piece
      */
-    public void handleSquare(boolean hasPiece){
-        if (pieceSelected) {
-            //condition: -> firstCLick != -1;
-            pieceSelected = false;
-            if (BoardHelper.contains(currPieceMoves, secondClick)) {
-                //Promotion: Call the method to show the promotion window
-
-                if(board.getBoard()[firstClick].getType() == PieceTypes.PAWN && (BoardHelper.getRow(secondClick) == 0 || BoardHelper.getRow(secondClick) == Board.sideLen-1)){
-                    double clickedX = BoardHelper.getCol(secondClick) * chessScene.constants.BlockS + (double) chessScene.constants.BlockS /2;
-                    double clickedY = (Board.sideLen-BoardHelper.getRow(secondClick)) * chessScene.constants.BlockS - (double) chessScene.constants.BlockS /2;
-
-                    double sceneY = stage.getY() + (stage.getHeight() - stage.getScene().getHeight());
-
-                    double x = stage.getX() + clickedX + chessScene.constants.WidthStart;
-                    double y = sceneY + clickedY + chessScene.constants.HeightStart;
-
-                    chessScene.showPromotionStage(board.getBoard()[firstClick].getColor(), x, y);
-                }else {
-                    moveQueue.offer(new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE));
-                }
+    public MovePacket handleSquare(boolean hasPiece){
+        if (!pieceSelected) {
+            if (hasPiece) {
+                pieceSelected = true;
             }
-            return;
+            return null;
         }
-        if (hasPiece) {
-            pieceSelected = true;
+        //condition: -> firstCLick != -1;
+        pieceSelected = false;
+        if (!BoardHelper.contains(currPieceMoves, secondClick)) {
+            return null;
         }
+        if(  // check if the move is a promotion
+            !(board.getBoard()[firstClick].getType() == PieceTypes.PAWN
+            && (BoardHelper.getRow(secondClick) == 0
+            || BoardHelper.getRow(secondClick) == Board.sideLen-1))
+        ){
+            // return normal move if NOT
+            return new MovePacket(MoveType.Generic, firstClick, secondClick, board.getBoard()[secondClick] != EmptyPiece.EMPTY_PIECE);
+        }
+
+        double clickedX = BoardHelper.getCol(secondClick) * chessScene.constants.BlockS + (double) chessScene.constants.BlockS /2;
+        double clickedY = (Board.sideLen-BoardHelper.getRow(secondClick)) * chessScene.constants.BlockS - (double) chessScene.constants.BlockS /2;
+
+        double sceneY = chessScene.getY() + (chessScene.getHeight() - chessScene.getScene().getHeight());
+
+        double x = chessScene.getX() + clickedX + chessScene.constants.WidthStart;
+        double y = sceneY + clickedY + chessScene.constants.HeightStart;
+
+        chessScene.showPromotionStage(board.getBoard()[firstClick].getColor(), x, y);
+        return null;
     }
 
     @Override
@@ -223,6 +235,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+        System.gc();
 
         Platform.runLater(() -> {
               chessScene.drawPieces(board);

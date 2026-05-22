@@ -2,6 +2,7 @@ package org.mxnik.forcechess.ChessLogic.Moves;
 
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
+import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 
 public enum MoveOffsets {
     UP(Board.sideLen),

@@ -1,4 +1,4 @@
-package org.mxnik.forcechess;
+package org.mxnik.forcechess.General;
 
 import java.io.FileInputStream;
 import java.io.IOException;

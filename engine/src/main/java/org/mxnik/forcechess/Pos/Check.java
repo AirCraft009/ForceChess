@@ -1,7 +1,5 @@
 package org.mxnik.forcechess.Pos;
 
-import org.mxnik.forcechess.Bitboard;
-
 import static org.mxnik.forcechess.Pos.MoveGen.generatePseudoMoves;
 import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
 

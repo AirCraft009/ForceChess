@@ -1,9 +1,11 @@
 package org.mxnik.forcechess.Chess;
 
-import org.mxnik.forcechess.*;
+import org.mxnik.forcechess.GameControl.Callback;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
-import org.mxnik.forcechess.Pos.MoveGen;
+import org.mxnik.forcechess.Moves.GameState;
+import org.mxnik.forcechess.Moves.MovePacket;
+import org.mxnik.forcechess.GameControl.Player;
 
 public final class ChessGame implements Runnable{
     private  Player white;
@@ -49,8 +51,7 @@ public final class ChessGame implements Runnable{
                     break;
                 }
                 MovePacket packet = getActivePLayer().requestMove();
-                //TODO: implemented MovePacket inner workings and connect them with board
-                board.move(packet.from(), packet.to(), packet.type());
+                board.move(packet);
                 getActivePLayer().getMove(packet);
                 //System.out.println("moved");
                 response.update();

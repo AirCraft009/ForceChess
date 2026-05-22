@@ -5,7 +5,7 @@ import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
-public class King extends Piece{
+public class King extends Piece {
     public static final int dirCount = 10;
     private static final byte[] moveSet = new byte[dirCount];
     static {
