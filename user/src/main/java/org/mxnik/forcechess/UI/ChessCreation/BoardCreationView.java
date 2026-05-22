@@ -3,11 +3,9 @@ package org.mxnik.forcechess.UI.ChessCreation;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
 import javafx.scene.image.Image;
@@ -15,9 +13,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
-import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
@@ -29,7 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
 
-public class BoardCreationScene {
+public class BoardCreationView {
     public final Stage stage;
 
     private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
@@ -48,7 +44,7 @@ public class BoardCreationScene {
 
     private Image[] images;
 
-    public BoardCreationScene(Stage stage, String fen, int sideLen) {
+    public BoardCreationView(Stage stage, String fen, int sideLen) {
         this.stage = stage;
 
         setBounds();

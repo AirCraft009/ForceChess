@@ -17,7 +17,6 @@ import org.deeplearning4j.util.ModelSerializer;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
-import org.mxnik.forcechess.Player;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
@@ -26,7 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public class ChessScene {
+public class ChessView {
     public final Stage stage;
 
     private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
@@ -41,7 +40,7 @@ public class ChessScene {
 
     private Image[] images;
 
-    public ChessScene(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB) throws CloneNotSupportedException {
+    public ChessView(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB) throws CloneNotSupportedException {
         this.stage = stage;
 
         setBounds();
@@ -93,53 +92,6 @@ public class ChessScene {
         }catch (IOException e){
             throw new RuntimeException(e);
         }
-    }
-    public void showPromotionStage(boolean white, double x, double y){
-        x -= constants.BlockS * 2;
-        y -= (double) constants.BlockS / 2;
-
-        int colorOffset = (white?0:1);
-
-        Stage promotionStage = new Stage();
-
-        Group group = new Group();
-        HBox box = new HBox();
-        ImageView[] promotionOptions = new ImageView[4];
-        promotionOptions[0] = new ImageView(images[2+colorOffset]);
-        promotionOptions[1] = new ImageView(images[4+colorOffset]);
-        promotionOptions[2] = new ImageView(images[6+colorOffset]);
-        promotionOptions[3] = new ImageView(images[8+colorOffset]);
-        for (int i = 0; i < promotionOptions.length; i++) {
-            promotionOptions[i].setFitWidth(constants.BlockS);
-            promotionOptions[i].setFitHeight(constants.BlockS);
-        }
-        box.getChildren().addAll(promotionOptions);
-
-        HBox interaction = new HBox();
-        Button[] btns = new Button[4];
-        for (int i = 0; i < 4; i++) {
-            btns[i] = new Button("");
-            int btnID = i;
-            btns[i].addEventHandler(ActionEvent.ACTION, event -> controller.handlePromotionPress(btnID, promotionStage));
-
-            btns[i].setPrefSize(constants.BlockS, constants.BlockS);
-            btns[i].setMinSize(constants.BlockS, constants.BlockS);
-            btns[i].setMaxSize(constants.BlockS, constants.BlockS);
-
-            // IMPORTANT -fx-background-color: transparent;
-            btns[i].setStyle("-fx-background-color: transparent");
-        }
-        interaction.getChildren().addAll(btns);
-        group.getChildren().addAll(box, interaction);
-
-        Scene scene = new Scene(group);
-        promotionStage.setScene(scene);
-        promotionStage.initStyle(StageStyle.UNDECORATED);
-        promotionStage.initModality(Modality.APPLICATION_MODAL);
-        promotionStage.setResizable(false);
-        promotionStage.setX(x);
-        promotionStage.setY(y);
-        promotionStage.show();
     }
 
     /**
@@ -397,4 +349,6 @@ public class ChessScene {
         winView.setFitWidth(constants.bounds.getWidth());
         pieceLayer.getChildren().addFirst(winView);
     }
+
+
 }
