@@ -17,6 +17,7 @@ import org.deeplearning4j.util.ModelSerializer;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.Player;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
@@ -25,9 +26,11 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-public class ChessScene extends Stage {
-    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
-    private final String pathToImages = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/pieces-basic-png/";
+public class ChessScene {
+    public final Stage stage;
+
+    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
+    private final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
     Constants constants;
     private ChessController controller;
@@ -38,17 +41,19 @@ public class ChessScene extends Stage {
 
     private Image[] images;
 
-    ChessScene(int sideLen, String startPos) throws CloneNotSupportedException {
+    public ChessScene(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB) throws CloneNotSupportedException {
+        this.stage = stage;
+
         setBounds();
         basicInit(sideLen);
         generateImages();
 
-        getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
-        getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
+        stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
+        stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         try {
-            this.controller = new ChessController(this, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
-            this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\boardsNBots\\bots\\networks\\HF_LR.zip")),"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", 64), controller);
+            this.controller = new ChessController(this, stage, fen);
+            setPlayers(playerStrW, playerStrB, fen);
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");
@@ -58,7 +63,7 @@ public class ChessScene extends Stage {
 
         drawBoard();
         root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
-        this.setOnCloseRequest(e ->
+        stage.setOnCloseRequest(e ->
                 {
                     cleanUp();
                     Platform.exit();
@@ -69,6 +74,26 @@ public class ChessScene extends Stage {
         this.controller.start();
     }
 
+    private void setPlayers(String playerStrW, String playerStrB, String fen) throws CloneNotSupportedException {
+        try {
+            if (playerStrW == null && playerStrB == null) {
+                this.controller.setPlayers(controller, controller);
+            } else if (playerStrW == null) {
+                this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
+            } else if (playerStrB == null) {
+                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), controller);
+            } else {
+                if (playerStrW.equals(playerStrB)) {
+                    BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64);
+                    this.controller.setPlayers(bot, bot);
+                } else {
+                    this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
+                }
+            }
+        }catch (IOException e){
+            throw new RuntimeException(e);
+        }
+    }
     public void showPromotionStage(boolean white, double x, double y){
         x -= constants.BlockS * 2;
         y -= (double) constants.BlockS / 2;
@@ -121,10 +146,10 @@ public class ChessScene extends Stage {
      * sets the x,y & width, height properties
      */
     public void setBounds(){
-        setX(Constants.bounds.getMinX());
-        setY(Constants.bounds.getMinY());
-        setWidth(Constants.bounds.getWidth());
-        setHeight(Constants.bounds.getHeight());
+        stage.setX(Constants.bounds.getMinX());
+        stage.setY(Constants.bounds.getMinY());
+        stage.setWidth(Constants.bounds.getWidth());
+        stage.setHeight(Constants.bounds.getHeight());
     }
 
     /**
@@ -134,9 +159,9 @@ public class ChessScene extends Stage {
     public void basicInit(int sideLen){
         root = new Group();
         Scene scene = new Scene(root, 500, 500, Color.GREY);
-        setTitle("Chess");
-        setScene(scene);
-        show();
+        stage.setTitle("Chess");
+        stage.setScene(scene);
+        stage.show();
         constants = new Constants(sideLen, scene);
     }
 
@@ -302,6 +327,60 @@ public class ChessScene extends Stage {
             case KING -> new ImageView(images[10+colorOffset]);
             case ToPromote, EMPTY, ILLEGAL -> null;
         };
+    }
+
+
+    /**
+     * Shows a Popup-Window that is used to choose the piece to promote to
+     * @param white what player is doing this move
+     * @param x,y the position of the popup-window
+     */
+    public void showPromotionStage(boolean white, double x, double y){
+        x -= constants.BlockS * 2;
+        y -= (double) constants.BlockS / 2;
+
+        int colorOffset = (white?0:1);
+
+        Stage promotionStage = new Stage();
+
+        Group group = new Group();
+        HBox box = new HBox();
+        ImageView[] promotionOptions = new ImageView[4];
+        promotionOptions[0] = new ImageView(images[2+colorOffset]);
+        promotionOptions[1] = new ImageView(images[4+colorOffset]);
+        promotionOptions[2] = new ImageView(images[6+colorOffset]);
+        promotionOptions[3] = new ImageView(images[8+colorOffset]);
+        for (int i = 0; i < promotionOptions.length; i++) {
+            promotionOptions[i].setFitWidth(constants.BlockS);
+            promotionOptions[i].setFitHeight(constants.BlockS);
+        }
+        box.getChildren().addAll(promotionOptions);
+
+        HBox interaction = new HBox();
+        Button[] btns = new Button[4];
+        for (int i = 0; i < 4; i++) {
+            btns[i] = new Button("");
+            int btnID = i;
+            btns[i].addEventHandler(ActionEvent.ACTION, event -> controller.handlePromotionPress(btnID, promotionStage));
+
+            btns[i].setPrefSize(constants.BlockS, constants.BlockS);
+            btns[i].setMinSize(constants.BlockS, constants.BlockS);
+            btns[i].setMaxSize(constants.BlockS, constants.BlockS);
+
+            // IMPORTANT -fx-background-color: transparent;
+            btns[i].setStyle("-fx-background-color: transparent");
+        }
+        interaction.getChildren().addAll(btns);
+        group.getChildren().addAll(box, interaction);
+
+        Scene scene = new Scene(group);
+        promotionStage.setScene(scene);
+        promotionStage.initStyle(StageStyle.UNDECORATED);
+        promotionStage.initModality(Modality.APPLICATION_MODAL);
+        promotionStage.setResizable(false);
+        promotionStage.setX(x);
+        promotionStage.setY(y);
+        promotionStage.show();
     }
 
 

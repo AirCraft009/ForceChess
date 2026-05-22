@@ -28,6 +28,7 @@ import static org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen.getMovesFromPos
 
 
 public class ChessController implements EventHandler<Event>, Callback, Player {
+    final private Stage stage;
 
     final private ChessScene chessScene;
     final private Board board;
@@ -40,7 +41,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     private final SynchronousQueue<MovePacket> moveQueue = new SynchronousQueue<>();
 
 
-    public ChessController(ChessScene chess, String startFen) throws CloneNotSupportedException, IOException {
+    public ChessController(ChessScene chess, Stage stage, String startFen) throws CloneNotSupportedException, IOException {
+        this.stage = stage;
         chessScene = chess;
         board = new Board(startFen);
         game = new ChessGame(board, this);
@@ -154,7 +156,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
 
         switch (event.getCode()){
-            case F11 -> chessScene.setFullScreen(!chessScene.isFullScreen());
+            case F11 -> stage.setFullScreen(!stage.isFullScreen());
         }
     }
 
@@ -266,7 +268,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      * scale the viewed items properly
      */
     public void resize() {
-        chessScene.constants = new Constants(chessScene.constants.sideLen, chessScene.getScene());
+        chessScene.constants = new Constants(chessScene.constants.sideLen, stage.getScene());
         chessScene.backgroundLayer.getChildren().clear();
         chessScene.clearInteractionLayer();
         chessScene.drawBoard();
