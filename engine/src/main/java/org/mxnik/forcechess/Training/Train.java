@@ -20,6 +20,7 @@ import org.mxnik.forcechess.network.NetworkConfig;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.MultiDataSet;
 import org.nd4j.linalg.factory.Nd4j;
+import org.nd4j.linalg.ops.transforms.Transforms;
 
 import java.io.File;
 import java.io.IOException;
@@ -134,7 +135,8 @@ public class Train {
     private void trainFromBuffer(int batchSize, TrainingsBuffer buffer, INDArray inputs, INDArray piTargets, INDArray zTargets){
         // each sample: one position + its pi + its z
         for (int i = 0; i < batchSize; i++) {
-            SampleBuffer.TrainingSample s = buffer.getNext();
+            var out = buffer.getNext();
+            var s = out.first();
 
 //            float sum = 0;
 //            float max = 0;
@@ -166,6 +168,10 @@ public class Train {
                 new INDArray[] {inputs},
                 new INDArray[] {piTargets, zTargets}
         ));
+
+//        INDArray policyOut = network.getModel().output(inputs)[0];
+//        double policyLoss = -piTargets.mul(Transforms.log(policyOut.add(1e-8))).sumNumber().doubleValue() / batchSize;
+//        System.out.printf("policy Loss = %f/%f total Loss\n", policyLoss, network.getModel().score());
 
 
     }
@@ -276,6 +282,7 @@ public class Train {
             for (int i = 1; i < epoch + 1; i++) {
 //                long start = System.currentTimeMillis();
                 trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);
+
 //                System.out.println("iter: " + (System.currentTimeMillis() - start));
                 ConsoleBar.render((double) i / epoch, 2);
                 if (checkPoint > 0 && i % checkPoint == 0) {
@@ -320,7 +327,7 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("Hugging_Face_Buff",  false, true);
+        Train train = new Train("HF_LR",  true, true);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
@@ -332,14 +339,15 @@ public class Train {
             StatsStorage statsStorage = new InMemoryStatsStorage();
             uiServer.attach(statsStorage);
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
+            train.network.getModel().setLearningRate(1e-5);
 
-            StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_hf_data.csv");
-            for (int i = 2; i > 0; i--) {
-                train.train(512, buffer, 17071, 500);
-                train.saveCheckPoint();
-                System.gc();
-                buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\chess_training_hf_data.csv");
-            }
+            StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
+            buffer.skipLines(512 * 10000);
+            train.train(512, buffer, 41973, 1000);
+            train.saveCheckPoint();
+            System.gc();
+            buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
+            train.train(512, buffer, 50973 , 1000);
             train.saveNet();
 
         }catch (Exception e){
