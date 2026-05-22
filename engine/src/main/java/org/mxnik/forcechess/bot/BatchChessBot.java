@@ -21,7 +21,7 @@ public class BatchChessBot extends ChessBot{
     public static final float VIRTUAL_LOSS = 1F;
 
     // there to remove virtualLoss and virtualVisitCount
-    private final int[][] batchedMoves = new int[BATCH_SIZE][Move.MOVE_POSSIBILITIES];
+    private final int[][] batchedMoves = new int[BATCH_SIZE][MAX_MOVES_IN_POS];
     private final DiversePair<Integer, GameState>[] endStates = new DiversePair[BATCH_SIZE];
     private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];          // all leaf-nodes affected by virtualLoss
     private final FlatArray batchedInputs;
@@ -89,7 +89,7 @@ public class BatchChessBot extends ChessBot{
             simulate();
         }
         outputMoveDist();
-        return tree.move[tree.findBestChild(ROOT)];
+        return tree.move[tree.highestScoreChild(ROOT)];
     }
 
 
@@ -107,7 +107,7 @@ public class BatchChessBot extends ChessBot{
         while (nodeCount < BATCH_SIZE) {
             if(depth == MAX_SEARCH_DEPTH){
                 tree.globalVisits++;
-                tree.n[node]++;
+                tree.n[ROOT]++;
                 updateVirtual(node);
                 batchedMoves[nodeCount] = new int[0];           // empty array
                 virtuallyAffectedNodes[nodeCount] = node;
@@ -116,7 +116,7 @@ public class BatchChessBot extends ChessBot{
 
                 nodeCount++;
                 unmakeAll();
-                resetCore();
+//                resetCore();
 
                 depth = 0;
                 node = ROOT;
@@ -125,7 +125,7 @@ public class BatchChessBot extends ChessBot{
 
             if (tree.firstChild[node] == 0) {
                 tree.globalVisits++;
-                tree.n[node]++;
+                tree.n[ROOT]++;
                 updateVirtual(node);
                 virtuallyAffectedNodes[nodeCount] = node;
                 endStates[nodeCount] = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, batchedMoves[nodeCount]);
@@ -161,7 +161,7 @@ public class BatchChessBot extends ChessBot{
             int node = virtuallyAffectedNodes[i];
 
             // set the value
-            backProp(node, tree.w[node]);
+            backProp(node, results[i].value());
 
 
             if(tree.firstChild[node] == 0){
@@ -184,6 +184,7 @@ public class BatchChessBot extends ChessBot{
             // don't add to n it was alr incremented during the batching process to make the node look worse
 
             tree.w[node] -= VIRTUAL_LOSS;
+            tree.n[node]++;
             node = tree.parentIdx[node];
         }
     }
