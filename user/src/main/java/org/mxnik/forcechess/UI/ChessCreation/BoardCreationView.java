@@ -28,7 +28,7 @@ import java.util.Arrays;
 public class BoardCreationView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     BorderPane borderPane;
     Constants constants;

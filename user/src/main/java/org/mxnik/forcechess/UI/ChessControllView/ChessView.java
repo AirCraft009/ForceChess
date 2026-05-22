@@ -13,10 +13,12 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import org.apache.commons.compress.harmony.unpack200.bytecode.InnerClassesAttribute;
 import org.deeplearning4j.util.ModelSerializer;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.General.FileLocations;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
@@ -28,7 +30,7 @@ import java.io.IOException;
 public class ChessView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
     Constants constants;
@@ -52,7 +54,13 @@ public class ChessView {
 
         try {
             this.controller = new ChessController(this, stage, fen);
-            setPlayers(playerStrW, playerStrB, fen);
+            new Thread(() -> {
+                try {
+                    initView(playerStrW, playerStrB, fen);
+                } catch (CloneNotSupportedException e) {
+                    throw new IllegalStateException("CloneNotSupportedException was thrown while loading classes. Impossible State, try reinstalling the jar: " + e);
+                }
+            }).start();
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
         }catch (CloneNotSupportedException e){
             throw new CloneNotSupportedException("Error in the chess controller - an invalid clone arose.\nThis is undefined behaviour and should not occur for any reason");
@@ -61,7 +69,6 @@ public class ChessView {
         }
 
         drawBoard();
-        root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
         stage.setOnCloseRequest(e ->
                 {
                     cleanUp();
@@ -69,7 +76,15 @@ public class ChessView {
                     System.exit(0);
                 }
         );
+    }
 
+    private void initView(String playerStrW, String playerStrB, String fen) throws CloneNotSupportedException {
+        Platform.runLater( () -> {
+                    drawBoard();        // TODO: replace drawing board w/ drawing loading screen
+                    root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
+                });
+        setPlayers(playerStrW, playerStrB, fen);
+        Platform.runLater(this::drawBoard);
         this.controller.start();
     }
 
@@ -78,10 +93,15 @@ public class ChessView {
             if (playerStrW == null && playerStrB == null) {
                 this.controller.setPlayers(controller, controller);
             } else if (playerStrW == null) {
+
+                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
                 this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
             } else if (playerStrB == null) {
+                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
                 this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), controller);
             } else {
+                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
+                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
                 if (playerStrW.equals(playerStrB)) {
                     BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64);
                     this.controller.setPlayers(bot, bot);

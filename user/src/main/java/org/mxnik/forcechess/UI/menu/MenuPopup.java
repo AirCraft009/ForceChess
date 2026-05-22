@@ -10,6 +10,8 @@ import javafx.stage.StageStyle;
 import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.FileHandling.TextFileHandler;
 
+import static org.mxnik.forcechess.General.FileLocations.NETWORK_LOCATIONS;
+
 public abstract class MenuPopup extends Stage {
     protected final Stage primaryStage;
     protected static final String DIRECTORY = System.getProperty("user.dir");
@@ -33,7 +35,7 @@ public abstract class MenuPopup extends Stage {
      */
     protected ChoiceBox<String> getBotsList() {
         ChoiceBox<String> bots = new ChoiceBox<>();
-        ObservableList<String> botsList = FXCollections.observableArrayList(TextFileHandler.getFolderContents(DIRECTORY + "/../boardsNBots/bots/networks"));
+        ObservableList<String> botsList = FXCollections.observableArrayList(TextFileHandler.getFolderContents(NETWORK_LOCATIONS));
         bots.setItems(botsList);
         return bots;
     }
