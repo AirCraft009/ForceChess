@@ -221,14 +221,14 @@ public class EndgameBufferBuilder {
 
 
     public static void main(String[] args) throws IOException {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
-        for (int i = 2; i < 6; i++) {
-            var b =          eg.buildBufferOnEndgames(30000, 3, true, PosGen::generateLegalPosition, "BalancedBuffer"+i);
-            b.combineBuffers(eg.buildBufferOnEndgames(35000, 4, true, PosGen::generateLegalPosition, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(40000, 5, false, PosGen::generateLegalPosition, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, PosGen::generateMateInOne, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(15000, 4, false, PosGen::generateMateInOne, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(15000, 5, false, PosGen::generateMateInOne, ""));
+        EndgameBufferBuilder eg = new EndgameBufferBuilder();
+        for (int i = 5; i < 6; i++) {
+//            var b =          eg.buildBufferOnEndgames(30000, 3, true, PosGen::generateLegalPosition, "BalancedBuffer"+i);
+//            b.combineBuffers(eg.buildBufferOnEndgames(35000, 4, true, PosGen::generateLegalPosition, ""));
+//            b.combineBuffers(eg.buildBufferOnEndgames(40000, 5, false, PosGen::generateLegalPosition, ""));
+//            b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, PosGen::generateMateInOne, ""));
+//            b.combineBuffers(eg.buildBufferOnEndgames(15000, 4, false, PosGen::generateMateInOne, ""));
+            var b =(eg.buildBufferOnEndgames(15000, 3, false, PosGen::generateMateInOne, "m1"));
 
             b.writeSamples(false);
         }

@@ -34,7 +34,7 @@ public class BatchChessBot extends ChessBot{
     }
 
     public BatchChessBot(BatchEvaluator evaluator, String fen, int playDepth) {
-        super(null, playDepth, fen);
+        super(null, fen, playDepth);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
     }

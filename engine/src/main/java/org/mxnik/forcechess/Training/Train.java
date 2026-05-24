@@ -327,7 +327,7 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("HF_LR",  true, true);
+        Train train = new Train("HF_LR_HIGH",  false, true);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
@@ -339,11 +339,10 @@ public class Train {
             StatsStorage statsStorage = new InMemoryStatsStorage();
             uiServer.attach(statsStorage);
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
-            train.network.getModel().setLearningRate(1e-5);
 
             StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
-            buffer.skipLines(512 * 10000);
-            train.train(512, buffer, 41973, 1000);
+//            buffer.skipLines(512 * 11000); 41973
+            train.train(512, buffer, 50973, 1000);
             train.saveCheckPoint();
             System.gc();
             buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");

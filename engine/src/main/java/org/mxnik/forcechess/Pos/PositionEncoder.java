@@ -30,10 +30,11 @@ import static org.mxnik.forcechess.bot.ChessBot.MAX_MOVES_IN_POS;
  */
 public final class PositionEncoder {
 
-    public static final int PLANES = 23;
+    public static final int PLANES = 25;
     public static final int SIZE   = 8;
     public static final int PLANE_SIZE = SIZE * SIZE;
     public static final int TENSOR_SIZE = PLANES * PLANE_SIZE;
+    private static final int MAX_MATERIAL_PER_SIDE = 91;
 
     private static final int PLANE_WP         = 0;
     private static final int PLANE_WN         = 1;
@@ -58,6 +59,8 @@ public final class PositionEncoder {
     private static final int PLANE_B_MOBILITY = 20;
     private static final int PLANE_W_ATTACKS  = 21;
     private static final int PLANE_B_ATTACKS  = 22;
+    private static final int PLANE_W_MATERIAL = 23;
+    private static final int PLANE_B_MATERIAL = 24;
     private static final int[] tempBuffer = new int[MAX_MOVES_IN_POS];
 
     private PositionEncoder() {}
@@ -185,15 +188,22 @@ public final class PositionEncoder {
         encodeBitboard(attackBitboard, offset + (PLANE_W_ATTACKS + W_Mod) * PLANE_SIZE, tensor);
 
 
+        // Material count white
+        Arrays.fill(tensor,
+                offset + (PLANE_W_MATERIAL + W_Mod) * PLANE_SIZE,
+                offset + (PLANE_B_MATERIAL + W_Mod) * PLANE_SIZE,
+                Math.min((float) pos.whiteMaterial/MAX_MATERIAL_PER_SIDE, 1.0f));
+
+
         int mobB = MoveGen.generateMoves(pos, 0, false, tempBuffer);
-        //Mobility score white
+        //Mobility score black
         int B_Mod = pos.whiteToMove? 0 : -1;
         Arrays.fill(tensor,
                 offset + (PLANE_B_MOBILITY + B_Mod) * PLANE_SIZE,
                 offset + (PLANE_W_ATTACKS  + B_Mod)* PLANE_SIZE,
                 Math.min((float) mobB / MAX_MOVES_IN_POS, 1.0f));
 
-        //Attack score white
+        //Attack score black
         attackBitboard = 0L;
         for (int i = 0; i < mobB; i++) {
             attackBitboard  |= (1L << Move.to(tempBuffer[i]));
@@ -202,6 +212,12 @@ public final class PositionEncoder {
         attackBitboard = pos.whiteToMove? attackBitboard : Bitboard.flip(attackBitboard);
         encodeBitboard(attackBitboard, offset + (PLANE_B_ATTACKS + B_Mod) * PLANE_SIZE, tensor);
 
+
+        // Material count black
+        Arrays.fill(tensor,
+                offset + (PLANE_B_MATERIAL + B_Mod) * PLANE_SIZE,
+                offset + (PLANES + B_Mod) * PLANE_SIZE,
+                Math.min((float) pos.blackMaterial/MAX_MATERIAL_PER_SIDE, 1.0f));
 
         return offset + TENSOR_SIZE;
     }

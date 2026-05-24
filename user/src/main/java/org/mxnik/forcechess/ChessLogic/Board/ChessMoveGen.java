@@ -53,6 +53,7 @@ public class ChessMoveGen {
                 for (j = 0; j < moveLength; j++) {
                     byte square = moves[moveOffset + j];
 
+                    // check for a take or enPassant
                     if (cBoard.board[i].getType() == PieceTypes.PAWN) {
                         if (BoardHelper.isDiagonalMove(i, square)) {
                             if ((cBoard.board[square].getColor() != cBoard.board[i].getColor()
@@ -67,6 +68,7 @@ public class ChessMoveGen {
                                 break;
                             }
                         }
+                        // Castling
                     } else if (cBoard.board[i].getType() == PieceTypes.KING) {
                         int dir = Integer.compare(square, i);
                         int cornerPos = (dir < 0)
@@ -80,7 +82,7 @@ public class ChessMoveGen {
                                     || corner.getType() != PieceTypes.ROOK) {
                                 break;
                             }
-                            for (int k = i + dir; k != cornerPos; k += dir) {
+                            for (int k = i; k != cornerPos; k += dir) {
                                 if (cBoard.board[k] != EmptyPiece.EMPTY_PIECE || cBoard.isChecked(k,cBoard.board[i].getColor())) {
                                     break moveLoop;
                                 }
