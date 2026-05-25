@@ -88,7 +88,7 @@ public class BatchChessBot extends ChessBot{
         for (int i = 0; i < n; i+=BATCH_SIZE) {
             simulate();
         }
-        outputMoveDist();
+//        outputMoveDist();
         return tree.move[tree.highestScoreChild(ROOT)];
     }
 
@@ -111,11 +111,12 @@ public class BatchChessBot extends ChessBot{
                 updateVirtual(node);
                 batchedMoves[nodeCount] = new int[0];           // empty array
                 virtuallyAffectedNodes[nodeCount] = node;
-                endStates[nodeCount] = new DiversePair<>(0,GameState.StaleMate);
+                endStates[nodeCount] = new DiversePair<>(0,GameState.Continue);
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);
 
                 nodeCount++;
                 unmakeAll();
+                System.out.println("Hit depth");
 //                resetCore();
 
                 depth = 0;

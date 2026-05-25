@@ -99,7 +99,7 @@ public class ChessView {
                 this.controller.setPlayers(controller, new ChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 400));
             } else if (playerStrB == null) {
                 playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
-                this.controller.setPlayers(new ChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 400), controller);
+                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), controller);
             } else {
                 playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
                 playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;

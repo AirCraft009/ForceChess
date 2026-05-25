@@ -36,8 +36,8 @@ public final class NetworkConfig {
     private static final int VAL_HIDDEN    = 64;
 
     // Training
-    private static final double LR         = 5e-4;
-    private static final int    SEED       = 12;
+    private static final double LR         = 1e-3;
+    private static final int    SEED       = 17;
 
     // Activations / losses
     private static final double POLICY_SCALE = 5;

@@ -41,7 +41,7 @@ public class Train {
      * Read the configured AI-model from the file specified (no file ending)
      */
     public Train(String fileName) throws IOException {
-        this(fileName, true, false);
+        this(fileName, true, true, true);
     }
 
 
@@ -51,15 +51,15 @@ public class Train {
      * @param batch use Batched MCTS
      */
     public Train(String fileName, boolean batch) throws IOException {
-        this(fileName, true, batch);
+        this(fileName, true, true, batch);
     }
 
-    private Train(String fileName, boolean read, boolean batch) throws IOException {
+    private Train(String fileName, boolean read, boolean useBot, boolean batch) throws IOException {
         fullPath = BASE_PATH + fileName;
         this.fileName = fileName;
         if (!read) {
             network = new AlphaNet(NetworkConfig.buildNet());
-            bot = batch ? new BatchChessBot(network, 300) : new ChessBot(network, 300);
+            bot = !useBot? null : batch ? new BatchChessBot(network, 300) : new ChessBot(network, 300);
             return;
         }
 
@@ -137,20 +137,6 @@ public class Train {
         for (int i = 0; i < batchSize; i++) {
             var out = buffer.getNext();
             var s = out.first();
-
-//            float sum = 0;
-//            float max = 0;
-//            float count = 0;
-//            for (float f : s.pi) {
-//                sum += f;
-//                count += (f == 0)? 0 : 1;
-//                if (f > max) max = f;
-//            }
-//
-//            System.out.println("sum: " + sum);
-//            System.out.println("max: " + max);
-//            System.out.println("moves: " + count);
-//            System.out.println("uniform would be: " + (1.0f / count));
 
             try (INDArray tensorSlice = Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c');
                  INDArray piRow     = Nd4j.create(s.pi);
@@ -327,7 +313,7 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("HF_LR_HIGH",  false, true);
+        Train train = new Train("HF_LR",  true, false,false);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
@@ -339,14 +325,16 @@ public class Train {
             StatsStorage statsStorage = new InMemoryStatsStorage();
             uiServer.attach(statsStorage);
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
+            train.network.getModel().setLearningRate(5e-4);
 
             StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
 //            buffer.skipLines(512 * 11000); 41973
-            train.train(512, buffer, 50973, 1000);
+            train.train(512, buffer, 3241, 1000);
             train.saveCheckPoint();
             System.gc();
             buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
-            train.train(512, buffer, 50973 , 1000);
+            buffer.skipLines(17000 * 512);
+            train.train(512, buffer, 11000 , 1000);
             train.saveNet();
 
         }catch (Exception e){
