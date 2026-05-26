@@ -42,6 +42,7 @@ public class MenuController implements EventHandler<Event> {
      */
     public void resize() {
         menuScene.constants = new Constants(menuScene.constants.sideLen, menuScene.getScene());
+        menuScene.root.getChildren().clear();
         menuScene.drawMenu();
     }
 }

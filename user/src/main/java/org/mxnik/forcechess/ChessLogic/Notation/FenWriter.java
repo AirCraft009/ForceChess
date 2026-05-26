@@ -55,9 +55,64 @@ public class FenWriter {
         fenBuilder.append(turn);
         fenBuilder.append(' ');
         // temporary 0's
-        fenBuilder.append("0 0 0");
+        fenBuilder.append("0 0 0");//TODO swap out 0's
         fenBuilder.append(' ');
         fenBuilder.append(sideLen);
+
+        return fenBuilder.toString();
+    }
+
+    public static String WriteFen(Piece[] pieceBoard, boolean whiteTurn, int sideLen){
+        StringBuilder fenBuilder = new StringBuilder();
+        String sideLenStr =  Integer.toString(Board.sideLen);
+        char turn = whiteTurn? 'w' : 'b';
+        int skip = 0;
+        int ptr = 0;
+
+        rowloop:
+        for (int i = Board.sideLen - 1; i >= 0 ; i--) {
+            for (int j = 0; j < Board.sideLen; j++) {
+                ptr = i * Board.sideLen + j;
+
+                if(pieceBoard[ptr].getType() == PieceTypes.EMPTY){
+                    while (pieceBoard[ptr].getType() == PieceTypes.EMPTY){
+                        skip ++;
+                        j ++;
+                        ptr ++;
+                        if ((ptr) % Board.sideLen == 0){
+                            fenBuilder.append(skip);
+                            fenBuilder.append('/');
+                            skip = 0;
+                            continue rowloop;
+                        }
+                    }
+                    continue;
+                }
+
+                Piece piece = pieceBoard[ptr];
+                if(skip != 0) {
+                    fenBuilder.append(skip);
+                    skip = 0;
+                }
+                char s = FenConversion.FromPiece(piece.getType(), piece.getColor());
+                fenBuilder.append(s);
+
+                if ((ptr + 1) % Board.sideLen == 0){
+                    fenBuilder.append('/');
+                }
+
+            }
+        }
+
+        //remove the last slash
+        fenBuilder.deleteCharAt(fenBuilder.length()-1);
+        fenBuilder.append(' ');
+        fenBuilder.append(turn);
+        fenBuilder.append(' ');
+        // temporary 0's
+        fenBuilder.append("0 0 0");//TODO swap out 0's
+        fenBuilder.append(' ');
+        fenBuilder.append(sideLenStr);
 
         return fenBuilder.toString();
     }
