@@ -67,9 +67,11 @@ public class PvBPopup extends MenuPopup {
         contButton.setOnAction(e -> {
             close();
             String fen = FenProperties.getFenStr(board.getValue());
-            int sideLen = Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
+            System.out.println(fen);
+            int sideLen = 8;
+//            Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
-                if(new Random().nextBoolean())
+                if(true)
                     new ChessView(primaryStage, fen, sideLen, bot.getValue(), null);
                 else
                     new ChessView(primaryStage, fen, sideLen, null, bot.getValue());
