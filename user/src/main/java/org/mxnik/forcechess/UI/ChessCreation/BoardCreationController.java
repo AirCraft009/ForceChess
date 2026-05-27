@@ -30,7 +30,7 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
     private int blackKPos = -1, whiteKPos = -1;
     private PieceTypes selectedPieceType;
 
-    public BoardCreationController(BoardCreationView view, Stage stage, String fen) {
+    public BoardCreationController(BoardCreationView view, Stage stage) {
         this.view = view;
         this.stage = stage;
         board = new Piece[view.constants.sideLen * view.constants.sideLen];
@@ -161,6 +161,7 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
     private void changedSizeSlider(ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) {
         int size = (int) Math.round(view.sizeSlider.getValue());
         if(size*size != board.length)
+            board = new Piece[size*size];
         Arrays.fill(board, EmptyPiece.EMPTY_PIECE);
         view.sizeLabel.setText(String.valueOf(size));
         view.constants = new Constants(size, stage.getScene());

@@ -51,17 +51,17 @@ public class BoardCreationView {
 
     private Image[] images;
 
-    public BoardCreationView(Stage stage, String fen, int sideLen) {
+    public BoardCreationView(Stage stage) {
         this.stage = stage;
 
         setBounds();
-        basicInit(sideLen);
+        basicInit();
         generateImages();
 
         stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
         stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
-        this.controller = new BoardCreationController(this, stage, fen);
+        this.controller = new BoardCreationController(this, stage);
 
         drawListView(true);
         drawControlButtons();
@@ -87,16 +87,15 @@ public class BoardCreationView {
 
     /**
      * initializes root, scene and generates constants for the screen dimensions
-     * @param sideLen used to generate screen dimensions
      */
-    public void basicInit(int sideLen){
+    public void basicInit(){
         borderPane = new BorderPane();
         borderPane.setCenter(center);
         Scene scene = new Scene(borderPane, 500, 500, Color.GREY);
         stage.setTitle("Board Creation");
         stage.setScene(scene);
         stage.show();
-        constants = new Constants(sideLen, scene);
+        constants = new Constants(8, scene);
     }
 
     /**

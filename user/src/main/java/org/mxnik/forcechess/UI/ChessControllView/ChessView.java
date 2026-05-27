@@ -30,7 +30,7 @@ import java.io.IOException;
 public class ChessView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
     Constants constants;
@@ -42,7 +42,7 @@ public class ChessView {
 
     private Image[] images;
 
-    public ChessView(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB) throws CloneNotSupportedException {
+    public ChessView(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB, int playDepth) throws CloneNotSupportedException {
         this.stage = stage;
 
         setBounds();
@@ -56,7 +56,7 @@ public class ChessView {
             this.controller = new ChessController(this, stage, fen);
             new Thread(() -> {
                 try {
-                    initView(playerStrW, playerStrB, fen);
+                    initView(playerStrW, playerStrB, fen, playDepth);
                 } catch (CloneNotSupportedException e) {
                     throw new IllegalStateException("CloneNotSupportedException was thrown while loading classes. Impossible State, try reinstalling the jar: " + e);
                 }
@@ -78,35 +78,35 @@ public class ChessView {
         );
     }
 
-    private void initView(String playerStrW, String playerStrB, String fen) throws CloneNotSupportedException {
+    private void initView(String playerStrW, String playerStrB, String fen, int playDepth) throws CloneNotSupportedException {
         Platform.runLater( () -> {
                     drawBoard();        // TODO: replace drawing board w/ drawing loading screen
                     root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
                 });
-        setPlayers(playerStrW, playerStrB, fen);
+        setPlayers(playerStrW, playerStrB, fen, playDepth);
         Platform.runLater(this::drawBoard);
         this.controller.start();
     }
 
-    private void setPlayers(String playerStrW, String playerStrB, String fen) throws CloneNotSupportedException {
+    private void setPlayers(String playerStrW, String playerStrB, String fen, int playDepth) throws CloneNotSupportedException {
         try {
             if (playerStrW == null && playerStrB == null) {
                 this.controller.setPlayers(controller, controller);
             } else if (playerStrW == null) {
 
-                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
-                this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
+                playerStrB = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
+                this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, playDepth));
             } else if (playerStrB == null) {
-                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
-                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), controller);
+                playerStrW = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
+                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth), controller);
             } else {
-                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
-                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
+                playerStrW = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
+                playerStrB = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
                 if (playerStrW.equals(playerStrB)) {
-                    BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64);
+                    BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth);
                     this.controller.setPlayers(bot, bot);
                 } else {
-                    this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
+                    this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth), new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
                 }
             }
         }catch (IOException e){

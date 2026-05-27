@@ -28,6 +28,7 @@ public class MenuController implements EventHandler<Event> {
             new TrainingPopup(menuScene.stage);
         }else if(source == menuScene.cBoard){
             new BoardCreationView(menuScene.stage, "rnbqknnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR - - - - 8", 8);
+            new BoardCreationView(menuScene.stage);
         }
     }
 
