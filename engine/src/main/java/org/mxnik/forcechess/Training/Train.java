@@ -28,6 +28,8 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
 
+import static org.nd4j.linalg.api.buffer.DataType.FLOAT16;
+
 public class Train {
     private final ChessBot bot;
     private final AlphaNet network;
@@ -138,9 +140,9 @@ public class Train {
             var out = buffer.getNext();
             var s = out.first();
 
-            try (INDArray tensorSlice = Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c');
-                 INDArray piRow     = Nd4j.create(s.pi);
-                 INDArray zRow      = Nd4j.create(new float[]{s.z})) {
+            try (INDArray tensorSlice = Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c').castTo(FLOAT16);
+                 INDArray piRow     = Nd4j.create(s.pi).castTo(FLOAT16);
+                 INDArray zRow      = Nd4j.create(new float[]{s.z}).castTo(FLOAT16)) {
 
                 inputs.putSlice(i, tensorSlice);
                 piTargets.putRow(i, piRow);
@@ -257,9 +259,9 @@ public class Train {
         // policy targets: [batchSize, 65536] (the pi distribution)
         // value targets: [batchSize, 1] (the game outcome z)
         // initialize arrays ones to avoid alloc and dealloc
-        try (INDArray inputs = Nd4j.zeros(batchSize, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE);
-             INDArray piTargets = Nd4j.zeros(batchSize, Move.MOVE_POSSIBILITIES);
-             INDArray zTargets = Nd4j.zeros(batchSize, 1)) {
+        try (INDArray inputs = Nd4j.zeros(new int[]{batchSize, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, FLOAT16);
+             INDArray piTargets = Nd4j.zeros(new int[]{batchSize, Move.MOVE_POSSIBILITIES}, FLOAT16);
+             INDArray zTargets = Nd4j.zeros(new int[]{batchSize, 1}, FLOAT16)) {
 
             trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);        // train loop to initialize loss
             System.out.println("\tstartLoss: " + network.getModel().score());
@@ -313,7 +315,7 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("HF_LR",  true, false,false);
+        Train train = new Train("CORRECTED_MOVES",  false, false,false);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
@@ -328,13 +330,11 @@ public class Train {
             train.network.getModel().setLearningRate(5e-4);
 
             StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
-//            buffer.skipLines(512 * 11000); 41973
-            train.train(512, buffer, 3241, 1000);
+            train.train(512, buffer, 41973, 1000);
             train.saveCheckPoint();
             System.gc();
             buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
-            buffer.skipLines(17000 * 512);
-            train.train(512, buffer, 11000 , 1000);
+            train.train(512, buffer, 41973 , 1000);
             train.saveNet();
 
         }catch (Exception e){

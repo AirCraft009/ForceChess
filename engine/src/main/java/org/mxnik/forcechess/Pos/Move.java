@@ -7,9 +7,13 @@ package org.mxnik.forcechess.Pos;
 // └─> bits(12-14) Type, bit 15 (is a capture)
 
 import net.chesstango.piazzolla.syzygy.Syzygy;
+import org.mxnik.forcechess.General.Bitboard;
 import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.Moves.MoveType;
 
+import java.util.function.BiConsumer;
+
+import static java.lang.Math.abs;
 import static org.mxnik.forcechess.Pos.Piece.EMPTY_PIECE;
 
 public final class Move {
@@ -126,7 +130,7 @@ public final class Move {
         return of(packet.from(), packet.to(), packet.type().flagVal | ((packet.capture() ? 1 : 0) << 3));
     }
 
-    public static int toFlags(PositionEncoder.Position pos, int to, int promotes){
+    public static int toFlags(PositionEncoder.Position pos, int from, int to, int promotes){
         boolean attack = pos.pieceMap[to] != EMPTY_PIECE;
         int base = switch (promotes){
             case 3 -> FLAG_PROMOTE_B;
@@ -136,6 +140,14 @@ public final class Move {
             case 0 -> FLAG_GENERIC;
             default -> throw new IllegalStateException("Unexpected Syzygy promotion value: " + promotes);
         };
+
+        if( Bitboard.lsb(pos.whiteToMove? pos.WKing : pos.BKing) == from &&         // king is moving
+            abs(from % PositionEncoder.SIZE - to % PositionEncoder.SIZE) > 1) {     // king moves more than 1 square
+            // castle
+            // from < to (=to the left, King_CASTLE) else Queen_CASTLE
+            base = (from < to)? FLAG_CASTLE_K : FLAG_CASTLE_Q;
+        }
+
         return (base | ((attack)? 1 : 0) << 3);
     }
 

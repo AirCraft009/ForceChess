@@ -143,7 +143,7 @@ public class EndgameBufferBuilder {
                             moveFrom = moveFrom ^ 56;  // flip square vertically
                             moveTo   = moveTo   ^ 56;
                         }
-                        engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveTo, movePromotes));
+                        engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveFrom, moveTo, movePromotes));
                         policyV[PolicyIndex.toPolicyIndex(engineMove)] = score;
                     }
 
@@ -156,8 +156,8 @@ public class EndgameBufferBuilder {
                         PCorrectedF = bestFromSq ^ 56;  // flip square vertically
                         PCorrectedT   = bestToSq   ^ 56;
                     }
-                    int bestPossMove = Move.of(bestFromSq, bestToSq, Move.toFlags(pos, bestToSq, bestPromotes));
-                    int bestFlippedMove = Move.of(PCorrectedF, PCorrectedT, Move.toFlags(pos, bestToSq, bestPromotes));
+                    int bestPossMove = Move.of(bestFromSq, bestToSq, Move.toFlags(pos, bestFromSq, bestToSq, bestPromotes));
+                    int bestFlippedMove = Move.of(PCorrectedF, PCorrectedT, Move.toFlags(pos, bestFromSq, bestToSq, bestPromotes));
                     policyV[PolicyIndex.toPolicyIndex(bestFlippedMove)] = BEST_MOVE_VALUE;
                     // soften slightly with lower temperature
                     buffer.addSample(PositionEncoder.encodeFlat(pos), softMax(policyV, SOFTMAX_TEMP), z);
