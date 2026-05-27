@@ -157,7 +157,7 @@ public class PositionUtils {
                 case 'k' -> B_KINGSIDE;
                 case 'q' -> B_QUEENSIDE;
                 case '-' -> 0;              // no perms
-                default -> throw new FenException("Illegal char in Castle-perms.", i);
+                default -> throw new FenException("Illegal char in Castle-perms:" + right, i);
             };
         }
         // En passant

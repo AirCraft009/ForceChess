@@ -8,6 +8,8 @@ import org.mxnik.forcechess.General.FenException;
 
 import java.util.Arrays;
 
+import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
+
 
 public final class FenReader {
     // sollte hidden sein
@@ -23,18 +25,22 @@ public final class FenReader {
 
     public FenReader(String fenStr){
         String [] fenParts = fenStr.split(" ");
-        if (fenParts.length != 6) {
-            throw new FenException("incomplete Fenstring incorrect number of subsections, expected 6 got: " + fenParts.length, 0);
+        if (fenParts.length < 5 || fenParts.length > 6) {
+            throw new FenException("incomplete Fenstring incorrect number of subsections, expected 5-6 got: " + fenParts.length, 0);
         }
         boardPositions = fenParts[0];
         turn = fenParts[1];
         castle = fenParts[2];
         enPassent = fenParts[3];
         moveNumber = fenParts[4];
-        try {
-            boardLenght = Integer.parseInt(fenParts[5]);
-        } catch (NumberFormatException e) {
-            throw new FenException("last FenString component wasn't a number(board-length), expected num got: " + fenParts[5], 0);
+        if (fenParts.length == 6) {
+            try {
+                boardLenght = Integer.parseInt(fenParts[5]);
+            } catch (NumberFormatException e) {
+                throw new FenException("last FenString component wasn't a number(board-length), expected num got: " + fenParts[5], 0);
+            }
+        }else {
+            boardLenght = 8;
         }
     }
 
@@ -60,11 +66,27 @@ public final class FenReader {
     }
 
     public int readEnpassent(){
-        try {
-            return  Integer.parseInt(enPassent);
-        } catch (NumberFormatException e) {
-            throw new FenException("last FenString component wasn't a number(en-passant square), expected num got: " + enPassent, 0);
+        if(enPassent.equals("-")){
+            return -1;
         }
+        if(enPassent.length() != 2){
+            throw new FenException("En Passant Square illegaly isn't 4 chars long but: " + enPassent.length(), -1);
+        }
+
+        String sq = enPassent.substring(0,2).toLowerCase();
+
+        int col = sq.charAt(0) - 'a';
+        int row = (sq.charAt(1) - '0') - 1;
+
+        return col + row * 8;
+
+    }
+
+    public static String toFieldName(int field){
+        int row = field / SIZE;
+        int col = field % SIZE;
+
+        return  Character.toString('a' + col) + row;
     }
 
     /**
