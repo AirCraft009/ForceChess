@@ -85,7 +85,7 @@ public class ChessView {
             indicator.setMinSize(150, 150);
             indicator.setLayoutX(constants.MIDDLE_X - indicator.getMinWidth()/2);
             indicator.setLayoutY(constants.MIDDLE_Y - indicator.getMinHeight()/2);
-            root.getChildren().add(indicator);       // TODO: replace drawing board w/ drawing loading screen
+            root.getChildren().add(indicator);
         });
         setPlayers(playerStrW, playerStrB, fen, playDepth);
         Platform.runLater( () -> {
