@@ -6,6 +6,9 @@ import org.mxnik.forcechess.Pos.PositionEncoder;
 import java.util.Arrays;
 import java.util.Random;
 
+/**
+ * evaluator interface to hide complexity and make testing easy
+ */
 public interface Evaluator{
     Result evaluate(PositionEncoder.Position pos);
 

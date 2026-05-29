@@ -16,29 +16,50 @@ import java.sql.SQLOutput;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 
+/**
+ * Extension of the ChessBot that Batches moves to improve efficiency for GPU and CPU network evals
+ */
 public class BatchChessBot extends ChessBot{
     public static final int BATCH_SIZE = 64;
     public static final float VIRTUAL_LOSS = 1F;
 
     // there to remove virtualLoss and virtualVisitCount
-    private final int[][] batchedMoves = new int[BATCH_SIZE][MAX_MOVES_IN_POS];
-    private final DiversePair<Integer, GameState>[] endStates = new DiversePair[BATCH_SIZE];
-    private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];          // all leaf-nodes affected by virtualLoss
-    private final FlatArray batchedInputs;
-    private final BatchEvaluator evaluator;
+    private final int[][] batchedMoves = new int[BATCH_SIZE][MAX_MOVES_IN_POS];                     // keeps next moves for each collected node in order
+    private final DiversePair<Integer, GameState>[] endStates = new DiversePair[BATCH_SIZE];        // keeps endStates (number of moves in given pos & GameState) for all connected nodes
+    private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];                               // all leaf-nodes affected by virtualLoss
+    private final FlatArray batchedInputs;                                                          // array to keep the inputTensors of all collected nodes
+    private final BatchEvaluator evaluator;                                                         // the batchevaluator overriding the normal evaluator in ChessBot
 
+    /**
+     * Initializes a BatChessBot with the starting pos
+     * @param evaluator what evaluation should be used
+     * @param playDepth how many MCTS iters a Bot should do
+     */
     public BatchChessBot(BatchEvaluator evaluator, int playDepth) {
         super(null, playDepth);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
     }
 
+    /**
+     * Initializes a BatChessBot with a given position
+     * @param evaluator what evaluation should be used
+     * @param playDepth how many MCTS iters a Bot should do
+     * @param fen fen-string of the given position
+     */
     public BatchChessBot(BatchEvaluator evaluator, String fen, int playDepth) {
         super(null, fen, playDepth);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
     }
 
+
+    /**
+     * Initializes a BatChessBot with a given position
+     * @param evaluator what evaluation should be used
+     * @param playDepth how many MCTS iters a Bot should do
+     * @param pos Built position object
+     */
     public BatchChessBot(BatchEvaluator evaluator, PositionEncoder.Position pos, int playDepth) {
         super(null, playDepth);
         this.pos = pos;
@@ -81,7 +102,7 @@ public class BatchChessBot extends ChessBot{
     }
 
     /**
-     * returns the move with the highest visit count after n moves
+     * returns the move with the highest score after n simulations (to nearest BATCH_SIZE)
      */
     @Override
     public int bestMove(int n){
@@ -180,6 +201,9 @@ public class BatchChessBot extends ChessBot{
         }
     }
 
+    /**
+     * Backpropagate virtual loss from a node
+     */
     private void updateVirtual(int node){
         while (node != 0) {
             // don't add to n it was alr incremented during the batching process to make the node look worse
@@ -190,6 +214,11 @@ public class BatchChessBot extends ChessBot{
         }
     }
 
+
+    /**
+     * Backpropagate a given value from a node
+     * @param val the position rating (z)
+     */
     @Override
     protected void backProp(int node, float val){
         while (node != 0) {
