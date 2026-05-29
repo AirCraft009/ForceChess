@@ -6,6 +6,7 @@ import javafx.event.Event;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -68,7 +69,6 @@ public class ChessView {
             throw new RuntimeException(e);
         }
 
-        drawBoard();
         stage.setOnCloseRequest(e ->
                 {
                     cleanUp();
@@ -80,11 +80,19 @@ public class ChessView {
 
     private void initView(String playerStrW, String playerStrB, String fen, int playDepth) throws CloneNotSupportedException {
         Platform.runLater( () -> {
-                    drawBoard();        // TODO: replace drawing board w/ drawing loading screen
-                    root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
-                });
+            ProgressIndicator indicator = new ProgressIndicator();
+            indicator.setPrefSize(150, 150);
+            indicator.setMinSize(150, 150);
+            indicator.setLayoutX(constants.MIDDLE_X - indicator.getMinWidth()/2);
+            indicator.setLayoutY(constants.MIDDLE_Y - indicator.getMinHeight()/2);
+            root.getChildren().add(indicator);       // TODO: replace drawing board w/ drawing loading screen
+        });
         setPlayers(playerStrW, playerStrB, fen, playDepth);
-        Platform.runLater(this::drawBoard);
+        Platform.runLater( () -> {
+            drawBoard();
+            root.getChildren().clear();
+            root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
+        });
         this.controller.start();
     }
 
