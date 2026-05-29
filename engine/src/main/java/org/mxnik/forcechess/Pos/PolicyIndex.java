@@ -4,10 +4,15 @@ package org.mxnik.forcechess.Pos;
 // KI-GENERIERTE KLASSE
 // TURNS MOVE INTO ARRAY INDEX TO REDUCE SIZE OF POLICY_VECTOR
 // MY GPU KEPT RUNNING OUT OF MEMORY BEFORE::
+
 public class PolicyIndex {
 
     public static final int POLICY_SIZE = 4672; // 64 * 73
 
+    /**
+     * turn a move into a policyIndex <p>
+     * this is done to drastically remove the size of the policyV from 2^16 to 4672
+     */
     public static int toPolicyIndex(int move) {
         int from  = Move.from(move);
         int to    = Move.to(move);

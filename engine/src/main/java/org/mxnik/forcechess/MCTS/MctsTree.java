@@ -59,6 +59,11 @@ public final class MctsTree {
         return maxNNode;
     }
 
+    /**
+     * returns the child with the highest score (exploration isn't weighed only raw score + p)
+     * @param nodeIdx the node whose child will be returned
+     * @return the index of the child
+     */
     public int highestScoreChild(int nodeIdx){
         int bestChild = -1;
         float bestScore = Float.NEGATIVE_INFINITY;      // start with the lowest score
@@ -77,6 +82,10 @@ public final class MctsTree {
         return bestChild;
     }
 
+    /**
+     * finds the best PUCT child
+     * @return the index of childnode
+     */
     public int findBestChild(int nodeIdx){
         int bestChild = -1;
         float bestScore = Float.NEGATIVE_INFINITY;      // start with the lowest score
@@ -115,6 +124,9 @@ public final class MctsTree {
         }
     }
 
+    /**
+     * resets the tree (fills local data with 0's) up to the last free node
+     */
     public void reset(){
         // reset arrays to 0 up until the nextFree node
         Arrays.fill(parentIdx, 0, nextFree, 0);

@@ -8,6 +8,13 @@ import static org.mxnik.forcechess.Pos.PositionEncoder.Position.*;
 
 public class MoveGen {
 
+    /**
+     * generate all moves and the gamestate of the current position
+     * @param pos   the given position
+     * @param whiteToMove   whoose turn. (important for check's etc)
+     * @param moves         the int[] that the move will be in
+     * @return A pair of the movecount and the GameState
+     */
     public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, boolean whiteToMove, int[] moves) {
         int newOff = generateMoves(pos, 0, whiteToMove, moves);
         if(newOff == 0){                                       // no new moves
@@ -69,6 +76,9 @@ public class MoveGen {
 
     // White
 
+    /**
+     * generate all moves for white.
+     */
     private static int generateMovesW(PositionEncoder.Position pos, int offset, int[] moves) {
         // Pawn pushes — can't land on any occupied square
         long singleP = (pos.WPawns << PositionEncoder.SIZE) & ~pos.Occupied;
@@ -214,6 +224,9 @@ public class MoveGen {
 
     // Black
 
+    /**
+     * Generate all moves for Black
+     */
     private static int generateMovesB(PositionEncoder.Position pos, int offset, int[] moves) {
         // Pawn pushes — can't land on any occupied square
         long singleP = (pos.BPawns >>> PositionEncoder.SIZE) & ~pos.Occupied;
@@ -353,11 +366,19 @@ public class MoveGen {
 
     // Slide move helpers
 
+    /**
+     * combinatino of bishop + rookmoves
+     */
     static long queenMoves(int square, long occupied, long ownPieces) {
         return rookMoves(square, occupied, ownPieces)
              | bishopMoves(square, occupied, ownPieces);
     }
 
+    /**
+     * generate all moves a rook has starting at square.
+     * @param occupied all piece position in a bitmap
+     * @param ownPieces all pieces of your color in a bitmap
+     */
     static long rookMoves(int square, long occupied, long ownPieces) {
         return slideAttacks(square,  PositionEncoder.SIZE, occupied, ownPieces, Move.ROW_1)  // up
              | slideAttacks(square, -PositionEncoder.SIZE, occupied, ownPieces, Move.ROW_8)  // down
@@ -365,6 +386,12 @@ public class MoveGen {
              | slideAttacks(square,  1, occupied, ownPieces, Move.FILE_A);             // right
     }
 
+
+    /**
+     * generate all moves a bishop has starting at square.
+     * @param occupied all piece position in a bitmap
+     * @param ownPieces all pieces of your color in a bitmap
+     */
     static long bishopMoves(int square, long occupied, long ownPieces) {
         return slideAttacks(square,  PositionEncoder.SIZE + 1, occupied, ownPieces, Move.FILE_A | Move.ROW_1)  // right-up
              | slideAttacks(square,  PositionEncoder.SIZE - 1, occupied, ownPieces, Move.FILE_H | Move.ROW_1)  // left-up
