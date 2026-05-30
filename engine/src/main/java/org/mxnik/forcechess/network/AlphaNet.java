@@ -35,11 +35,17 @@ public final class AlphaNet implements BatchEvaluator, Closeable {
     }
 
 
-
+    /**
+     * returns the given network
+     */
     public ComputationGraph getModel(){
         return model;
     }
 
+    /**
+     * evaluate a single position with the network
+     * @param pos the given position
+     */
     @Override
     public Result evaluate(PositionEncoder.Position pos) {
         // encode position in flat array
@@ -82,6 +88,9 @@ public final class AlphaNet implements BatchEvaluator, Closeable {
         return results;
     }
 
+    /**
+     * argMax of the policyV
+     */
     public int bestMove(PositionEncoder.Position inPos){
         PositionEncoder.encode(inPos, flat);
         INDArray input = Nd4j.create(flat, new int[]{1, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE});

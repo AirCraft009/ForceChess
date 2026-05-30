@@ -5,6 +5,9 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.lossfunctions.ILossFunction;
 import org.nd4j.linalg.lossfunctions.impl.*;
 
+/**
+ * UNUSED CLASS WILL GET REMOVED AFTER FINALIZATION
+ */
 public class ScaledLoss implements ILossFunction {
 
     private final ILossFunction baseLoss;

@@ -5,6 +5,9 @@ import org.mxnik.forcechess.Pos.PositionEncoder;
 
 import java.util.Arrays;
 
+/**
+ * Evaluate an entire Batch instead of just a single in/out
+ */
 public interface BatchEvaluator extends Evaluator {
 
     public Result[] evaluateBatch(float[] inputs);

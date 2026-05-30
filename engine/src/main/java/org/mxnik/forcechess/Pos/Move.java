@@ -15,6 +15,7 @@ import java.util.function.BiConsumer;
 
 import static java.lang.Math.abs;
 import static org.mxnik.forcechess.Pos.Piece.EMPTY_PIECE;
+import static org.mxnik.forcechess.Pos.Piece.PAWN;
 
 public final class Move {
     /**
@@ -26,11 +27,30 @@ public final class Move {
      */
     public static int of(int from, int to, int flags) { return (from | to << TO_MOVE_SHIFT | flags << FLAG_SHIFT);}
     // getter methods
+
+    /**
+     * gets the from-square of a move
+     */
     public static int from(int move)  { return move & MOVE_MASK; }
+
+    /**
+     * gets the to-square of a move
+     */
     public static int to(int move)    { return (move >>> TO_MOVE_SHIFT) & MOVE_MASK; }
+
+    /**
+     * get the flags of a move (includes attack bit)
+     */
     public static int flags(int move) { return (move >>> FLAG_SHIFT) & FLAG_MASK; }
 
+    /**
+     * is the attack bit set in the given flag
+     */
     public static boolean attackFromFlag(int flag){ return ((flag >>> 3) & 0x1) == 1L;}
+
+    /**
+     * Removes the possible attack-bit from a flag
+     */
     public static int baseFlag(int flag){ return (flag & 0x7);}
     public static boolean attack(int move){
         return Move.attackFromFlag(Move.flags(move));
@@ -92,6 +112,7 @@ public final class Move {
     public static final long[] KING_LOOKUP = new long[64];
 
     static {
+        //make a lookup table for the KNIGHT
         for (int sq = 0; sq < 64; sq++) {
             long b = 1L << sq;
             KNIGHT_LOOKUP[sq] =
@@ -105,6 +126,7 @@ public final class Move {
                             | ((b >>> 17) & ~FILE_H);        // down 2, left 1
         }
 
+        // make a lookup table for the king
         for (int sq = 0; sq < 64; sq++) {
             long b = 1L << sq;
             KING_LOOKUP[sq] =
@@ -122,14 +144,28 @@ public final class Move {
 
     // Helper for MovePacket
 
+    /**
+     * turn the moveType (stored in Primitive int) into a MovePacket record so that (non network class can work with it)
+     */
     public static MovePacket toMovePacket(int move){
         return new MovePacket(MoveType.fromFlagVal(baseFlag(flags(move))), from(move), to(move), attackFromFlag(flags(move)));
     }
 
+    /**
+     * turn a MovePacket record into a move (stored in Primitive int)
+     */
     public static int MovePacketToMove(MovePacket packet){
         return of(packet.from(), packet.to(), packet.type().flagVal | ((packet.capture() ? 1 : 0) << 3));
     }
 
+    /**
+     * generates the flags of a move
+     * @param pos the position
+     * @param from from-sq
+     * @param to to-sq
+     * @param promotes the promotion value (Piazolla)
+     * @return flags as int
+     */
     public static int toFlags(PositionEncoder.Position pos, int from, int to, int promotes){
         boolean attack = pos.pieceMap[to] != EMPTY_PIECE;
         int base = switch (promotes){
@@ -148,9 +184,19 @@ public final class Move {
             base = (from < to)? FLAG_CASTLE_K : FLAG_CASTLE_Q;
         }
 
+        if( Bitboard.lsb(pos.whiteToMove? pos.WPawns : pos.BPawns) == from &&
+            pos.pieceMap[to - (to > from? 1 : -1)] == Piece.of(!pos.whiteToMove, PAWN)
+        ){
+            base = FLAG_EN_PASSANT_CAPTURE;     // alr set the capture. It wouldn't be set normally cause the Pawn moves to an empty sq
+        }
+
         return (base | ((attack)? 1 : 0) << 3);
     }
 
+    /**
+     * returns a formatted move
+     * {@code Move: from -> to; flags: FLAG_GENERIC_CAPTURE}
+     */
     public static String format(int move){
         return String.format("Move: %d -> %d; flag: %s", Move.from(move), Move.to(move), MoveType.fromFlagVal((baseFlag(flags(move)))));
     }
