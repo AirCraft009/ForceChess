@@ -9,10 +9,8 @@ import org.mxnik.forcechess.Training.EndgameBufferBuilder;
 import org.mxnik.forcechess.network.AlphaNet;
 import org.mxnik.forcechess.network.NetworkConfig;
 import org.nd4j.linalg.api.buffer.DataType;
-import org.opencv.dnn.Net;
 
 import java.io.IOException;
-import java.sql.SQLOutput;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 
@@ -106,10 +104,11 @@ public class BatchChessBot extends ChessBot{
      */
     @Override
     public int bestMove(int n){
+        expandRoot();
         for (int i = 0; i < n; i+=BATCH_SIZE) {
             simulate();
         }
-//        outputMoveDist();
+        outputMoveDist(true);
         return tree.move[tree.highestScoreChild(ROOT)];
     }
 
@@ -151,7 +150,24 @@ public class BatchChessBot extends ChessBot{
                 updateVirtual(node);
                 virtuallyAffectedNodes[nodeCount] = node;
                 endStates[nodeCount] = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, batchedMoves[nodeCount]);
+
+                /*
+                the last move was played and now the position is to be rated from the side that played it
+
+                for example white.
+                pos.whiteToMove was flipped and now the position is encoded from the view of black
+                now all evals are the inverse of what they should be
+
+                That's why I flip the value
+
+                OMG kwasdhjgiopjkasdjvbijklwasjedgjkvbjasdklj jlk LET'S GOOOO
+
+                 */
+
+                pos.whiteToMove = !pos.whiteToMove;     // flip color so encoding happens from the correct perspective
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);            // save the position for later eval
+                pos.whiteToMove = !pos.whiteToMove;     // flip back for future moves
+
 
                 // reset the tree so another batch run can be started
                 nodeCount++;
@@ -192,14 +208,18 @@ public class BatchChessBot extends ChessBot{
                 if(endStates[i].second() != GameState.Continue)
                     continue;
 
+                normalizeDist(results[i].policyV(), batchedMoves[i], endStates[i].first());
+
                 // expand out all moves and set the policy
                 for (int j = 0; j < endStates[i].first(); j++) {
                     int child = tree.addNewChild(node, batchedMoves[i][j]);
                     tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
+                    //tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
                 }
             }
         }
     }
+
 
     /**
      * Backpropagate virtual loss from a node

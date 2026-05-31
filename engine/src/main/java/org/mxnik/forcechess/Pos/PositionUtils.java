@@ -281,7 +281,7 @@ public class PositionUtils {
     }
 
     public static String toFieldName(int field){
-        int row = field / SIZE;
+        int row = field / SIZE + 1;
         int col = field % SIZE;
 
         return  Character.toString('a' + col) + row;

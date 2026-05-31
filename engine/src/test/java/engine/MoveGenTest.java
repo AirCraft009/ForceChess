@@ -3,10 +3,7 @@ package engine;
 import org.junit.jupiter.api.*;
 import org.mxnik.forcechess.General.Bitboard;
 
-import org.mxnik.forcechess.Pos.Move;
-import org.mxnik.forcechess.Pos.MoveGen;
-import org.mxnik.forcechess.Pos.Piece;
-import org.mxnik.forcechess.Pos.PositionEncoder;
+import org.mxnik.forcechess.Pos.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -285,6 +282,14 @@ class MoveGenTest {
                     .filter(m -> Move.from(m) == sq(4,6) && Move.to(m) == sq(5,7))
                     .count();
             assertEquals(4, count, "4 promotion-capture variants expected");
+        }
+
+        @Test
+        @DisplayName("Pawn move (RTake is generate with no piece there) with no pawn present")
+        void illegalPawnMove(){
+            var pos = PositionUtils.fromFen("3k4/5KP1/8/8/8/8/8/8 w - - 12 8");
+            assertFalse(hasMove(genPseudo(pos, true), G7, H8));
+
         }
     }
 

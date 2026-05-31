@@ -89,10 +89,15 @@ public class MoveGen {
         // Pawn attacks — must land on enemy square
         // mask the file on the opposite side
         long attackL = ((pos.WPawns << PositionEncoder.SIZE - 1) & pos.BPieces) & ~Move.FILE_H;
-        long attackR = (pos.WPawns << PositionEncoder.SIZE + 1) & pos.BPieces & ~Move.FILE_A;
+        long attackR = ((pos.WPawns << PositionEncoder.SIZE + 1) & pos.BPieces) & ~Move.FILE_A;
 
         // En passant attacks
-        long enPassant =  1L << pos.enPassantSquare;
+
+        long enPassant = 1L << pos.enPassantSquare;
+        if(pos.enPassantSquare == -1)
+            enPassant = 0;          // set 0 for no enPassant (-1 will wrap to 63)
+
+
         long enPassantL = (pos.WPawns << PositionEncoder.SIZE - 1) & enPassant;
         long enPassantR = (pos.WPawns << PositionEncoder.SIZE + 1) & enPassant;
 
@@ -240,6 +245,10 @@ public class MoveGen {
 
         // En passant attacks
         long enPassant =  1L << pos.enPassantSquare;
+
+        if(pos.enPassantSquare == -1)
+            enPassant = 0;          // set 0 for no enPassant (-1 will wrap to 63)
+
         long enPassantL = (pos.BPawns >>> PositionEncoder.SIZE + 1) & enPassant;
         long enPassantR = (pos.BPawns >>> PositionEncoder.SIZE - 1) & enPassant;
 

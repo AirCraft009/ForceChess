@@ -10,13 +10,14 @@ import json
 import argparse
 from dataclasses import dataclass
 
+from dataclasses import dataclass
+
 @dataclass
 class EndgameHeuristic:
     max_queens: int = 0
     max_rooks: int = 2
-    max_minor_pieces: int = 6   # bishops + knights (combined)
-    max_total_pieces: int = 10  # optional global cap
-
+    max_minor_pieces: int = 6
+    max_total_pieces: int = 10
 
     def is_endgame(self, fen: str) -> bool:
         board = fen.split(' ', 1)[0]
@@ -25,9 +26,7 @@ class EndgameHeuristic:
         total_pieces = 0
 
         for c in board:
-            if c == '/':
-                continue
-            if c.isdigit():
+            if c == '/' or c.isdigit():
                 continue
 
             total_pieces += 1
@@ -53,6 +52,26 @@ class EndgameHeuristic:
             minor_pieces <= self.max_minor_pieces and
             total_pieces <= self.max_total_pieces
         )
+
+    def pawn_about_to_promote(self, fen: str) -> bool:
+        """
+        Returns True if a pawn is one move away from promotion.
+
+        White pawn on 7th rank.
+        Black pawn on 2nd rank.
+        """
+        board = fen.split(' ', 1)[0]
+        ranks = board.split('/')
+
+        # Rank 7 (white promotion next move)
+        if 'P' in ranks[1]:
+            return True
+
+        # Rank 2 (black promotion next move)
+        if 'p' in ranks[6]:
+            return True
+
+        return False
         
     
 
@@ -100,7 +119,7 @@ def process_files(files, filterEndgame=False, output_path="output.csv"):
             count = 0
             for record in load_positions(filepath=filename):
                 fen = record['fen']
-                if (filterEndgame and not categoriser.is_endgame(fen)):
+                if (filterEndgame and not categoriser.pawn_about_to_promote(fen)):
                     continue
                 
                 
@@ -152,7 +171,7 @@ def main():
         snapshot_download(
             repo_id="prdev/chessbench-full-policy-value",
             repo_type="dataset",
-            allow_patterns=["train-0**0-of-01024.msgpack.zst"],  # first 5 shards
+            allow_patterns=["train-***0-of-01024.msgpack.zst"],  # first 5 shards
             local_dir="./data",
             token=api_key
         )

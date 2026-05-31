@@ -87,7 +87,7 @@ public class Board {
             maxMoves += p.getMovesetLen();
         }
         Board.size = board.length;
-        moveList = new MoveList(amountPieces, maxDirs, maxMoves+8);
+        moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
 

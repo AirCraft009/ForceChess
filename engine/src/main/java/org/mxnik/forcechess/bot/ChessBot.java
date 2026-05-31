@@ -13,6 +13,7 @@ import org.mxnik.forcechess.Moves.GameState;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.function.BiConsumer;
 
 import static java.lang.Math.abs;
@@ -31,6 +32,7 @@ public class ChessBot implements Player {
     protected final int[] moves = new int[MAX_MOVES_IN_POS];                       // pre-allocated move array to max search depth to avoid rapid allocs. and deallocs. in train-loop
     protected final int[] undoInfoStack = new int[MAX_SEARCH_DEPTH];               // all undoInformation in a stack so it can be accessed easily; access[cDepth - 1]
     protected final float[] moveDist = new float[Move.MOVE_POSSIBILITIES];         // will hold the distributions for all the most likely moves;
+
 
     protected final Evaluator evaluator;
     protected int depth = 1;                                                      // depth = 1 da root immer existiert
@@ -137,14 +139,17 @@ public class ChessBot implements Player {
         // depth - 1 to get the last offset
         var out = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, moves);
 
-        if(out.second() != GameState.Continue)
-            tree.w[node] += 1;
+        if(out.second() != GameState.Continue) {
+            throw new IllegalStateException("Position already a checkmate");
+        }
 
+        normalizeDist(policyV, moves, out.first());
 
         // iterate over all moves in curr pos.
         for (int i = 0; i < out.first(); i++) {
             int child = tree.addNewChild(node, moves[i]);
             tree.p[child] = policyV[PolicyIndex.toPolicyIndex(moves[i])];    // add a new node and set the policy vector
+            //tree.p[child] = policyV[PolicyIndex.toPolicyIndex(moves[i])];    // add a new node and set the policy vector
         }
     }
 
@@ -218,12 +223,23 @@ public class ChessBot implements Player {
                 System.out.println("n: " + tree.n[node]);
                 System.out.println("q: " + q);
                 System.out.println("w: " + tree.w[node]);
+                System.out.println("p: " + tree.p[node]);
             }
             String moveStr = toFieldName(Move.from(move)) + toFieldName(Move.to(move));
             float score = q + tree.p[node];
             System.out.printf("moveDist: %s + %d. score: %f\n", moveStr, Move.flags(move), score);
             node = tree.nextSibling[node];
         }
+    }
+
+    protected float[] normalizeDist(float[] policyV, int[] moves, int moveOff){
+        System.arraycopy(policyV, 0, moveDist, 0, moveDist.length);
+        Arrays.fill(policyV, Float.NEGATIVE_INFINITY);
+        for (int i = 0; i < moveOff; i++) {
+            int idx = PolicyIndex.toPolicyIndex(moves[i]);
+            policyV[idx] = moveDist[idx];
+        }
+        return policyV;
     }
 
 
@@ -241,6 +257,7 @@ public class ChessBot implements Player {
     protected void expandRoot(){
         Evaluator.Result r = getEvaluator().evaluate(pos);
         tree.w[ROOT] = r.value();
+        tree.n[ROOT] = 1;
         expand(ROOT, r.policyV());
 
         tree.addNoiseToRootChildren();
@@ -267,7 +284,7 @@ public class ChessBot implements Player {
             flat = PositionEncoder.encodeFlat(pos);     // save pos before move happens
             expandRoot();
             move = bestMoveUCB(n);
-            buffer.addSample(flat, moveDist.clone(), z); // record the moveDist. and z value
+            buffer.addSample(flat, moveDist().clone(), z); // record the moveDist. and z value
             ConsoleBar.render((double) startoffset /end, 2);
             pos.makeMove(move);
 

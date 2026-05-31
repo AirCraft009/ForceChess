@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Pieces;
 
+import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Moves.MoveList;
 
 import java.util.Arrays;
@@ -8,7 +9,8 @@ import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Pawn extends Piece {
-    public final static int dirCount = 3;
+    // can turn into a Queen so this is the max
+    public final static int dirCount = 9;
     private static final byte[] moveSet = new byte[4];
     private static final byte[] captureMoves = new byte[2];
     static {
@@ -27,6 +29,12 @@ public class Pawn extends Piece {
 
     public Pawn(boolean color, boolean hasMoved) {
         super(PieceTypes.PAWN, color, hasMoved);
+    }
+
+    @Override
+    public int getMovesetLen(){
+        // return the amount of moves a queen has (pawn can promote)
+        return (Board.sideLen - 1) * 4;
     }
 
     @Override

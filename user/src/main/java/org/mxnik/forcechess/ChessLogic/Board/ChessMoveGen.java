@@ -82,7 +82,7 @@ public class ChessMoveGen {
                                     || corner.getType() != PieceTypes.ROOK) {
                                 break;
                             }
-                            for (int k = i; k != cornerPos; k += dir) {
+                            for (int k = i+dir; k != cornerPos; k += dir) {
                                 if (cBoard.board[k] != EmptyPiece.EMPTY_PIECE || cBoard.isChecked(k,cBoard.board[i].getColor())) {
                                     break moveLoop;
                                 }
