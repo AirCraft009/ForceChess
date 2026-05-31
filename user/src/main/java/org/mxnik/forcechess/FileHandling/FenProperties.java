@@ -6,14 +6,13 @@ import java.util.Set;
 
 public class FenProperties {
     private static final String FEN_PROPERTIES_FILE = System.getProperty("user.dir") + "/../boardsNBots/FenBoards.properties";//TODO File location with Properties
-    private static Properties props;
+    private static Properties props = new Properties();
     public static Set<String> fenNames;
 
     /**
      * Loads the FEN-Strings and their corresponding names from the properties file
      */
     public static void load() {
-        props = new Properties();
         try {
             props.load(new BufferedReader(new FileReader(FEN_PROPERTIES_FILE)));
         } catch (IOException e) {

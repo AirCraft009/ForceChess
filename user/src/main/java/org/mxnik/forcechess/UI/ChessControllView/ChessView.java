@@ -14,7 +14,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.apache.commons.compress.harmony.unpack200.bytecode.InnerClassesAttribute;
 import org.deeplearning4j.util.ModelSerializer;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
@@ -203,7 +202,7 @@ public class ChessView {
                 ChessBackgroundPane square;
 
                 if ((i + j) % 2 == 0) {
-                    square = new ChessBackgroundPane(size, size, Color.WHITE, Color.WHEAT, index);
+                    square = new ChessBackgroundPane(size, size, Color.WHITE, Color.WHEAT, index); //TODO with Settings
 
                 } else {
                     square = new ChessBackgroundPane(size, size, Color.DARKBLUE, Color.LIGHTBLUE, index);
