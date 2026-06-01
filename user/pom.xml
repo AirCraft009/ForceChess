@@ -90,6 +90,7 @@
                 <version>0.0.8</version>
                 <configuration>
                     <mainClass>org.mxnik.forcechess.UI.ChessControllView.ChessApplication</mainClass>
+                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
                 </configuration>
             </plugin>
             <plugin>

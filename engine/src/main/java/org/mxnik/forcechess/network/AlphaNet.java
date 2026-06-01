@@ -2,6 +2,7 @@ package org.mxnik.forcechess.network;
 
 import org.deeplearning4j.nn.conf.WorkspaceMode;
 import org.deeplearning4j.nn.graph.ComputationGraph;
+import org.mxnik.forcechess.Pos.Check;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.bot.BatchEvaluator;
@@ -19,6 +20,7 @@ import java.io.IOException;
 public final class AlphaNet implements BatchEvaluator, Closeable {
     private final ComputationGraph model;
     private final float[] flat;
+    private final int batchSize;
     private final INDArray input = Nd4j.create(
             new int[]{BatchChessBot.BATCH_SIZE, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, DataType.FLOAT16);
 
@@ -27,11 +29,20 @@ public final class AlphaNet implements BatchEvaluator, Closeable {
      * Net Evaluator & Batchevaluator leveraging a given model by giving it the ability to use batching and normal interference
      * @param model initialized model
      */
-    public AlphaNet(ComputationGraph model) {
+    public AlphaNet(ComputationGraph model, int batchSize) {
         this.model = model;
+        this.batchSize = batchSize;
         model.getConfiguration().setInferenceWorkspaceMode(WorkspaceMode.ENABLED);
         Nd4j.getMemoryManager().setAutoGcWindow(5000);
         flat = new float[PositionEncoder.PLANES * PositionEncoder.PLANE_SIZE];
+    }
+
+    /**
+     * Net Evaluator & Batchevaluator leveraging a given model by giving it the ability to use batching and normal interference
+     * @param model initialized model
+     */
+    public AlphaNet(ComputationGraph model) {
+        this(model, BatchChessBot.BATCH_SIZE);
     }
 
 
@@ -73,12 +84,12 @@ public final class AlphaNet implements BatchEvaluator, Closeable {
      */
     @Override
     public Result[] evaluateBatch(float[] inputs) {
-        Result[] results = new Result[BatchChessBot.BATCH_SIZE];
+        Result[] results = new Result[batchSize];
 
         input.data().setData(inputs);
         INDArray[] out = model.output(false, input);
 
-        for (int i = 0; i < BatchChessBot.BATCH_SIZE; i++) {
+        for (int i = 0; i < batchSize; i++) {
             results[i] = new Result(out[0].getRow(i).toFloatVector(), out[1].getFloat(i));
         }
 

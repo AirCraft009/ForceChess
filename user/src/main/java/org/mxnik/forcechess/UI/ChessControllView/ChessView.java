@@ -31,7 +31,7 @@ import java.io.IOException;
 public class ChessView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
     Constants constants;
@@ -60,6 +60,10 @@ public class ChessView {
                     initView(playerStrW, playerStrB, fen, playDepth);
                 } catch (CloneNotSupportedException e) {
                     throw new IllegalStateException("CloneNotSupportedException was thrown while loading classes. Impossible State, try reinstalling the jar: " + e);
+                }
+                catch (IllegalStateException e){
+                    //TODO: print error message to screen and backoff
+                    System.err.println("Model unavailable");
                 }
             }).start();
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
@@ -102,14 +106,14 @@ public class ChessView {
                 this.controller.setPlayers(controller, controller);
             } else if (playerStrW == null) {
 
-                playerStrB = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
+                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
                 this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, playDepth));
             } else if (playerStrB == null) {
-                playerStrW = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
+                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
                 this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth), controller);
             } else {
-                playerStrW = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
-                playerStrB = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
+                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
+                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
                 if (playerStrW.equals(playerStrB)) {
                     BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth);
                     this.controller.setPlayers(bot, bot);

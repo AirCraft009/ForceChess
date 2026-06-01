@@ -35,7 +35,7 @@ public abstract class MenuPopup extends Stage {
      */
     protected ChoiceBox<String> getBotsList() {
         ChoiceBox<String> bots = new ChoiceBox<>();
-        ObservableList<String> botsList = FXCollections.observableArrayList(TextFileHandler.getFolderContents("../" + NETWORK_LOCATIONS));
+        ObservableList<String> botsList = FXCollections.observableArrayList(TextFileHandler.getFolderContents(NETWORK_LOCATIONS));
         bots.setItems(botsList);
         return bots;
     }
