@@ -1,8 +1,10 @@
 package org.mxnik.forcechess.UI.menu;
 
 import javafx.event.*;
+import javafx.scene.input.KeyEvent;
 import org.mxnik.forcechess.UI.ChessCreation.BoardCreationView;
 import org.mxnik.forcechess.UI.Constants;
+import org.mxnik.forcechess.UI.settings.SettingsView;
 
 public class MenuController implements EventHandler<Event> {
     MenuScene menuScene;
@@ -27,7 +29,15 @@ public class MenuController implements EventHandler<Event> {
         }else if(source == menuScene.train){
             new TrainingPopup(menuScene.stage);
         }else if(source == menuScene.cBoard){
-            new BoardCreationView(menuScene.stage, "rnbqknnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR - - - - 8", 8);
+            new BoardCreationView(menuScene.stage);
+        }else if(source == menuScene.settings){
+            new SettingsView(menuScene.stage, true);
+        }
+    }
+
+    private void handleKeyEvent(KeyEvent event) {
+        switch (event.getCode()){
+            case F11 -> menuScene.stage.setFullScreen(!menuScene.stage.isFullScreen());
         }
     }
 
@@ -35,6 +45,9 @@ public class MenuController implements EventHandler<Event> {
     public void handle(Event event) {
         if(event.getEventType() == ActionEvent.ACTION)
             handleActionEvent((ActionEvent) event);
+        if(event.getEventType() == KeyEvent.KEY_PRESSED){
+            handleKeyEvent((KeyEvent)event);
+        }
     }
 
     /**
@@ -42,6 +55,7 @@ public class MenuController implements EventHandler<Event> {
      */
     public void resize() {
         menuScene.constants = new Constants(menuScene.constants.sideLen, menuScene.getScene());
+        menuScene.root.getChildren().clear();
         menuScene.drawMenu();
     }
 }

@@ -6,6 +6,7 @@ import javafx.event.Event;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
@@ -13,7 +14,6 @@ import javafx.scene.paint.Color;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
-import org.apache.commons.compress.harmony.unpack200.bytecode.InnerClassesAttribute;
 import org.deeplearning4j.util.ModelSerializer;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
@@ -31,7 +31,7 @@ import java.io.IOException;
 public class ChessView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
     Constants constants;
@@ -43,7 +43,7 @@ public class ChessView {
 
     private Image[] images;
 
-    public ChessView(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB) throws CloneNotSupportedException {
+    public ChessView(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB, int playDepth) throws CloneNotSupportedException {
         this.stage = stage;
 
         setBounds();
@@ -57,7 +57,7 @@ public class ChessView {
             this.controller = new ChessController(this, stage, fen);
             new Thread(() -> {
                 try {
-                    initView(playerStrW, playerStrB, fen);
+                    initView(playerStrW, playerStrB, fen, playDepth);
                 } catch (CloneNotSupportedException e) {
                     throw new IllegalStateException("CloneNotSupportedException was thrown while loading classes. Impossible State, try reinstalling the jar: " + e);
                 }
@@ -69,7 +69,6 @@ public class ChessView {
             throw new RuntimeException(e);
         }
 
-        drawBoard();
         stage.setOnCloseRequest(e ->
                 {
                     cleanUp();
@@ -79,35 +78,43 @@ public class ChessView {
         );
     }
 
-    private void initView(String playerStrW, String playerStrB, String fen) throws CloneNotSupportedException {
+    private void initView(String playerStrW, String playerStrB, String fen, int playDepth) throws CloneNotSupportedException {
         Platform.runLater( () -> {
-                    drawBoard();        // TODO: replace drawing board w/ drawing loading screen
-                    root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
-                });
-        setPlayers(playerStrW, playerStrB, fen);
-        Platform.runLater(this::drawBoard);
+            ProgressIndicator indicator = new ProgressIndicator();
+            indicator.setPrefSize(150, 150);
+            indicator.setMinSize(150, 150);
+            indicator.setLayoutX(constants.MIDDLE_X - indicator.getMinWidth()/2);
+            indicator.setLayoutY(constants.MIDDLE_Y - indicator.getMinHeight()/2);
+            root.getChildren().add(indicator);
+        });
+        setPlayers(playerStrW, playerStrB, fen, playDepth);
+        Platform.runLater( () -> {
+            drawBoard();
+            root.getChildren().clear();
+            root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
+        });
         this.controller.start();
     }
 
-    private void setPlayers(String playerStrW, String playerStrB, String fen) throws CloneNotSupportedException {
+    private void setPlayers(String playerStrW, String playerStrB, String fen, int playDepth) throws CloneNotSupportedException {
         try {
             if (playerStrW == null && playerStrB == null) {
                 this.controller.setPlayers(controller, controller);
             } else if (playerStrW == null) {
 
-                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
-                this.controller.setPlayers(controller, new ChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 400));
+                playerStrB = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
+                this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, playDepth));
             } else if (playerStrB == null) {
-                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
-                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 64), controller);
+                playerStrW = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
+                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth), controller);
             } else {
-                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
-                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
+                playerStrW = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
+                playerStrB = "../" + FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
                 if (playerStrW.equals(playerStrB)) {
-                    BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 2048);
+                    BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth);
                     this.controller.setPlayers(bot, bot);
                 } else {
-                    this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, 1600), new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 1600));
+                    this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth), new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
                 }
             }
         }catch (IOException e){
@@ -196,7 +203,7 @@ public class ChessView {
                 ChessBackgroundPane square;
 
                 if ((i + j) % 2 == 0) {
-                    square = new ChessBackgroundPane(size, size, Color.WHITE, Color.WHEAT, index);
+                    square = new ChessBackgroundPane(size, size, Color.WHITE, Color.WHEAT, index); //TODO with Settings
 
                 } else {
                     square = new ChessBackgroundPane(size, size, Color.DARKBLUE, Color.LIGHTBLUE, index);

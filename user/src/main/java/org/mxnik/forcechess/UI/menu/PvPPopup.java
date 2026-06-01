@@ -44,7 +44,7 @@ public class PvPPopup extends MenuPopup {
             String fen = FenProperties.getFenStr(board.getValue());
             int sideLen = Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
-                new ChessView(primaryStage, fen, sideLen, null, null);
+                new ChessView(primaryStage, fen, sideLen, null, null, 0);
             } catch (CloneNotSupportedException ex) {
                 throw new RuntimeException(ex);
             }

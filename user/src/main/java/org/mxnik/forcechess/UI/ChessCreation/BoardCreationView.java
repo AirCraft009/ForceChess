@@ -6,29 +6,31 @@ import javafx.collections.ObservableList;
 import javafx.event.Event;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.Nullable;
-import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
+import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.UI.ChessControllView.ChessBackgroundPane;
 import org.mxnik.forcechess.UI.ChessControllView.ChessButton;
 import org.mxnik.forcechess.UI.Constants;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 public class BoardCreationView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     BorderPane borderPane;
     Constants constants;
@@ -38,25 +40,31 @@ public class BoardCreationView {
     private Group pieceLayer = new Group();
     private Group interactionLayer = new Group();
     CheckBox white;
-    ListView<Group> listView;
+    ListView<Group> pieceList;
 
-    ImageView winView;
+    TextField nameField;
+    Slider sizeSlider;
+    Label sizeLabel;
+    ListView<HBox> boardsList;
+    ArrayList<Button> deleteButtons = new ArrayList<>();
+    Button closeButton, saveButton;
 
     private Image[] images;
 
-    public BoardCreationView(Stage stage, String fen, int sideLen) {
+    public BoardCreationView(Stage stage) {
         this.stage = stage;
 
         setBounds();
-        basicInit(sideLen);
+        basicInit();
         generateImages();
 
         stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
         stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
-        this.controller = new BoardCreationController(this, stage, fen);
+        this.controller = new BoardCreationController(this, stage);
 
         drawListView(true);
+        drawControlButtons();
         drawBoard();
         center.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
         stage.setOnCloseRequest(e ->
@@ -79,16 +87,15 @@ public class BoardCreationView {
 
     /**
      * initializes root, scene and generates constants for the screen dimensions
-     * @param sideLen used to generate screen dimensions
      */
-    public void basicInit(int sideLen){
+    public void basicInit(){
         borderPane = new BorderPane();
         borderPane.setCenter(center);
         Scene scene = new Scene(borderPane, 500, 500, Color.GREY);
         stage.setTitle("Board Creation");
         stage.setScene(scene);
         stage.show();
-        constants = new Constants(sideLen, scene);
+        constants = new Constants(8, scene);
     }
 
     /**
@@ -120,13 +127,24 @@ public class BoardCreationView {
         }
     }
 
+    /**
+     * Responsible for drawing the right hand side of the Scene - The Piece selector and the color selector
+     * @param w the currently selected color {@code true == white}, {@code false == black}
+     */
     public void drawListView(boolean w){
         if(borderPane.getRight() == null){
-            HBox hBox = new HBox();
+            VBox vBox = new VBox();
             white = new CheckBox("White");
-            listView = new ListView<Group>();
-            listView.getSelectionModel().selectedItemProperty().addListener(controller);
+            white.setSelected(w);
+            white.addEventHandler(Event.ANY, controller);
+            pieceList = new ListView<Group>();
+            pieceList.getSelectionModel().selectedItemProperty().addListener(controller);
+            pieceList.setPrefSize((stage.getScene().getHeight() - white.getHeight()) / 6, (stage.getScene().getHeight() - white.getHeight()));
+            vBox.getChildren().addAll(white, pieceList);
+            borderPane.setRight(vBox);
         }
+        pieceList.getSelectionModel().selectedItemProperty().removeListener(controller);
+        int selectedIndex = pieceList.getSelectionModel().getSelectedIndex();
         Group[] pieces = new Group[6];
         String colorPrefix = (w) ? "white-" : "black-";
         String[] arr = {colorPrefix + "pawn.png",
@@ -136,27 +154,86 @@ public class BoardCreationView {
                 colorPrefix + "queen.png",
                 colorPrefix + "king.png"};
         for(int i = 0; i < arr.length; i++) {
-            int size = constants.BlockS;
+            int size = (int) ((stage.getScene().getHeight() - white.getHeight()-12.0) / 6);
             ChessBackgroundPane bg = new ChessBackgroundPane(size, size, (i%2==0)?Color.WHITE:Color.DARKBLUE, (i%2==0)?Color.WHEAT:Color.LIGHTBLUE, i);
 
             ImageView piece = new ImageView(images[2*i+(w?0:1)]);
             piece.setFitHeight(size);
             piece.setFitWidth(size);
 
-            ChessButton button = new ChessButton("", i);
-            button.addEventHandler(Event.ANY, controller);
-
-            button.setPrefSize(size, size);
-            button.setMinSize(size, size);
-            button.setMaxSize(size, size);
-
-            // IMPORTANT -fx-background-color: transparent;
-            button.setStyle("-fx-background-color: transparent");
-
-            pieces[i].getChildren().addAll(bg, piece, button);
+            pieces[i] = new Group(bg, piece);
         }
         ObservableList<Group> observableList = FXCollections.observableList(Arrays.asList(pieces));
-        listView.setItems(observableList);
+        pieceList.setItems(observableList);
+        pieceList.getSelectionModel().selectedItemProperty().addListener(controller);
+        pieceList.getSelectionModel().select(Math.max(0, selectedIndex));
+    }
+
+    /**
+     * Responsible for drawing the left hand side of the Scene - The Board selector and the different value changers of the board (Name, Side length)
+     */
+    private void drawControlButtons(){
+        GridPane grid = new GridPane();
+        grid.setVgap(10);
+        grid.setHgap(10);
+        Label nameLabel = new Label("Name:");
+        grid.add(nameLabel, 0, 0);
+        nameField = new TextField();
+        nameField.setPromptText("Name");
+        grid.add(nameField, 1, 0);
+
+        Label sizeText = new Label("Size:");
+        grid.add(sizeText, 0, 1);
+        sizeSlider = new Slider();
+        sizeSlider.setMin(3);
+        sizeSlider.setValue(8);
+        sizeSlider.setMax(32);
+        sizeSlider.setSnapToTicks(true);
+        sizeSlider.setShowTickMarks(true);
+        sizeSlider.setShowTickLabels(true);
+        sizeSlider.setMajorTickUnit(5);
+        sizeSlider.setMinorTickCount(4);
+        sizeSlider.valueProperty().addListener(controller);
+        grid.add(sizeSlider, 1, 1);
+        sizeLabel = new Label("8");
+        grid.add(sizeLabel, 2, 1);
+
+        FenProperties.load();
+
+        boardsList  = new ListView<>();
+        boardsList.getSelectionModel().selectedItemProperty().addListener(controller);
+        updateBoardList();
+
+        grid.add(boardsList, 0, 2, 2, 1);
+
+        closeButton = new Button("Close");
+        closeButton.addEventHandler(Event.ANY, controller);
+        grid.add(closeButton, 0, 3);
+        saveButton = new Button("Save");
+        saveButton.addEventHandler(Event.ANY, controller);
+        grid.add(saveButton, 1, 3);
+
+        borderPane.setLeft(grid);
+    }
+
+    /**
+     * Updates the content of the List of Boards. Must be called if any changes are made to the boards
+     */
+    void updateBoardList(){
+        HBox[] boards = new HBox[FenProperties.fenNames.size()];
+        String[] names = FenProperties.fenNames.toArray(new String[FenProperties.fenNames.size()]);
+        deleteButtons.clear();
+        for (int i = 0; i < boards.length; i++) {
+            boards[i] = new HBox();
+            Label name = new Label(names[i]);
+            Button button = new Button("Delete");
+            button.addEventHandler(Event.ANY, controller);
+            deleteButtons.add(button);
+            boards[i].getChildren().addAll(name, button);
+        }
+        ObservableList<HBox> boardsObservable = FXCollections.observableArrayList(boards);
+        boardsList.setItems(boardsObservable);
+        boardsList.getSelectionModel().selectFirst();
     }
 
 
@@ -167,8 +244,8 @@ public class BoardCreationView {
         int sideLen = constants.sideLen;
         int size = constants.BlockS;
         int index;
-        ChessBackgroundPane[] panes =  new ChessBackgroundPane[Board.size];
-        ChessButton[] buttons =  new ChessButton[Board.size];
+        ChessBackgroundPane[] panes =  new ChessBackgroundPane[sideLen*sideLen];
+        ChessButton[] buttons =  new ChessButton[sideLen*sideLen];
 
 
         for (int i = 0; i < sideLen; i++) {
@@ -283,20 +360,5 @@ public class BoardCreationView {
             case KING -> new ImageView(images[10+colorOffset]);
             case ToPromote, EMPTY, ILLEGAL -> null;
         };
-    }
-
-
-    public void showWinImage(){
-        String imageP = sourcedir + "img.png";
-        Image image;
-        try {
-            image = new Image(new FileInputStream(imageP));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        winView = new ImageView(image);
-        winView.setFitHeight(constants.bounds.getHeight());
-        winView.setFitWidth(constants.bounds.getWidth());
-        pieceLayer.getChildren().addFirst(winView);
     }
 }

@@ -8,6 +8,7 @@ import javafx.scene.paint.*;
 
 public class Constants {
     final int BoardSize;
+    public final int MIDDLE_X, MIDDLE_Y;
     public final int WidthStart;
     public final int HeightStart;
     public final int BlockS;
@@ -20,10 +21,10 @@ public class Constants {
     public Constants(int sideLen, Scene scene){
         this.sideLen = sideLen;
         BoardSize = (int) (Math.min(scene.getHeight(), scene.getWidth()) * 0.95);
-        int middleX = (int) scene.getWidth() / 2;
-        int middleY = (int) scene.getHeight() / 2;
-        WidthStart = middleX - BoardSize / 2;
-        HeightStart = middleY - BoardSize / 2;
+        MIDDLE_X = (int) scene.getWidth() / 2;
+        MIDDLE_Y = (int) scene.getHeight() / 2;
+        WidthStart = MIDDLE_X - BoardSize / 2;
+        HeightStart = MIDDLE_Y - BoardSize / 2;
         BlockS = BoardSize / sideLen;
     }
 }
