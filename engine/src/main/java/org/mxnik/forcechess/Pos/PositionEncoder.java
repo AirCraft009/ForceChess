@@ -186,14 +186,15 @@ public final class PositionEncoder {
 
 
         int mobB = MoveGen.generateMoves(pos, 0, false, tempBuffer);
-        //Mobility score white
+      
+        //Mobility score black
         int B_Mod = pos.whiteToMove? 0 : -1;
         Arrays.fill(tensor,
                 offset + (PLANE_B_MOBILITY + B_Mod) * PLANE_SIZE,
                 offset + (PLANE_W_ATTACKS  + B_Mod)* PLANE_SIZE,
                 Math.min((float) mobB / MAX_MOVES_IN_POS, 1.0f));
 
-        //Attack score white
+        //Attack score black
         attackBitboard = 0L;
         for (int i = 0; i < mobB; i++) {
             attackBitboard  |= (1L << Move.to(tempBuffer[i]));

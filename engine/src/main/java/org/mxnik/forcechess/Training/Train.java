@@ -28,11 +28,13 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Map;
 
+import static org.nd4j.linalg.api.buffer.DataType.FLOAT16;
+
 public class Train {
     private final ChessBot bot;
     private final AlphaNet network;
-    private final String fullPath;
-    private final String fileName;
+    private String fullPath;
+    private String fileName;
     private int checkPointC = 0;
     public final static String BASE_PATH = FileLocations.NETWORK_LOCATIONS;
     public final static String FILE_ENDING = ".zip";
@@ -41,7 +43,7 @@ public class Train {
      * Read the configured AI-model from the file specified (no file ending)
      */
     public Train(String fileName) throws IOException {
-        this(fileName, true, false);
+        this(fileName, true, true, true);
     }
 
 
@@ -51,15 +53,15 @@ public class Train {
      * @param batch use Batched MCTS
      */
     public Train(String fileName, boolean batch) throws IOException {
-        this(fileName, true, batch);
+        this(fileName, true, true, batch);
     }
 
-    private Train(String fileName, boolean read, boolean batch) throws IOException {
+    private Train(String fileName, boolean read, boolean useBot, boolean batch) throws IOException {
         fullPath = BASE_PATH + fileName;
         this.fileName = fileName;
         if (!read) {
             network = new AlphaNet(NetworkConfig.buildNet());
-            bot = batch ? new BatchChessBot(network, 300) : new ChessBot(network, 300);
+            bot = !useBot? null : batch ? new BatchChessBot(network, 300) : new ChessBot(network, 300);
             return;
         }
 
@@ -93,6 +95,11 @@ public class Train {
         }
         this.network = (AlphaNet) e;
         this.bot = bot;
+    }
+
+    public void rename(String newName){
+        fileName = newName;
+        fullPath = BASE_PATH + newName;
     }
 
     public void saveCheckPoint() throws IOException {
@@ -138,23 +145,9 @@ public class Train {
             var out = buffer.getNext();
             var s = out.first();
 
-//            float sum = 0;
-//            float max = 0;
-//            float count = 0;
-//            for (float f : s.pi) {
-//                sum += f;
-//                count += (f == 0)? 0 : 1;
-//                if (f > max) max = f;
-//            }
-//
-//            System.out.println("sum: " + sum);
-//            System.out.println("max: " + max);
-//            System.out.println("moves: " + count);
-//            System.out.println("uniform would be: " + (1.0f / count));
-
-            try (INDArray tensorSlice = Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c');
-                 INDArray piRow     = Nd4j.create(s.pi);
-                 INDArray zRow      = Nd4j.create(new float[]{s.z})) {
+            try (INDArray tensorSlice = Nd4j.create(s.tensor, new int[]{PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, 'c').castTo(FLOAT16);
+                 INDArray piRow     = Nd4j.create(s.pi).castTo(FLOAT16);
+                 INDArray zRow      = Nd4j.create(new float[]{s.z}).castTo(FLOAT16)) {
 
                 inputs.putSlice(i, tensorSlice);
                 piTargets.putRow(i, piRow);
@@ -271,9 +264,9 @@ public class Train {
         // policy targets: [batchSize, 65536] (the pi distribution)
         // value targets: [batchSize, 1] (the game outcome z)
         // initialize arrays ones to avoid alloc and dealloc
-        try (INDArray inputs = Nd4j.zeros(batchSize, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE);
-             INDArray piTargets = Nd4j.zeros(batchSize, Move.MOVE_POSSIBILITIES);
-             INDArray zTargets = Nd4j.zeros(batchSize, 1)) {
+        try (INDArray inputs = Nd4j.zeros(new int[]{batchSize, PositionEncoder.PLANES, PositionEncoder.SIZE, PositionEncoder.SIZE}, FLOAT16);
+             INDArray piTargets = Nd4j.zeros(new int[]{batchSize, Move.MOVE_POSSIBILITIES}, FLOAT16);
+             INDArray zTargets = Nd4j.zeros(new int[]{batchSize, 1}, FLOAT16)) {
 
             trainFromBuffer(batchSize, buffer, inputs, piTargets, zTargets);        // train loop to initialize loss
             System.out.println("\tstartLoss: " + network.getModel().score());
@@ -327,7 +320,8 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("HF_LR",  true, true);
+        Train train = new Train("CORRECTED_BEST",  true, false,false);
+        train.rename("PROMOTIONS");
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
@@ -339,15 +333,14 @@ public class Train {
             StatsStorage statsStorage = new InMemoryStatsStorage();
             uiServer.attach(statsStorage);
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
-            train.network.getModel().setLearningRate(1e-5);
+            train.network.getModel().setLearningRate(5e-5);
 
-            StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
-            buffer.skipLines(512 * 10000);
-            train.train(512, buffer, 41973, 1000);
+            StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\promotions.csv");
+            train.train(512, buffer, 3000, 1000);
             train.saveCheckPoint();
             System.gc();
-            buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
-            train.train(512, buffer, 50973 , 1000);
+            buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\promotions.csv");
+            train.train(512, buffer, 6000 , 1000);
             train.saveNet();
 
         }catch (Exception e){

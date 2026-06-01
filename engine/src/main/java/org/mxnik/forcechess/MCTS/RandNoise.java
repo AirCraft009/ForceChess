@@ -10,6 +10,9 @@ import java.util.Random;
 public final class RandNoise {
     public final static Random random = new Random();
 
+    /**
+     * generate a random vector arr to belp systematic exploration
+     */
      static float[] dirichlet(float alpha, int count) {
         float[] samples = new float[count];
         float sum = 0;

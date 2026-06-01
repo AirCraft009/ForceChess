@@ -10,6 +10,7 @@ import org.mxnik.forcechess.bot.ChessBot;
 import java.io.*;
 import java.util.Arrays;
 
+import static java.lang.Math.abs;
 import static org.mxnik.forcechess.Pos.PositionUtils.fromFen;
 
 public class StockfishBuffer implements TrainingsBuffer {
@@ -127,7 +128,7 @@ public class StockfishBuffer implements TrainingsBuffer {
                 }
             }
 
-            int move = Move.of(from, to, Move.toFlags(pos, to, promotes));             // no promotion
+            int move = Move.of(from, to, Move.toFlags(pos, from, to, promotes));
             moveBuff[PolicyIndex.toPolicyIndex(move)] = (float) cpScore;
         }
 

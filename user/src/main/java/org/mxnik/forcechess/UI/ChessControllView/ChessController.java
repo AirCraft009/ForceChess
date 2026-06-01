@@ -197,6 +197,11 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         if (!BoardHelper.contains(currPieceMoves, secondClick)) {
             return null;
         }
+        if( board.getBoard()[firstClick].getType() == PieceTypes.KING
+            && (BoardHelper.colDiff(firstClick, secondClick) >= 2)
+        ){
+            return new MovePacket((firstClick - secondClick > 0)? MoveType.CastleQ : MoveType.CastleK, firstClick, secondClick, false);
+        }
         if(  // check if the move is a promotion
             !(board.getBoard()[firstClick].getType() == PieceTypes.PAWN
             && (BoardHelper.getRow(secondClick) == 0

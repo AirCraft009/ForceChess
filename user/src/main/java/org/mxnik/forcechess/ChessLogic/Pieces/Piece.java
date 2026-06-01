@@ -63,6 +63,8 @@ public abstract class Piece implements Cloneable {
         return getMoveSet().length;
     }
 
+
+
     public boolean isColor() {
         return color;
     }

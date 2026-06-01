@@ -157,7 +157,7 @@ public class PositionUtils {
                 case 'k' -> B_KINGSIDE;
                 case 'q' -> B_QUEENSIDE;
                 case '-' -> 0;              // no perms
-                default -> throw new FenException("Illegal char in Castle-perms.", i);
+                default -> throw new FenException("Illegal char in Castle-perms:" + right, i);
             };
         }
         // En passant
@@ -281,7 +281,7 @@ public class PositionUtils {
     }
 
     public static String toFieldName(int field){
-        int row = field / SIZE;
+        int row = field / SIZE + 1;
         int col = field % SIZE;
 
         return  Character.toString('a' + col) + row;

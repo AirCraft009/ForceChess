@@ -55,6 +55,9 @@ public final class NetworkConfig {
     private static final String OUT = "rb-out-";
 
 
+    /**
+     * builds a new ResNet
+     */
     public static ComputationGraph buildNet() {
 
         ComputationGraphConfiguration.GraphBuilder g =
@@ -187,7 +190,7 @@ public final class NetworkConfig {
 
 
     /**
-     * Appends {@code n} residual blocks to {@code gb}.
+     * Appends  n residual blocks to gb.
      * Each block: Conv->BN->ReLU->Conv->BN -> add(skip) → ReLU
      *
      * @param gb            graph builder

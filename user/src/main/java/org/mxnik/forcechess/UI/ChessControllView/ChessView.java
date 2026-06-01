@@ -21,6 +21,7 @@ import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.General.FileLocations;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
+import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
 
 import java.io.FileInputStream;

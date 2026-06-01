@@ -143,7 +143,7 @@ public class EndgameBufferBuilder {
                             moveFrom = moveFrom ^ 56;  // flip square vertically
                             moveTo   = moveTo   ^ 56;
                         }
-                        engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveTo, movePromotes));
+                        engineMove = Move.of(moveFrom, moveTo, Move.toFlags(pos, moveFrom, moveTo, movePromotes));
                         policyV[PolicyIndex.toPolicyIndex(engineMove)] = score;
                     }
 
@@ -156,8 +156,8 @@ public class EndgameBufferBuilder {
                         PCorrectedF = bestFromSq ^ 56;  // flip square vertically
                         PCorrectedT   = bestToSq   ^ 56;
                     }
-                    int bestPossMove = Move.of(bestFromSq, bestToSq, Move.toFlags(pos, bestToSq, bestPromotes));
-                    int bestFlippedMove = Move.of(PCorrectedF, PCorrectedT, Move.toFlags(pos, bestToSq, bestPromotes));
+                    int bestPossMove = Move.of(bestFromSq, bestToSq, Move.toFlags(pos, bestFromSq, bestToSq, bestPromotes));
+                    int bestFlippedMove = Move.of(PCorrectedF, PCorrectedT, Move.toFlags(pos, bestFromSq, bestToSq, bestPromotes));
                     policyV[PolicyIndex.toPolicyIndex(bestFlippedMove)] = BEST_MOVE_VALUE;
                     // soften slightly with lower temperature
                     buffer.addSample(PositionEncoder.encodeFlat(pos), softMax(policyV, SOFTMAX_TEMP), z);
@@ -221,14 +221,14 @@ public class EndgameBufferBuilder {
 
 
     public static void main(String[] args) throws IOException {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder(SEED);
-        for (int i = 2; i < 6; i++) {
-            var b =          eg.buildBufferOnEndgames(30000, 3, true, PosGen::generateLegalPosition, "BalancedBuffer"+i);
-            b.combineBuffers(eg.buildBufferOnEndgames(35000, 4, true, PosGen::generateLegalPosition, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(40000, 5, false, PosGen::generateLegalPosition, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, PosGen::generateMateInOne, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(15000, 4, false, PosGen::generateMateInOne, ""));
-            b.combineBuffers(eg.buildBufferOnEndgames(15000, 5, false, PosGen::generateMateInOne, ""));
+        EndgameBufferBuilder eg = new EndgameBufferBuilder();
+        for (int i = 5; i < 6; i++) {
+//            var b =          eg.buildBufferOnEndgames(30000, 3, true, PosGen::generateLegalPosition, "BalancedBuffer"+i);
+//            b.combineBuffers(eg.buildBufferOnEndgames(35000, 4, true, PosGen::generateLegalPosition, ""));
+//            b.combineBuffers(eg.buildBufferOnEndgames(40000, 5, false, PosGen::generateLegalPosition, ""));
+//            b.combineBuffers(eg.buildBufferOnEndgames(10000, 3, false, PosGen::generateMateInOne, ""));
+//            b.combineBuffers(eg.buildBufferOnEndgames(15000, 4, false, PosGen::generateMateInOne, ""));
+            var b =(eg.buildBufferOnEndgames(15000, 3, false, PosGen::generateMateInOne, "m1"));
 
             b.writeSamples(false);
         }

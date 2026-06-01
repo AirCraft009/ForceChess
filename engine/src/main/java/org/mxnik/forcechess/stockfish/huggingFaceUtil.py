@@ -8,24 +8,70 @@ import math
 import csv
 import json
 import argparse
-import threading
+from dataclasses import dataclass
 
+from dataclasses import dataclass
 
-class Position_worker():
-    def __init__(self, filepath):
-        self.thread = threading.Thread(target=self.run, kwargs={"filepath": filepath})
-        self.notif_next_queue = threading.Queue()           # Queue to send the isready signal to the next position_worker in line
-        self.get_notif_queue = None
-    
-    def setPrevWorker(self, prev_worker: position_worker):
-        self.get_notif_queue = prev_worker.get_notif_queue  # get notification from the last position_worker
-        
-    def start():
-        self.thread.start()
-        
-    def run(self, filepath):
-        pass
-        
+@dataclass
+class EndgameHeuristic:
+    max_queens: int = 0
+    max_rooks: int = 2
+    max_minor_pieces: int = 6
+    max_total_pieces: int = 10
+
+    def is_endgame(self, fen: str) -> bool:
+        board = fen.split(' ', 1)[0]
+
+        queens = rooks = bishops = knights = pawns = kings = 0
+        total_pieces = 0
+
+        for c in board:
+            if c == '/' or c.isdigit():
+                continue
+
+            total_pieces += 1
+
+            if c in 'qQ':
+                queens += 1
+            elif c in 'rR':
+                rooks += 1
+            elif c in 'bB':
+                bishops += 1
+            elif c in 'nN':
+                knights += 1
+            elif c in 'pP':
+                pawns += 1
+            elif c in 'kK':
+                kings += 1
+
+        minor_pieces = bishops + knights
+
+        return (
+            queens <= self.max_queens and
+            rooks <= self.max_rooks and
+            minor_pieces <= self.max_minor_pieces and
+            total_pieces <= self.max_total_pieces
+        )
+
+    def pawn_about_to_promote(self, fen: str) -> bool:
+        """
+        Returns True if a pawn is one move away from promotion.
+
+        White pawn on 7th rank.
+        Black pawn on 2nd rank.
+        """
+        board = fen.split(' ', 1)[0]
+        ranks = board.split('/')
+
+        # Rank 7 (white promotion next move)
+        if 'P' in ranks[1]:
+            return True
+
+        # Rank 2 (black promotion next move)
+        if 'p' in ranks[6]:
+            return True
+
+        return False
         
     
 
@@ -60,11 +106,12 @@ def makeScore(score: int, mate):
     return  int(clamp(score - mate, -100, 100))
     
 
-def process_files(files, output_path="output.csv"):
+def process_files(files, filterEndgame=False, output_path="output.csv"):
     with open(output_path, 'w', newline='') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=['fen', 'best_move', 'top_moves_json', 'score_cp'])
         writer.writeheader()
-
+        categoriser = EndgameHeuristic()
+        
         for filename in files:
             if not Path.is_file(filename):
                 continue
@@ -72,6 +119,11 @@ def process_files(files, output_path="output.csv"):
             count = 0
             for record in load_positions(filepath=filename):
                 fen = record['fen']
+                if (filterEndgame and not categoriser.pawn_about_to_promote(fen)):
+                    continue
+                
+                
+
                 moves = record['moves']
 
                 best_move = None
@@ -119,7 +171,7 @@ def main():
         snapshot_download(
             repo_id="prdev/chessbench-full-policy-value",
             repo_type="dataset",
-            allow_patterns=["train-000**-of-01024.msgpack.zst"],  # first 5 shards
+            allow_patterns=["train-***0-of-01024.msgpack.zst"],  # first 5 shards
             local_dir="./data",
             token=api_key
         )
@@ -128,7 +180,7 @@ def main():
         
     files = list(Path("./data").iterdir())
     
-    process_files(files, args.output)
+    process_files(files, True, args.output)
     
 if __name__ == "__main__":
     main()

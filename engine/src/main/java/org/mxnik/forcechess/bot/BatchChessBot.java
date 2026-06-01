@@ -9,36 +9,55 @@ import org.mxnik.forcechess.Training.EndgameBufferBuilder;
 import org.mxnik.forcechess.network.AlphaNet;
 import org.mxnik.forcechess.network.NetworkConfig;
 import org.nd4j.linalg.api.buffer.DataType;
-import org.opencv.dnn.Net;
 
 import java.io.IOException;
-import java.sql.SQLOutput;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 
+/**
+ * Extension of the ChessBot that Batches moves to improve efficiency for GPU and CPU network evals
+ */
 public class BatchChessBot extends ChessBot{
     public static final int BATCH_SIZE = 64;
     public static final float VIRTUAL_LOSS = 1F;
 
     // there to remove virtualLoss and virtualVisitCount
-    private final int[][] batchedMoves = new int[BATCH_SIZE][MAX_MOVES_IN_POS];
-    private final DiversePair<Integer, GameState>[] endStates = new DiversePair[BATCH_SIZE];
-    private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];          // all leaf-nodes affected by virtualLoss
-    private final FlatArray batchedInputs;
-    private final BatchEvaluator evaluator;
+    private final int[][] batchedMoves = new int[BATCH_SIZE][MAX_MOVES_IN_POS];                     // keeps next moves for each collected node in order
+    private final DiversePair<Integer, GameState>[] endStates = new DiversePair[BATCH_SIZE];        // keeps endStates (number of moves in given pos & GameState) for all connected nodes
+    private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];                               // all leaf-nodes affected by virtualLoss
+    private final FlatArray batchedInputs;                                                          // array to keep the inputTensors of all collected nodes
+    private final BatchEvaluator evaluator;                                                         // the batchevaluator overriding the normal evaluator in ChessBot
 
+    /**
+     * Initializes a BatChessBot with the starting pos
+     * @param evaluator what evaluation should be used
+     * @param playDepth how many MCTS iters a Bot should do
+     */
     public BatchChessBot(BatchEvaluator evaluator, int playDepth) {
         super(null, playDepth);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
     }
 
+    /**
+     * Initializes a BatChessBot with a given position
+     * @param evaluator what evaluation should be used
+     * @param playDepth how many MCTS iters a Bot should do
+     * @param fen fen-string of the given position
+     */
     public BatchChessBot(BatchEvaluator evaluator, String fen, int playDepth) {
-        super(null, playDepth, fen);
+        super(null, fen, playDepth);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
     }
 
+
+    /**
+     * Initializes a BatChessBot with a given position
+     * @param evaluator what evaluation should be used
+     * @param playDepth how many MCTS iters a Bot should do
+     * @param pos Built position object
+     */
     public BatchChessBot(BatchEvaluator evaluator, PositionEncoder.Position pos, int playDepth) {
         super(null, playDepth);
         this.pos = pos;
@@ -81,14 +100,15 @@ public class BatchChessBot extends ChessBot{
     }
 
     /**
-     * returns the move with the highest visit count after n moves
+     * returns the move with the highest score after n simulations (to nearest BATCH_SIZE)
      */
     @Override
     public int bestMove(int n){
+        expandRoot();
         for (int i = 0; i < n; i+=BATCH_SIZE) {
             simulate();
         }
-        outputMoveDist();
+        outputMoveDist(true);
         return tree.move[tree.highestScoreChild(ROOT)];
     }
 
@@ -111,11 +131,12 @@ public class BatchChessBot extends ChessBot{
                 updateVirtual(node);
                 batchedMoves[nodeCount] = new int[0];           // empty array
                 virtuallyAffectedNodes[nodeCount] = node;
-                endStates[nodeCount] = new DiversePair<>(0,GameState.StaleMate);
+                endStates[nodeCount] = new DiversePair<>(0,GameState.Continue);
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);
 
                 nodeCount++;
                 unmakeAll();
+                System.out.println("Hit depth");
 //                resetCore();
 
                 depth = 0;
@@ -129,7 +150,24 @@ public class BatchChessBot extends ChessBot{
                 updateVirtual(node);
                 virtuallyAffectedNodes[nodeCount] = node;
                 endStates[nodeCount] = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, batchedMoves[nodeCount]);
+
+                /*
+                the last move was played and now the position is to be rated from the side that played it
+
+                for example white.
+                pos.whiteToMove was flipped and now the position is encoded from the view of black
+                now all evals are the inverse of what they should be
+
+                That's why I flip the value
+
+                OMG kwasdhjgiopjkasdjvbijklwasjedgjkvbjasdklj jlk LET'S GOOOO
+
+                 */
+
+                pos.whiteToMove = !pos.whiteToMove;     // flip color so encoding happens from the correct perspective
                 PositionEncoder.encode(nodeCount * PositionEncoder.TENSOR_SIZE, pos, batchedInputs.arr);            // save the position for later eval
+                pos.whiteToMove = !pos.whiteToMove;     // flip back for future moves
+
 
                 // reset the tree so another batch run can be started
                 nodeCount++;
@@ -170,15 +208,22 @@ public class BatchChessBot extends ChessBot{
                 if(endStates[i].second() != GameState.Continue)
                     continue;
 
+                normalizeDist(results[i].policyV(), batchedMoves[i], endStates[i].first());
+
                 // expand out all moves and set the policy
                 for (int j = 0; j < endStates[i].first(); j++) {
                     int child = tree.addNewChild(node, batchedMoves[i][j]);
                     tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
+                    //tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
                 }
             }
         }
     }
 
+
+    /**
+     * Backpropagate virtual loss from a node
+     */
     private void updateVirtual(int node){
         while (node != 0) {
             // don't add to n it was alr incremented during the batching process to make the node look worse
@@ -189,6 +234,11 @@ public class BatchChessBot extends ChessBot{
         }
     }
 
+
+    /**
+     * Backpropagate a given value from a node
+     * @param val the position rating (z)
+     */
     @Override
     protected void backProp(int node, float val){
         while (node != 0) {

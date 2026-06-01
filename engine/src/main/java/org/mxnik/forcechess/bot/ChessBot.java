@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.bot;
 
 import org.deeplearning4j.util.ModelSerializer;
+import org.mxnik.forcechess.General.Bitboard;
 import org.mxnik.forcechess.General.ConsoleBar;
 import org.mxnik.forcechess.MCTS.MctsTree;
 import org.mxnik.forcechess.Moves.MovePacket;
@@ -12,11 +13,15 @@ import org.mxnik.forcechess.Moves.GameState;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.function.BiConsumer;
 
+import static java.lang.Math.abs;
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
+import static org.mxnik.forcechess.Pos.PositionUtils.toFieldName;
 
 /**
- * Final class connecting all classes from Pos to the NN
+ * ChessBot combines an evaluator with and MCTS tree to improve playing beyond greedy sampling.
  */
 public class ChessBot implements Player {
     public static final int MAX_SEARCH_DEPTH = 64;
@@ -28,17 +33,31 @@ public class ChessBot implements Player {
     protected final int[] undoInfoStack = new int[MAX_SEARCH_DEPTH];               // all undoInformation in a stack so it can be accessed easily; access[cDepth - 1]
     protected final float[] moveDist = new float[Move.MOVE_POSSIBILITIES];         // will hold the distributions for all the most likely moves;
 
+
     protected final Evaluator evaluator;
     protected int depth = 1;                                                      // depth = 1 da root immer existiert
     protected int playDepth;
 
-    public ChessBot(Evaluator evaluator, int playDepth, String fen){
+
+    /**
+     * Initializes a ChessBot with a given pos
+     * @param evaluator what evaluation should be used
+     * @param fen the fenStr of the starting pos
+     * @param playDepth how many MCTS iters a Bot should do
+     */
+    public ChessBot(Evaluator evaluator, String fen, int playDepth){
         this.evaluator = evaluator;
         this.playDepth = playDepth;
         pos = PositionUtils.fromFen(fen);
         tree = new MctsTree();
     }
 
+
+    /**
+     * Initializes a ChessBot with the starting pos
+     * @param evaluator what evaluation should be used
+     * @param playDepth how many MCTS iters a Bot should do
+     */
     public ChessBot(Evaluator evaluator, int playDepth){
         this.evaluator = evaluator;
         this.playDepth = playDepth;
@@ -120,17 +139,24 @@ public class ChessBot implements Player {
         // depth - 1 to get the last offset
         var out = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, moves);
 
-        if(out.second() != GameState.Continue)
-            tree.w[node] += 1;
+        if(out.second() != GameState.Continue) {
+            throw new IllegalStateException("Position already a checkmate");
+        }
 
+        normalizeDist(policyV, moves, out.first());
 
         // iterate over all moves in curr pos.
         for (int i = 0; i < out.first(); i++) {
             int child = tree.addNewChild(node, moves[i]);
             tree.p[child] = policyV[PolicyIndex.toPolicyIndex(moves[i])];    // add a new node and set the policy vector
+            //tree.p[child] = policyV[PolicyIndex.toPolicyIndex(moves[i])];    // add a new node and set the policy vector
         }
     }
 
+    /**
+     * backpropagate a given value from a given node
+     * @param val position rating (z)
+     */
     protected void backProp(int node, float val){
         tree.globalVisits++;
         tree.n[0]++;
@@ -185,20 +211,35 @@ public class ChessBot implements Player {
     }
 
     /**
-     * output moveDist
+     * output how good every move is being evalled by the MCTS +
+     * @param debug also prints n, q, w of each node
      */
-    public void outputMoveDist(){
+    public void outputMoveDist(boolean debug){
         int node = tree.firstChild[0];
         while (node != 0){
             int move = tree.move[node];
             float q = tree.n[node] == 0 ? 0f : tree.w[node] / tree.n[node];             // evaluation
-            System.out.println("n: " + tree.n[node]);
-            System.out.println("q: " + q);
-            System.out.println("w: " + tree.w[node]);
+            if (debug) {
+                System.out.println("n: " + tree.n[node]);
+                System.out.println("q: " + q);
+                System.out.println("w: " + tree.w[node]);
+                System.out.println("p: " + tree.p[node]);
+            }
+            String moveStr = toFieldName(Move.from(move)) + toFieldName(Move.to(move));
             float score = q + tree.p[node];
-            System.out.printf("moveDist: %d -> %d + %d. score: %f\n", Move.from(move), Move.to(move), Move.flags(move), (float) score);
+            System.out.printf("moveDist: %s + %d. score: %f\n", moveStr, Move.flags(move), score);
             node = tree.nextSibling[node];
         }
+    }
+
+    protected float[] normalizeDist(float[] policyV, int[] moves, int moveOff){
+        System.arraycopy(policyV, 0, moveDist, 0, moveDist.length);
+        Arrays.fill(policyV, Float.NEGATIVE_INFINITY);
+        for (int i = 0; i < moveOff; i++) {
+            int idx = PolicyIndex.toPolicyIndex(moves[i]);
+            policyV[idx] = moveDist[idx];
+        }
+        return policyV;
     }
 
 
@@ -210,19 +251,26 @@ public class ChessBot implements Player {
         depth = 0;
     }
 
+    /**
+     * expand the root with dietrichNoise
+     */
     protected void expandRoot(){
         Evaluator.Result r = getEvaluator().evaluate(pos);
         tree.w[ROOT] = r.value();
+        tree.n[ROOT] = 1;
         expand(ROOT, r.policyV());
 
         tree.addNoiseToRootChildren();
     }
 
 
-
     /**
-     * sims a game and outputs to the screen
-     * every move will have n rounds in the tree
+     * play a game and fill a sampleBuffer
+     * @param n MCTS movedepth
+     * @param startoffset how many moves are in the buffer
+     * @param end   how many moves should be in the buffer
+     * @param buffer the SampleBuffer
+     * @return the new startoffset
      */
     public int selfPlayGame(int n, int startoffset, int end, SampleBuffer buffer){
         float z = 0;
@@ -236,7 +284,7 @@ public class ChessBot implements Player {
             flat = PositionEncoder.encodeFlat(pos);     // save pos before move happens
             expandRoot();
             move = bestMoveUCB(n);
-            buffer.addSample(flat, moveDist.clone(), z); // record the moveDist. and z value
+            buffer.addSample(flat, moveDist().clone(), z); // record the moveDist. and z value
             ConsoleBar.render((double) startoffset /end, 2);
             pos.makeMove(move);
 
@@ -255,8 +303,11 @@ public class ChessBot implements Player {
     }
 
 
-
-    public void selfPlayGame(int n){
+    /**
+     * sims a game and outputs to the screen
+     * every move will have n rounds in the tree
+     */
+     public void selfPlayGame(int n){
 
         GameState g = pos.getState(pos.whiteToMove);
 
@@ -282,26 +333,28 @@ public class ChessBot implements Player {
 //        b.selfPlayGame(300);
     }
 
+    // methods for ChessGame
+
+    /**
+     * does playdepth simulations and returns the best move as the support MovePacket format
+     */
     @Override
     public MovePacket requestMove() {
-//        System.out.println("bot move requested");
-//        System.out.println("All moves in position");
         int rMove = bestMove(playDepth);
         var r = getEvaluator().evaluate(pos);
         System.out.println("Net rates positions: " + r.value());
-        //System.out.printf("Black: %d -> %d\n", Move.from(rMove), Move.to(rMove));
         pos.makeMove(rMove);
-        //System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
         resetCore();
         return Move.toMovePacket(rMove);
     }
 
+    /**
+     *      the other player played made move and this syncs the local board
+     */
     @Override
     public void getMove(MovePacket movePacket) {
         int move = Move.MovePacketToMove(movePacket);
 
-        System.out.printf("whiteM: %d -> %d: %d\n", Move.from(move), Move.to(move), Move.flags(move));
-        //System.out.println(Bitboard.visualiseBitboard(pos.Occupied));
         pos.makeMove(move);
         resetCore();
     }
