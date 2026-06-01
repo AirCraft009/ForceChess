@@ -127,6 +127,10 @@ public class BoardCreationView {
         }
     }
 
+    /**
+     * Responsible for drawing the right hand side of the Scene - The Piece selector and the color selector
+     * @param w the currently selected color {@code true == white}, {@code false == black}
+     */
     public void drawListView(boolean w){
         if(borderPane.getRight() == null){
             VBox vBox = new VBox();
@@ -165,6 +169,9 @@ public class BoardCreationView {
         pieceList.getSelectionModel().select(Math.max(0, selectedIndex));
     }
 
+    /**
+     * Responsible for drawing the left hand side of the Scene - The Board selector and the different value changers of the board (Name, Side length)
+     */
     private void drawControlButtons(){
         GridPane grid = new GridPane();
         grid.setVgap(10);
@@ -188,7 +195,7 @@ public class BoardCreationView {
         sizeSlider.setMinorTickCount(4);
         sizeSlider.valueProperty().addListener(controller);
         grid.add(sizeSlider, 1, 1);
-        sizeLabel = new Label("8"); //TODO read from Fen??
+        sizeLabel = new Label("8");
         grid.add(sizeLabel, 2, 1);
 
         FenProperties.load();
@@ -208,6 +215,10 @@ public class BoardCreationView {
 
         borderPane.setLeft(grid);
     }
+
+    /**
+     * Updates the content of the List of Boards. Must be called if any changes are made to the boards
+     */
     void updateBoardList(){
         HBox[] boards = new HBox[FenProperties.fenNames.size()];
         String[] names = FenProperties.fenNames.toArray(new String[FenProperties.fenNames.size()]);

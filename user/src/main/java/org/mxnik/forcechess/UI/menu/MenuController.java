@@ -31,7 +31,7 @@ public class MenuController implements EventHandler<Event> {
         }else if(source == menuScene.cBoard){
             new BoardCreationView(menuScene.stage);
         }else if(source == menuScene.settings){
-            new SettingsView(menuScene.stage);
+            new SettingsView(menuScene.stage, true);
         }
     }
 

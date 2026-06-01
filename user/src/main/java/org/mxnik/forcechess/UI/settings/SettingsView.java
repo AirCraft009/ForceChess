@@ -30,12 +30,14 @@ public class SettingsView {
     ChoiceBox<String> defaultBot;
     Button closeButton, resetButton, defaultButton;
 
-    public SettingsView(Stage primaryStage) {
+    public SettingsView(Stage primaryStage, boolean loadSettings) {
         stage = primaryStage;
         setBounds();
         basicInit(8);
         controller = new SettingsController(this);
-        loadSettings();
+        if(loadSettings) {
+            loadSettings();
+        }
 
         stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
         stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
@@ -91,7 +93,8 @@ public class SettingsView {
         useFP16 = new CheckBox("Use FP16");
         useFP16.setDisable(!useGPU.isSelected());
         useFP16.setSelected(SavedSettings.savedSettings.fp16());
-        useFP16.selectedProperty().addListener(controller);
+        useFP16.selectedProperty().addListener((_, old, newV) -> controller.updateButtons());
+        useFP16.setTooltip(new Tooltip("A tool that uses less GPU-Memory"));
         root.add(useFP16, 0, 5, 2, 1);
 
         Label defaultBotL = createFormattedLabel("Default Bot: ");
@@ -150,10 +153,14 @@ public class SettingsView {
         constants = new Constants(sideLen, scene);
     }
 
+    /**
+     * Loads the saved Settings from the properties file
+     */
     void loadSettings(){
         SavedSettings.loadSavedSettings();
     }
 
+    //Methods for simpler, shorter UI-Changes
     private Label createFormattedLabel(String text) {
         return new Label(text);
     }

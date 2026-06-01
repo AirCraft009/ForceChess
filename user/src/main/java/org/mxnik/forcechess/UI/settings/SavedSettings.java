@@ -13,6 +13,9 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
     public static SavedSettings savedSettings;
     private static Properties properties;
 
+    /**
+     * Reads the Settings from the .properties file, and saves them in {@code savedSettings}
+     */
     public static void loadSavedSettings() {
         properties = FileLocations.FILE_PROPERTIES;
 
@@ -36,6 +39,10 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Write the {@code savedSettings} to the .properties file
+     */
     public static void writeSettings() {
         properties.setProperty("savePath", savedSettings.savePath);
         properties.setProperty("boardPositionFile", savedSettings.savePath + "FenBoards.properties");
@@ -55,7 +62,7 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
         try {
             FileOutputStream out = new FileOutputStream(FileLocations.OPTION_FILE);
 
-            properties.store(out, "All saved Fen-Strings and the default 8x8 board, saved as a property with their names");
+            properties.store(out, "The Users Settings");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

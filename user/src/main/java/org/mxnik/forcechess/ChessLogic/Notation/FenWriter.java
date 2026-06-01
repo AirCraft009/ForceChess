@@ -64,22 +64,22 @@ public class FenWriter {
 
     public static String WriteFen(Piece[] pieceBoard, boolean whiteTurn, int sideLen){
         StringBuilder fenBuilder = new StringBuilder();
-        String sideLenStr =  Integer.toString(Board.sideLen);
+        String sideLenStr =  Integer.toString(sideLen);
         char turn = whiteTurn? 'w' : 'b';
         int skip = 0;
         int ptr = 0;
 
         rowloop:
-        for (int i = Board.sideLen - 1; i >= 0 ; i--) {
-            for (int j = 0; j < Board.sideLen; j++) {
-                ptr = i * Board.sideLen + j;
+        for (int i = sideLen - 1; i >= 0 ; i--) {
+            for (int j = 0; j < sideLen; j++) {
+                ptr = i * sideLen + j;
 
                 if(pieceBoard[ptr].getType() == PieceTypes.EMPTY){
                     while (pieceBoard[ptr].getType() == PieceTypes.EMPTY){
                         skip ++;
                         j ++;
                         ptr ++;
-                        if ((ptr) % Board.sideLen == 0){
+                        if ((ptr) % sideLen == 0){
                             fenBuilder.append(skip);
                             fenBuilder.append('/');
                             skip = 0;
@@ -97,7 +97,7 @@ public class FenWriter {
                 char s = FenConversion.FromPiece(piece.getType(), piece.getColor());
                 fenBuilder.append(s);
 
-                if ((ptr + 1) % Board.sideLen == 0){
+                if ((ptr + 1) % sideLen == 0){
                     fenBuilder.append('/');
                 }
 

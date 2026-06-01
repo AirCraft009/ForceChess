@@ -45,6 +45,10 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         view.drawPieces(board);
     }
 
+    /**
+     * Handle Clicks on the Board, and places pieces, if possible
+     * @param source the ChessButton that was clicked
+     */
     private void handleCButtonClick(ChessButton source) {
         int square = source.getField();
         if(square == whiteKPos){
@@ -81,12 +85,16 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
                     yield EmptyPiece.EMPTY_PIECE; //TODO Label
                 }
             }
-            default -> EmptyPiece.EMPTY_PIECE;//TODO Error
+            default -> EmptyPiece.EMPTY_PIECE;//TODO Error, delete pieces
         };
 
         view.drawPieces(board);
     }
 
+    /**
+     * responsible for deleting boards
+     * @param source source button
+     */
     private void handleDelButtonClick(Button source) {
         int index = view.deleteButtons.indexOf(source);
         String name = (String) FenProperties.fenNames.toArray()[index];
@@ -94,6 +102,10 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         view.updateBoardList();
     }
 
+    /**
+     * Handles Button clicks of any kind
+     * @param event the event recieved by the button
+     */
     private void handleActionEvent(ActionEvent event) {
         Object source = event.getSource();
 
@@ -141,6 +153,12 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
             handleKeyEvent((KeyEvent)event);
     }
 
+    /**
+     * Handles Clicks on the Piece selector
+     * @param observableValue
+     * @param oldValue
+     * @param newValue
+     */
     private void changedPieceList(ObservableValue<? extends Group> observableValue, Group oldValue, Group newValue) {
         if(oldValue != null)
             ((ChessBackgroundPane)oldValue.getChildren().getFirst()).deactivate();
@@ -158,6 +176,12 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         }
     }
 
+    /**
+     * Handles changes to the Board size slider
+     * @param observableValue
+     * @param oldValue
+     * @param newValue
+     */
     private void changedSizeSlider(ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) {
         int size = (int) Math.round(view.sizeSlider.getValue());
         if(size*size != board.length)
@@ -168,9 +192,17 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         resize();
     }
 
+    /**
+     * Handles the selection of different Boards
+     * @param observableValue
+     * @param oldValue
+     * @param newValue
+     */
     private void changedBoard(ObservableValue<? extends HBox> observableValue, HBox oldValue, HBox newValue) {
-        FenReader reader = new FenReader(FenProperties.getFenStr(((Label)newValue.getChildren().getFirst()).getText()));
+        String fenName = ((Label)newValue.getChildren().getFirst()).getText();
+        FenReader reader = new FenReader(FenProperties.getFenStr(fenName));
         view.sizeSlider.setValue(reader.readSideLen());
+        view.nameField.setText(fenName);
         board = reader.readFenBoard();
         resize();
     }
