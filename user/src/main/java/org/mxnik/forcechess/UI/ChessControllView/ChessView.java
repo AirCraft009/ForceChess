@@ -106,14 +106,14 @@ public class ChessView {
                 this.controller.setPlayers(controller, controller);
             } else if (playerStrW == null) {
 
-                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
+                playerStrB = FileLocations.NETWORK_LOCATIONS + playerStrB;
                 this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, playDepth));
             } else if (playerStrB == null) {
-                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
+                playerStrW = FileLocations.NETWORK_LOCATIONS + playerStrW;
                 this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth), controller);
             } else {
-                playerStrW = FileLocations.NETWORK_LOCATIONS + "/" + playerStrW;
-                playerStrB = FileLocations.NETWORK_LOCATIONS + "/" + playerStrB;
+                playerStrW = FileLocations.NETWORK_LOCATIONS + playerStrW;
+                playerStrB = FileLocations.NETWORK_LOCATIONS + playerStrB;
                 if (playerStrW.equals(playerStrB)) {
                     BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth);
                     this.controller.setPlayers(bot, bot);
@@ -207,10 +207,10 @@ public class ChessView {
                 ChessBackgroundPane square;
 
                 if ((i + j) % 2 == 0) {
-                    square = new ChessBackgroundPane(size, size, Color.WHITE, Color.WHEAT, index); //TODO with Settings
+                    square = new ChessBackgroundPane(size, size, true, index); //TODO with Settings
 
                 } else {
-                    square = new ChessBackgroundPane(size, size, Color.DARKBLUE, Color.LIGHTBLUE, index);
+                    square = new ChessBackgroundPane(size, size, false, index);
                 }
 
                 square.setLayoutX(constants.WidthStart + j * size);

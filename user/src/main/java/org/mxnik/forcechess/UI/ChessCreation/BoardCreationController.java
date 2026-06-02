@@ -57,6 +57,7 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
             blackKPos = -1;
         }
         board[square] = switch (selectedPieceType){
+            case EMPTY -> EmptyPiece.EMPTY_PIECE;
             case PAWN -> new Pawn(view.white.isSelected(), false);
             case KNIGHT -> new Knight(view.white.isSelected(), false);
             case BISHOP -> new Bishop(view.white.isSelected(), false);
@@ -82,10 +83,10 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
                     }
                     yield new King(view.white.isSelected(), false);
                 }else {
-                    yield EmptyPiece.EMPTY_PIECE; //TODO Label
+                    yield EmptyPiece.EMPTY_PIECE;
                 }
             }
-            default -> EmptyPiece.EMPTY_PIECE;//TODO Error, delete pieces
+            default -> board[square];
         };
 
         view.drawPieces(board);
@@ -166,13 +167,14 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
 
         int index = ((ChessBackgroundPane)newValue.getChildren().getFirst()).getIndex();
         switch (index){
-            case 0 -> selectedPieceType = PieceTypes.PAWN;
-            case 1 -> selectedPieceType = PieceTypes.KNIGHT;
-            case 2 -> selectedPieceType = PieceTypes.BISHOP;
-            case 3 -> selectedPieceType = PieceTypes.ROOK;
-            case 4 -> selectedPieceType = PieceTypes.QUEEN;
-            case 5 -> selectedPieceType = PieceTypes.KING;
-            default -> selectedPieceType = PieceTypes.EMPTY; //TODO error
+            case 0 -> selectedPieceType = PieceTypes.EMPTY;
+            case 1 -> selectedPieceType = PieceTypes.PAWN;
+            case 2 -> selectedPieceType = PieceTypes.KNIGHT;
+            case 3 -> selectedPieceType = PieceTypes.BISHOP;
+            case 4 -> selectedPieceType = PieceTypes.ROOK;
+            case 5 -> selectedPieceType = PieceTypes.QUEEN;
+            case 6 -> selectedPieceType = PieceTypes.KING;
+            default -> selectedPieceType = PieceTypes.ILLEGAL; //TODO error
         }
     }
 

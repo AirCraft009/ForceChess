@@ -3,10 +3,7 @@ package org.mxnik.forcechess.UI.menu;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
+import javafx.scene.control.*;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
@@ -15,8 +12,6 @@ import org.jetbrains.annotations.NotNull;
 import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.UI.ChessControllView.ChessView;
 import org.mxnik.forcechess.bot.BatchChessBot;
-
-import java.util.Random;
 
 public class PvBPopup extends MenuPopup {
     /**
@@ -41,11 +36,21 @@ public class PvBPopup extends MenuPopup {
         Label opponentText = new Label("Opponent: ");
         grid.add(opponentText, 0, 1);
         ChoiceBox<String> bots = super.getBotsList();
-        bots.getSelectionModel().selectFirst();
         grid.add(bots, 1, 1);
 
+        Label playerColor = new Label("Player Color: ");
+        grid.add(playerColor, 0, 2);
+        ToggleGroup colorGroup = new ToggleGroup();
+        RadioButton white = new RadioButton("White");
+        white.setSelected(true);
+        white.setToggleGroup(colorGroup);
+        grid.add(white, 1, 2);
+        RadioButton black = new RadioButton("Black");
+        black.setToggleGroup(colorGroup);
+        grid.add(black, 2, 2);
+
         Label playDepthText = new Label("Play Depth: " + BatchChessBot.BATCH_SIZE);
-        grid.add(playDepthText, 0, 2);
+        grid.add(playDepthText, 0, 3);
         Slider playDepthS = new Slider(BatchChessBot.BATCH_SIZE, BatchChessBot.BATCH_SIZE*8, BatchChessBot.BATCH_SIZE);
         playDepthS.setShowTickMarks(true);
         playDepthS.setShowTickLabels(true);
@@ -55,14 +60,14 @@ public class PvBPopup extends MenuPopup {
         playDepthS.valueProperty().addListener((observable, oldValue, newValue) -> {
             playDepthText.setText("Play Depth: " + Math.round(newValue.doubleValue()/64)*64);
         });
-        grid.add(playDepthS, 1, 2);
+        grid.add(playDepthS, 1, 3);
 
         Button cancel = getButton("Cancel");
         cancel.setOnAction(e -> close());
-        grid.add(cancel, 0, 3);
+        grid.add(cancel, 0, 4);
 
-        Button contButton = getContButton(primaryStage, board, bots, playDepthS);
-        grid.add(contButton, 1, 3);
+        Button contButton = getContButton(primaryStage, board, bots, white, playDepthS);
+        grid.add(contButton, 1, 4);
 
         Scene scene = new Scene(grid);
         setScene(scene);
@@ -77,7 +82,7 @@ public class PvBPopup extends MenuPopup {
      * @return the {@code Button} to start the PvB match
      */
     @NotNull
-    private Button getContButton(Stage primaryStage, ChoiceBox<String> board, ChoiceBox<String> bot, Slider playDepthS) {
+    private Button getContButton(Stage primaryStage, ChoiceBox<String> board, ChoiceBox<String> bot, RadioButton color, Slider playDepthS) {
         Button contButton = getButton("Continue");
         contButton.setOnAction(e -> {
             close();
@@ -86,10 +91,10 @@ public class PvBPopup extends MenuPopup {
             int sideLen = 8;
 //            Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
-                if(new Random().nextBoolean())
-                    new ChessView(primaryStage, fen, sideLen, bot.getValue(), null, (int)playDepthS.getValue());
-                else
+                if(color.isSelected())
                     new ChessView(primaryStage, fen, sideLen, null, bot.getValue(), (int)playDepthS.getValue());
+                else
+                    new ChessView(primaryStage, fen, sideLen, bot.getValue(), null, (int)playDepthS.getValue());
             } catch (CloneNotSupportedException ex) {
                 throw new RuntimeException(ex);
             }

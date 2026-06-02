@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.FileHandling.TextFileHandler;
+import org.mxnik.forcechess.UI.settings.SavedSettings;
 
 import static org.mxnik.forcechess.General.FileLocations.NETWORK_LOCATIONS;
 
@@ -37,6 +38,7 @@ public abstract class MenuPopup extends Stage {
         ChoiceBox<String> bots = new ChoiceBox<>();
         ObservableList<String> botsList = FXCollections.observableArrayList(TextFileHandler.getFolderContents(NETWORK_LOCATIONS));
         bots.setItems(botsList);
+        bots.getSelectionModel().select(SavedSettings.savedSettings.defaultBot());
         return bots;
     }
 
