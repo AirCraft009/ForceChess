@@ -144,12 +144,14 @@ public class BatchChessBot extends ChessBot{
                 continue;
             }
 
+
             if (tree.firstChild[node] == 0) {
                 tree.globalVisits++;
                 tree.n[ROOT]++;
                 updateVirtual(node);
                 virtuallyAffectedNodes[nodeCount] = node;
                 endStates[nodeCount] = MoveGen.generateMovesAndResult(pos, pos.whiteToMove, batchedMoves[nodeCount]);
+
 
                 /*
                 the last move was played and now the position is to be rated from the side that played it
@@ -198,8 +200,19 @@ public class BatchChessBot extends ChessBot{
         for (int i = 0; i < virtuallyAffectedNodes.length; i++) {
             int node = virtuallyAffectedNodes[i];
 
-            // set the value
-            backProp(node, results[i].value());
+
+            switch (endStates[i].second()){
+                case Continue -> {
+                    backProp(node, results[i].value());
+                }
+                case CheckMate -> {
+                    // lost the game from playing persp.
+                    backProp(node, -1.2F);
+                }
+                case StaleMate, FiftyMove -> {
+                }
+            }
+
 
 
             if(tree.firstChild[node] == 0){

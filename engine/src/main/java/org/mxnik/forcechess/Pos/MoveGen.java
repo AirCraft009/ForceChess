@@ -17,8 +17,8 @@ public class MoveGen {
      */
     public static DiversePair <Integer, GameState> generateMovesAndResult(PositionEncoder.Position pos, boolean whiteToMove, int[] moves) {
         int newOff = generateMoves(pos, 0, whiteToMove, moves);
-        if(newOff == 0){                                       // no new moves
-            boolean check = pos.checkChess(!whiteToMove);           // other colored king still in chack
+        if(newOff == 0){                                            // no new moves
+            boolean check = pos.checkChess(whiteToMove);
             return check ? new DiversePair<>(newOff, GameState.CheckMate) : new DiversePair<>(newOff, GameState.StaleMate);
         }
         return new DiversePair<>(newOff, GameState.Continue);
