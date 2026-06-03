@@ -15,6 +15,10 @@ import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 import static org.mxnik.forcechess.Moves.RayDetection.*;
 
+
+/**
+ * internal representation of a Chessboard.
+ */
 public class Board {
     public static int sideLen = 8;
     public static int size = 64;
@@ -34,15 +38,22 @@ public class Board {
 
     int maxMoves = 0;
 
+    /**
+     * initializes a Board with the normal chess starting pos.
+     */
     public Board() {
         board = new Piece[sideLen * sideLen];
         BuildFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
     }
 
+    /**
+     * initializes a Board with a given position
+     */
     public Board(String fenString) {
         BuildFromFen(fenString);
         MoveOffsets.calculateOffset(sideLen);
     }
+
 
     public void calcMaterial(){
         teamBMaterial = 0;
@@ -93,13 +104,13 @@ public class Board {
 
 
     /**
-     * Ist König in Schach.
      *
      * Verwendet Ray-Modell beginnt vom könig aus in alle Richtungen (slide) und Springerform
      * und check für Schach.
      *
      * @param kingPos   flat board index of the king to test
      * @param kingColor true = white king, false = black king
+     * @return is the king in check
      */
     public boolean isChecked(int kingPos, boolean kingColor) {
         int kingRow = BoardHelper.getRow(kingPos);
@@ -258,6 +269,9 @@ public class Board {
         return undoInfo;
     }
 
+    /**
+     * undoes a move (board state is restored perfectly)
+     */
     public void undoMove(UndoMovePacket undoPacket){
         fiftyMove = undoPacket.fiftyMoveCounter();
         turn = !turn;

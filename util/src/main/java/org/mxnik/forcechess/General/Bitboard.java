@@ -32,6 +32,9 @@ public final class Bitboard {
         }
     }
 
+    /**
+     * visualizes A bitboard to a string repr. of a chessboard with x marking spaces
+     */
     public static String  visualiseBitboard(long board){
         StringBuilder sb = new StringBuilder();
         String horizontalLine = "+" + ("---+").repeat(8) + "\n";

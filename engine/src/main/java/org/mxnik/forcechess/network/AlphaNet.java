@@ -26,7 +26,7 @@ public final class AlphaNet implements BatchEvaluator, Closeable {
 
 
     /**
-     * Net Evaluator & Batchevaluator leveraging a given model by giving it the ability to use batching and normal interference
+     * Net Evaluator and Batchevaluator leveraging a given model by giving it the ability to use batching and normal interference
      * @param model initialized model
      */
     public AlphaNet(ComputationGraph model, int batchSize) {
@@ -38,7 +38,7 @@ public final class AlphaNet implements BatchEvaluator, Closeable {
     }
 
     /**
-     * Net Evaluator & Batchevaluator leveraging a given model by giving it the ability to use batching and normal interference
+     * Net Evaluator and Batchevaluator leveraging a given model by giving it the ability to use batching and normal interference
      * @param model initialized model
      */
     public AlphaNet(ComputationGraph model) {

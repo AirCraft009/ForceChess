@@ -128,7 +128,7 @@ public class SettingsView {
     }
 
     /**
-     * sets the x,y & width, height properties
+     * sets the x,y, width, height properties
      */
     public void setBounds(){
         stage.setX(Constants.bounds.getMinX());

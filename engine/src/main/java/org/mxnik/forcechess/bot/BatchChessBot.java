@@ -109,7 +109,7 @@ public class BatchChessBot extends ChessBot{
             simulate();
         }
         outputMoveDist(true);
-        return tree.move[tree.highestScoreChild(ROOT)];
+        return tree.move[tree.findBestChild(ROOT)];
     }
 
 

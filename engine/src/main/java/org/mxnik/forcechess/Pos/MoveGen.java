@@ -415,7 +415,7 @@ public class MoveGen {
      *
      * @param square starting square
      * @param delta offset to move
-     * @param occupied blockers (own & enemyPieces)
+     * @param occupied blockers (own and enemyPieces)
      * @param ownPieces (same colored pieces)
      * @param border fields that cannot be accessed <p> example: rook moving upward (+8) <p> bottom row is border
      */

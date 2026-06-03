@@ -43,7 +43,7 @@ public class MenuScene {
     }
 
     /**
-     * sets the {@code x}, {@code y} & {@code width}, {@code height} properties
+     * sets the {@code x}, {@code y} and {@code width}, {@code height} properties
      */
     public void setBounds(Stage stage) {
         stage.setX(Constants.bounds.getMinX());

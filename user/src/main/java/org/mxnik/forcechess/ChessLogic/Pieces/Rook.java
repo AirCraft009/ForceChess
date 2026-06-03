@@ -41,11 +41,10 @@ public class Rook extends Piece {
      * Gibt alle möglichen Züge zurück, ohne ander Schachfiguren zu beachten.
      * Moves werden nur durch die Boardgrenzen eingeschränkt
      * @param pos die jetzige position des Turms
-     * @return ein byte arr mit allen move offsets
      */
     @Override
     public void getMoves(int pos, MoveList moveList) {
-        // code shaut hässlich aus ist aber nicht so uneffizient.
+        // code schaut hässlich aus, ist aber nicht so ineffizient.
         // läuft immer noch O(N)
         moveList.startPiece();
 

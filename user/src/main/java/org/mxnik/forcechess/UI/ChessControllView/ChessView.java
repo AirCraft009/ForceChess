@@ -127,7 +127,7 @@ public class ChessView {
     }
 
     /**
-     * sets the x,y & width, height properties
+     * sets the x,y and width, height properties
      */
     public void setBounds(){
         stage.setX(Constants.bounds.getMinX());

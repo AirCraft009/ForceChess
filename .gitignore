@@ -6,6 +6,9 @@ target/
 ### IntelliJ IDEA ###
 /.idea
 
+### Binary files
+*.bin
+
 ### Eclipse ###
 .apt_generated
 .classpath
