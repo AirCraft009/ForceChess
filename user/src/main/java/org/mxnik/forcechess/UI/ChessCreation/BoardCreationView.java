@@ -30,7 +30,7 @@ import java.util.Arrays;
 public class BoardCreationView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     BorderPane borderPane;
     Constants constants;
@@ -139,13 +139,13 @@ public class BoardCreationView {
             white.addEventHandler(Event.ANY, controller);
             pieceList = new ListView<Group>();
             pieceList.getSelectionModel().selectedItemProperty().addListener(controller);
-            pieceList.setPrefSize((stage.getScene().getHeight() - white.getHeight()) / 6, (stage.getScene().getHeight() - white.getHeight()));
+            pieceList.setPrefSize((stage.getScene().getHeight() - white.getHeight()) / 8, (stage.getScene().getHeight() - white.getHeight()));
             vBox.getChildren().addAll(white, pieceList);
             borderPane.setRight(vBox);
         }
         pieceList.getSelectionModel().selectedItemProperty().removeListener(controller);
         int selectedIndex = pieceList.getSelectionModel().getSelectedIndex();
-        Group[] pieces = new Group[6];
+        Group[] pieces = new Group[7];
         String colorPrefix = (w) ? "white-" : "black-";
         String[] arr = {colorPrefix + "pawn.png",
                 colorPrefix + "knight.png",
@@ -153,15 +153,17 @@ public class BoardCreationView {
                 colorPrefix + "rook.png",
                 colorPrefix + "queen.png",
                 colorPrefix + "king.png"};
+        int size = (int) ((stage.getScene().getHeight() - white.getHeight()) / 8);
+        ChessBackgroundPane bg0 = new ChessBackgroundPane(size, size, false, 0);
+        pieces[0] = new Group(bg0);
         for(int i = 0; i < arr.length; i++) {
-            int size = (int) ((stage.getScene().getHeight() - white.getHeight()-12.0) / 6);
-            ChessBackgroundPane bg = new ChessBackgroundPane(size, size, (i%2==0)?Color.WHITE:Color.DARKBLUE, (i%2==0)?Color.WHEAT:Color.LIGHTBLUE, i);
+            ChessBackgroundPane bg = new ChessBackgroundPane(size, size, i%2==0, i+1);
 
             ImageView piece = new ImageView(images[2*i+(w?0:1)]);
             piece.setFitHeight(size);
             piece.setFitWidth(size);
 
-            pieces[i] = new Group(bg, piece);
+            pieces[i+1] = new Group(bg, piece);
         }
         ObservableList<Group> observableList = FXCollections.observableList(Arrays.asList(pieces));
         pieceList.setItems(observableList);
@@ -256,10 +258,9 @@ public class BoardCreationView {
                 ChessBackgroundPane square;
 
                 if ((i + j) % 2 == 0) {
-                    square = new ChessBackgroundPane(size, size, Color.WHITE, Color.WHEAT, index);
-
+                    square = new ChessBackgroundPane(size, size, true, index);
                 } else {
-                    square = new ChessBackgroundPane(size, size, Color.DARKBLUE, Color.LIGHTBLUE, index);
+                    square = new ChessBackgroundPane(size, size, false, index);
                 }
 
                 square.setLayoutX(constants.WidthStart + j * size);

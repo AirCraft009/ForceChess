@@ -2,12 +2,15 @@ package org.mxnik.forcechess.UI.ChessControllView;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.mxnik.forcechess.UI.settings.SavedSettings;
 
 public class ChessBackgroundPane extends Rectangle {
     private int index;
     private Color primaryColor = Color.DARKBLUE;
     private Color secondaryColor = Color.YELLOW;
+    private Color tertiaryColor = Color.RED;
     private boolean active;
+    private boolean moved;
 
 
     /**
@@ -16,16 +19,25 @@ public class ChessBackgroundPane extends Rectangle {
      *
      * @param v width
      * @param v1 height
-     * @param primary active color
-     * @param secondary passive color
+     * @param color {@code true == lightSquare}, {@code false == darkSquare}
      * @param index index on the board
      */
-    public ChessBackgroundPane(double v, double v1, Color primary, Color secondary, int index) {
-        super(v, v1, primary);
-        primaryColor = primary;
-        secondaryColor = secondary;
+    public ChessBackgroundPane(double v, double v1, boolean color, int index) {
+        super(v, v1, SavedSettings.savedSettings.lightSquare());
+        if(color){
+            primaryColor = SavedSettings.savedSettings.lightSquare();
+            secondaryColor = SavedSettings.savedSettings.lightHighlight();
+            tertiaryColor = SavedSettings.savedSettings.lightMoved();
+        }else{
+            primaryColor = SavedSettings.savedSettings.darkSquare();
+            secondaryColor = SavedSettings.savedSettings.darkHighlight();
+            tertiaryColor = SavedSettings.savedSettings.darkMoved();
+        }
+
         this.index = index;
         active = false;
+        moved = false;
+        updateColors();
     }
 
     public ChessBackgroundPane(double v, double v1, int index) {
@@ -45,25 +57,47 @@ public class ChessBackgroundPane extends Rectangle {
 
     public void toggle(){
         if (!active){
-            this.setFill(secondaryColor);
-            active = true;
+            setActive();
             return;
         }
-        active = false;
-        this.setFill(primaryColor);
+        deactivate();
     }
 
     public void setActive(){
         active = true;
-        this.setFill(secondaryColor);
+        updateColors();
     }
 
     public void deactivate(){
         active = false;
-        this.setFill(primaryColor);
+        updateColors();
     }
 
     public boolean isActive(){
         return active;
+    }
+
+    public void setMoved(){
+        moved = true;
+        updateColors();
+    }
+
+    public void deactivateMoved(){
+        moved = false;
+        updateColors();
+    }
+
+    public boolean isMoved(){
+        return moved;
+    }
+
+    private void updateColors(){
+        if(active){
+            this.setFill(secondaryColor);
+        }else if(moved){
+            this.setFill(tertiaryColor);
+        }else {
+            this.setFill(primaryColor);
+        }
     }
 }
