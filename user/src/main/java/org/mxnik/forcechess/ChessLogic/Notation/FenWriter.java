@@ -74,22 +74,20 @@ public class FenWriter {
             for (int j = 0; j < sideLen; j++) {
                 ptr = i * sideLen + j;
 
-                if(pieceBoard[ptr].getType() == PieceTypes.EMPTY){
-                    while (pieceBoard[ptr].getType() == PieceTypes.EMPTY){
-                        skip ++;
-                        j ++;
-                        ptr ++;
-                        if ((ptr) % sideLen == 0){
-                            fenBuilder.append(skip);
-                            fenBuilder.append('/');
-                            skip = 0;
-                            continue rowloop;
-                        }
+                while (pieceBoard[ptr].getType() == PieceTypes.EMPTY){
+                    skip ++;
+                    j ++;
+                    ptr ++;
+                    if ((ptr) % sideLen == 0){
+                        fenBuilder.append(skip);
+                        fenBuilder.append('/');
+                        skip = 0;
+                        continue rowloop;
                     }
-                    continue;
                 }
 
                 Piece piece = pieceBoard[ptr];
+                System.out.println(piece);
                 if(skip != 0) {
                     fenBuilder.append(skip);
                     skip = 0;
