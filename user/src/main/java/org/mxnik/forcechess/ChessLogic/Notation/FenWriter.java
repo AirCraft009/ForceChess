@@ -31,7 +31,6 @@ public class FenWriter {
                             continue rowloop;
                         }
                     }
-                    continue;
                 }
 
                 Piece piece = pieceBoard[ptr];
@@ -86,7 +85,6 @@ public class FenWriter {
                             continue rowloop;
                         }
                     }
-                    continue;
                 }
 
                 Piece piece = pieceBoard[ptr];
@@ -110,7 +108,7 @@ public class FenWriter {
         fenBuilder.append(turn);
         fenBuilder.append(' ');
         // temporary 0's
-        fenBuilder.append("0 0 0");//TODO swap out 0's
+        fenBuilder.append("KQkq - 0");//TODO swap out 0's
         fenBuilder.append(' ');
         fenBuilder.append(sideLenStr);
 
