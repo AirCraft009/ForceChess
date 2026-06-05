@@ -38,6 +38,8 @@ public class Board {
 
     int maxMoves = 0;
 
+    int lastMoveFrom = -1, lastMoveTo = -1;
+
     /**
      * initializes a Board with the normal chess starting pos.
      */
@@ -266,6 +268,9 @@ public class Board {
             fiftyMove = 0;
         }
 
+        lastMoveFrom = packet.from();
+        lastMoveTo = packet.to();
+
         return undoInfo;
     }
 
@@ -480,6 +485,14 @@ public class Board {
 
     public void setMaxMoves(int maxMoves) {
         this.maxMoves = maxMoves;
+    }
+
+    public int getLastMoveFrom(){
+        return lastMoveFrom;
+    }
+
+    public int getLastMoveTo(){
+        return lastMoveTo;
     }
 
     public static void main(String[] args) throws CloneNotSupportedException {

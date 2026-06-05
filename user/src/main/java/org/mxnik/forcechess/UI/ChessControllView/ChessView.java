@@ -207,8 +207,7 @@ public class ChessView {
                 ChessBackgroundPane square;
 
                 if ((i + j) % 2 == 0) {
-                    square = new ChessBackgroundPane(size, size, true, index); //TODO with Settings
-
+                    square = new ChessBackgroundPane(size, size, true, index);
                 } else {
                     square = new ChessBackgroundPane(size, size, false, index);
                 }

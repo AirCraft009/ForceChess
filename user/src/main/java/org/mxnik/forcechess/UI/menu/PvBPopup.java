@@ -51,12 +51,12 @@ public class PvBPopup extends MenuPopup {
 
         Label playDepthText = new Label("Play Depth: " + BatchChessBot.BATCH_SIZE);
         grid.add(playDepthText, 0, 3);
-        Slider playDepthS = new Slider(BatchChessBot.BATCH_SIZE, BatchChessBot.BATCH_SIZE*8, BatchChessBot.BATCH_SIZE);
+        Slider playDepthS = new Slider(BatchChessBot.BATCH_SIZE, BatchChessBot.BATCH_SIZE*64, BatchChessBot.BATCH_SIZE);
         playDepthS.setShowTickMarks(true);
         playDepthS.setShowTickLabels(true);
         playDepthS.setSnapToTicks(true);
-        playDepthS.setMajorTickUnit(BatchChessBot.BATCH_SIZE);
-        playDepthS.setMinorTickCount(0);
+        playDepthS.setMajorTickUnit(BatchChessBot.BATCH_SIZE*16);
+        playDepthS.setMinorTickCount(15);
         playDepthS.valueProperty().addListener((observable, oldValue, newValue) -> {
             playDepthText.setText("Play Depth: " + Math.round(newValue.doubleValue()/64)*64);
         });

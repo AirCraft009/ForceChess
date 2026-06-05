@@ -17,7 +17,7 @@ public class MenuScene {
     Constants constants;
     MenuController controller;
 
-    Button pvp, pvb, bvb, train, cBoard, settings;
+    Button pvp, pvb, bvb, cBoard, settings;
 
     /**
      * @param stage the primary stage used in the program
@@ -75,11 +75,10 @@ public class MenuScene {
         pvp = createButton("Player vs Player");
         pvb = createButton("Player vs Bot");
         bvb = createButton("Bot vs Bot");
-        train = createButton("Train Bots");
         cBoard = createButton("Create Board");
         settings = createButton("Settings");
 
-        root.getChildren().addAll(pvp, pvb, bvb, train, cBoard, settings);
+        root.getChildren().addAll(pvp, pvb, bvb, cBoard, settings);
     }
 
     /**

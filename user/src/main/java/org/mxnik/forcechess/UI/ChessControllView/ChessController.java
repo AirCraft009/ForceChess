@@ -40,6 +40,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     private byte[] currPieceMoves;
     private final SynchronousQueue<MovePacket> moveQueue = new SynchronousQueue<>();
 
+    int prevMovedFrom = -1, prevMovedTo = -1;
+
 
     public ChessController(ChessView chess, Stage stage, String startFen) throws CloneNotSupportedException, IOException {
         this.stage = stage;
@@ -181,6 +183,21 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
     }
 
+    public void highlightLastMove(){
+        int lastMoveFrom = board.getLastMoveFrom();
+        int lastMoveTo = board.getLastMoveTo();
+        if(prevMovedFrom >= 0 && prevMovedTo >= 0) {
+            ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(prevMovedFrom)).deactivateMoved();
+            ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(prevMovedTo)).deactivateMoved();
+        }
+        if(lastMoveFrom >= 0 && lastMoveTo >= 0) {
+            ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(lastMoveFrom)).setMoved();
+            ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(lastMoveTo)).setMoved();
+        }
+        prevMovedFrom = lastMoveFrom;
+        prevMovedTo = lastMoveTo;
+    }
+
     /**
      * handles if to set the flag for moveReady
      * @param hasPiece does the square contain a piece
@@ -243,7 +260,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         System.gc();
 
         Platform.runLater(() -> {
-              chessView.drawPieces(board);
+            chessView.drawPieces(board);
+            highlightLastMove();
         });
     }
 
