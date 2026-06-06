@@ -37,14 +37,6 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         Arrays.fill(board, EmptyPiece.EMPTY_PIECE);
     }
 
-    public void resize(){
-        view.constants = new Constants(view.constants.sideLen, stage.getScene());
-        view.backgroundLayer.getChildren().clear();
-        view.clearInteractionLayer();
-        view.drawBoard();
-        view.drawPieces(board);
-    }
-
     /**
      * Handle Clicks on the Board, and places pieces, if possible
      * @param source the ChessButton that was clicked
@@ -191,6 +183,8 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         Arrays.fill(board, EmptyPiece.EMPTY_PIECE);
         view.sizeLabel.setText(String.valueOf(size));
         view.constants = new Constants(size, stage.getScene());
+        whiteKPos = -1;
+        blackKPos = -1;
         resize();
     }
 
@@ -218,5 +212,13 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         }else if(newValue instanceof HBox){
             changedBoard(observableValue, (HBox)oldValue, (HBox)newValue);
         }
+    }
+
+    public void resize(){
+        view.constants = new Constants(view.constants.sideLen, stage.getScene());
+        view.backgroundLayer.getChildren().clear();
+        view.clearInteractionLayer();
+        view.drawBoard();
+        view.drawPieces(board);
     }
 }

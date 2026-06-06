@@ -50,9 +50,6 @@ public class ChessView {
         basicInit(sideLen);
         generateImages();
 
-        stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
-        stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
-
         try {
             this.controller = new ChessController(this, stage, fen);
             new Thread(() -> {
@@ -96,6 +93,9 @@ public class ChessView {
             drawBoard();
             root.getChildren().clear();
             root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
+
+            stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
+            stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
         });
         this.controller.start();
     }
