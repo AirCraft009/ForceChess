@@ -9,10 +9,12 @@ import javafx.stage.Stage;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
+import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
+import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.GameControl.Callback;
 import org.mxnik.forcechess.GameControl.Player;
 import org.mxnik.forcechess.General.DiversePair;
@@ -20,6 +22,7 @@ import org.mxnik.forcechess.Moves.GameState;
 import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.Moves.MoveType;
 import org.mxnik.forcechess.UI.Constants;
+import org.mxnik.forcechess.UI.menu.MenuScene;
 
 import java.io.IOException;
 import java.util.concurrent.SynchronousQueue;
@@ -148,6 +151,13 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         // all Buttons
         if (source instanceof ChessButton sourceButton){
             handleActiveChessClick(sourceButton);
+        }else if (source == chessView.saveAndQuitB){
+            FenProperties.addFenStr("current", FenWriter.WriteFen(board)); //TODO Delete when continuing to play
+            new MenuScene(stage);
+        } else if (source == chessView.undoB) {
+            //TODO UNDO MOVE
+        } else if (source == chessView.resignB){
+            //TODO Resign
         }
     }
 
@@ -291,8 +301,10 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     public void resize() {
         chessView.constants = new Constants(chessView.constants.sideLen, stage.getScene());
         chessView.backgroundLayer.getChildren().clear();
+        chessView.menuLayer.getChildren().clear();
         chessView.clearInteractionLayer();
         chessView.drawBoard();
+        chessView.drawMenuLayer();
         chessView.drawPieces(board);
     }
 }

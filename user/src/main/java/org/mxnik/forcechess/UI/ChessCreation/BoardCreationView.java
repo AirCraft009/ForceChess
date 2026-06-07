@@ -26,6 +26,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class BoardCreationView {
     public final Stage stage;
@@ -222,8 +224,16 @@ public class BoardCreationView {
      * Updates the content of the List of Boards. Must be called if any changes are made to the boards
      */
     void updateBoardList(){
-        HBox[] boards = new HBox[FenProperties.fenNames.size()];
-        String[] names = FenProperties.fenNames.toArray(new String[FenProperties.fenNames.size()]);
+        String[] names;
+        if(FenProperties.fenNames.contains("current")){
+            Set<String> fenNamesExcl = new HashSet<>(FenProperties.fenNames);
+            fenNamesExcl.remove("current");
+            System.out.println("Fen names Excl" + fenNamesExcl);
+            names = fenNamesExcl.toArray(new String[fenNamesExcl.size()]);
+        }else{
+            names = FenProperties.fenNames.toArray(new String[FenProperties.fenNames.size()]);
+        }
+        HBox[] boards = new HBox[names.length];
         deleteButtons.clear();
         for (int i = 0; i < boards.length; i++) {
             boards[i] = new HBox();

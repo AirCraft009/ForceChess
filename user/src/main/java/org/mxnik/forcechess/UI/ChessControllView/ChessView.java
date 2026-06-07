@@ -7,8 +7,12 @@ import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundImage;
+import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Modality;
@@ -39,6 +43,8 @@ public class ChessView {
     Group backgroundLayer = new Group();
     private Group pieceLayer = new Group();
     private Group interactionLayer = new Group();
+    Group menuLayer = new Group();//TODO Rename?
+    Button saveAndQuitB, undoB, resignB;
     ImageView winView;
 
     private Image[] images;
@@ -91,8 +97,9 @@ public class ChessView {
         setPlayers(playerStrW, playerStrB, fen, playDepth);
         Platform.runLater( () -> {
             drawBoard();
+            drawMenuLayer();
             root.getChildren().clear();
-            root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
+            root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer, menuLayer);
 
             stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
             stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
@@ -293,6 +300,42 @@ public class ChessView {
 
             pieceLayer.getChildren().add(imgView);
         }
+    }
+
+    public void drawMenuLayer(){//TODO change buttons (PNGs)
+        saveAndQuitB = new Button("Save and Quit");
+        saveAndQuitB.setLayoutX((double) constants.WidthStart / 4);
+        saveAndQuitB.setLayoutY((double) constants.MIDDLE_Y - saveAndQuitB.getHeight()/2);
+        saveAndQuitB.addEventHandler(Event.ANY, controller);
+
+        undoB = new Button();
+        Image i;
+        try {
+            i = new Image(new FileInputStream(sourcedir + "chess-menu/undo.png"));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        undoB.setBackground(new Background(new BackgroundImage(i, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null)));
+        undoB.setTooltip(new Tooltip("Undo last move"));
+        undoB.setPrefSize(constants.BlockS, constants.BlockS);
+        undoB.setLayoutX(2 * constants.MIDDLE_X - (double) constants.MIDDLE_X / 5);
+        undoB.setLayoutY(constants.MIDDLE_Y - constants.BlockS * 1.5);
+        undoB.addEventHandler(Event.ANY, controller);
+
+        resignB = new Button();
+        try {
+            i = new Image(new FileInputStream(sourcedir + "chess-menu/resign.png"));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        resignB.setBackground(new Background(new BackgroundImage(i, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null)));
+        resignB.setPrefSize(constants.BlockS, constants.BlockS);
+        resignB.setTooltip(new Tooltip("Resign"));
+        resignB.setLayoutX(2 * constants.MIDDLE_X - (double) constants.MIDDLE_X / 5);
+        resignB.setLayoutY(constants.MIDDLE_Y + constants.BlockS * 0.5);
+        resignB.addEventHandler(Event.ANY, controller);
+
+        menuLayer.getChildren().addAll(saveAndQuitB, undoB, resignB);
     }
 
     @Nullable
