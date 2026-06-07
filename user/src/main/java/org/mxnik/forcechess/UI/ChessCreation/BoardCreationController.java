@@ -111,7 +111,7 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         }else if(source == view.saveButton){
             String text = view.nameField.getText();
             if(text != null && !text.isBlank() && !text.equals("default")){
-                FenProperties.addFenStr(text, FenWriter.WriteFen(board, true, (int) Math.round(view.sizeSlider.getValue())));
+                FenProperties.addFenStr(text, FenWriter.WriteFen(board, true, (int) Math.round(view.sizeSlider.getValue()), -1));
                 view.updateBoardList();
             }
         }else if(source instanceof Button deleteButton){
