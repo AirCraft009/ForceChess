@@ -1,21 +1,22 @@
 package org.mxnik.forcechess.ChessLogic.Notation;
 
 import org.mxnik.forcechess.ChessLogic.Board.Board;
+import org.mxnik.forcechess.ChessLogic.Board.CastleRights;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 
 public class FenWriter {
 
     public static String WriteFen(Board board){
-        return WriteFen(board.getBoard(), board.getTurn(), board.getFiftyMove(), Board.sideLen, board.getEnPassantPos());
+        return WriteFen(board.getBoard(), board.getTurn(), board.getFiftyMove(), Board.sideLen, board.getEnPassantPos(), board.getCastleRights());
     }
     //TODO: write extra attributes correctly
-    public static String WriteFen(Piece[] pieceBoard, boolean whiteTurn, int fiftyMove, int sideLen, int enPassant){
+    public static String WriteFen(Piece[] pieceBoard, boolean whiteTurn, int fiftyMove, int sideLen, int enPassant, CastleRights rights){
         StringBuilder fenBuilder = new StringBuilder();
         String sideLenStr =  Integer.toString(sideLen);
         char turn = whiteTurn? 'w' : 'b';
         int skip = 0;
-        int ptr = 0;
+        int ptr;
 
         rowloop:
         for (int i = sideLen - 1; i >= 0 ; i--) {
@@ -52,9 +53,12 @@ public class FenWriter {
 
         //remove the last slash
         fenBuilder.deleteCharAt(fenBuilder.length()-1).append(' ')
-        .append(turn).append(' ')
-        // temporary 0's
-        .append("KQkq").append(' ')
+        .append(turn).append(' ');
+
+        fenBuilder.append((rights.WK_Castle? "":"K"))
+        .append((rights.WQ_Castle? "":"Q"))
+        .append((rights.BK_Castle? "":"k"))
+        .append((rights.BQ_Castle? "":"q"))
         .append(enPassant).append(' ')
         .append(fiftyMove).append(' ')
         .append(sideLenStr);

@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.ChessLogic.Notation;
 
+import org.mxnik.forcechess.ChessLogic.Board.CastleRights;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
@@ -68,6 +69,35 @@ public final class FenReader {
 
         return col + row * 8;
 
+    }
+
+    public CastleRights readCastleRights(){
+        if(castle.equals("-")){
+            return new CastleRights(false,false,false,false);
+        }
+
+        boolean WK = false;
+        boolean WQ = false;
+        boolean BK = false;
+        boolean BQ = false;
+        for (int i = 0; i < castle.length(); i++) {
+            switch (castle.charAt(i)){
+                case 'K':
+                    WK = true;
+                    break;
+                case 'Q':
+                    WQ = true;
+                    break;
+                case 'k':
+                    BK = true;
+                    break;
+                case 'q':
+                    BQ = true;
+                    break;
+            }
+        }
+
+        return new CastleRights(WK, WQ, BK, BQ);
     }
 
     public static String toFieldName(int field){

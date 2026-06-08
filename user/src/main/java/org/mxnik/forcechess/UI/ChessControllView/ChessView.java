@@ -413,13 +413,6 @@ public class ChessView {
 
 
     public void showWinImage(){
-        String imageP = sourcedir + "img.png";
-        Image image;
-        try {
-            image = new Image(new FileInputStream(imageP));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
         var blocker = new Rectangle(
                 stage.getScene().getWidth(),
                 stage.getScene().getHeight(),
@@ -427,6 +420,4 @@ public class ChessView {
         );
         menuLayer.getChildren().add(blocker);
     }
-
-
 }

@@ -302,7 +302,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
                 new UndoMovePacket(packet, board.getBoard()[packet.from()].clone(),
                         board.getBoard()[packet.to()] = (board.getBoard()[packet.to()] == EmptyPiece.EMPTY_PIECE? EmptyPiece.EMPTY_PIECE : board.getBoard()[packet.to()].clone()),
                         board.getEnPassantPos(),
-                        board.getFiftyMove()
+                        board.getFiftyMove(),
+                        board.getCastleRights().clone()
                 )
         );
     }
