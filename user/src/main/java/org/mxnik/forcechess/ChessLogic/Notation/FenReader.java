@@ -8,13 +8,6 @@ import org.mxnik.forcechess.General.FenException;
 
 import java.util.Arrays;
 
-import static org.mxnik.forcechess.Pos.Piece.*;
-import static org.mxnik.forcechess.Pos.Piece.BISHOP;
-import static org.mxnik.forcechess.Pos.Piece.KING;
-import static org.mxnik.forcechess.Pos.Piece.KNIGHT;
-import static org.mxnik.forcechess.Pos.Piece.PAWN;
-import static org.mxnik.forcechess.Pos.Piece.QUEEN;
-import static org.mxnik.forcechess.Pos.Piece.ROOK;
 import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
 
 

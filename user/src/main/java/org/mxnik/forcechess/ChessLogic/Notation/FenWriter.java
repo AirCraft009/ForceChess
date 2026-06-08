@@ -7,10 +7,10 @@ import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 public class FenWriter {
 
     public static String WriteFen(Board board){
-        return WriteFen(board.getBoard(), board.getTurn(), Board.sideLen, board.getEnPassantPos());
+        return WriteFen(board.getBoard(), board.getTurn(), board.getFiftyMove(), Board.sideLen, board.getEnPassantPos());
     }
-
-    public static String WriteFen(Piece[] pieceBoard, boolean whiteTurn, int sideLen, int enPassant){
+    //TODO: write extra attributes correctly
+    public static String WriteFen(Piece[] pieceBoard, boolean whiteTurn, int fiftyMove, int sideLen, int enPassant){
         StringBuilder fenBuilder = new StringBuilder();
         String sideLenStr =  Integer.toString(sideLen);
         char turn = whiteTurn? 'w' : 'b';
@@ -51,14 +51,13 @@ public class FenWriter {
         }
 
         //remove the last slash
-        fenBuilder.deleteCharAt(fenBuilder.length()-1);
-        fenBuilder.append(' ');
-        fenBuilder.append(turn);
-        fenBuilder.append(' ');
+        fenBuilder.deleteCharAt(fenBuilder.length()-1).append(' ')
+        .append(turn).append(' ')
         // temporary 0's
-        fenBuilder.append("KQkq ").append(enPassant).append(" 0");//TODO swap out 0's
-        fenBuilder.append(' ');
-        fenBuilder.append(sideLenStr);
+        .append("KQkq").append(' ')
+        .append(enPassant).append(' ')
+        .append(fiftyMove).append(' ')
+        .append(sideLenStr);
 
         return fenBuilder.toString();
     }
