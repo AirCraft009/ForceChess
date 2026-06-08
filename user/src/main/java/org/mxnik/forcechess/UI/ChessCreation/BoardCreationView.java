@@ -16,6 +16,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.Nullable;
+import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.UI.ChessControllView.ChessBackgroundPane;
@@ -332,17 +333,17 @@ public class BoardCreationView {
     /**
      * draws all pieces
      */
-    public void drawPieces(Piece[] pieces){
+    public void drawPieces(Board b){ //TODO Extract Method?
         clearPieces();
 
         int sideLen = constants.sideLen;
 
-        for (int i = 0; i < pieces.length; i++) {
+        for (int i = 0; i < b.getBoard().length; i++) {
             int x = i % sideLen;
             int y = i / sideLen;
 
 
-            ImageView imgView = getImageView(pieces, i);
+            ImageView imgView = getImageView(b, i);
             if(imgView == null){
                 continue;
             }
@@ -357,8 +358,8 @@ public class BoardCreationView {
     }
 
     @Nullable
-    private ImageView getImageView(Piece[] pieces, int i) {
-        Piece p = pieces[i];
+    private ImageView getImageView(Board b, int i) { //TODO Extract Method??
+        Piece p = b.getBoard()[i];
 
 
         int colorOffset = (p.getColor()?0:1);
