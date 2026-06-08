@@ -5,6 +5,7 @@ import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.input.DragEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -27,11 +28,11 @@ public class MenuScene {
         setBounds(stage);
         basicInit(stage);
 
-        //TODO remove listeners when not needed
         stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
         stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         this.controller = new MenuController(this);
+        root.addEventHandler(DragEvent.ANY, controller);
 
         drawMenu();
         stage.setOnCloseRequest(e ->
