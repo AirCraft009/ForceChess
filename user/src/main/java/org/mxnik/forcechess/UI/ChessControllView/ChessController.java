@@ -9,6 +9,7 @@ import javafx.stage.Stage;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
+import org.mxnik.forcechess.ChessLogic.Moves.UndoMovePacket;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
@@ -25,6 +26,7 @@ import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.UI.menu.MenuScene;
 
 import java.io.IOException;
+import java.util.Stack;
 import java.util.concurrent.SynchronousQueue;
 
 import static org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen.getMovesFromPosition;
@@ -42,6 +44,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     private boolean pieceSelected = false;
     private byte[] currPieceMoves;
     private final SynchronousQueue<MovePacket> moveQueue = new SynchronousQueue<>();
+    private Stack<UndoMovePacket> undoStack = new Stack<>();
+
 
     int prevMovedFrom = -1, prevMovedTo = -1;
 
@@ -155,7 +159,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             FenProperties.addFenStr("current", FenWriter.WriteFen(board)); //TODO Delete when continuing to play
             new MenuScene(stage);
         } else if (source == chessView.undoB) {
-            //TODO UNDO MOVE
+            game.undoMove();
+            update();
         } else if (source == chessView.resignB){
             //TODO Resign
         }
@@ -291,8 +296,22 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     }
 
     @Override
-    public void getMove(MovePacket movePacket) {
+    public void makeMove(MovePacket packet) throws CloneNotSupportedException {
         //don't do anything update handles it
+        undoStack.push(
+                new UndoMovePacket(packet, board.getBoard()[packet.from()].clone(),
+                        board.getBoard()[packet.to()] = (board.getBoard()[packet.to()] == EmptyPiece.EMPTY_PIECE? EmptyPiece.EMPTY_PIECE : board.getBoard()[packet.to()].clone()),
+                        board.getEnPassantPos(),
+                        board.getFiftyMove()
+                )
+        );
+    }
+
+    @Override
+    public void undoMove() {
+        if(undoStack.isEmpty())
+            return;
+        board.undoMove(undoStack.pop());
     }
 
     /**

@@ -41,6 +41,16 @@ public final class ChessGame implements Runnable{
         return board.getTurn() ? white : black;
     }
 
+    public void undoMove(){
+        if(white == black) {
+            white.undoMove();
+            return;
+        }
+
+        white.undoMove();
+        black.undoMove();
+    }
+
     @Override
     public void run() {
         while (running) {
@@ -51,9 +61,8 @@ public final class ChessGame implements Runnable{
                     break;
                 }
                 MovePacket packet = getActivePLayer().requestMove();
+                getActivePLayer().makeMove(packet);
                 board.move(packet);
-                getActivePLayer().getMove(packet);
-                //System.out.println("moved");
                 response.update();
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);

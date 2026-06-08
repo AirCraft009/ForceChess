@@ -4,5 +4,6 @@ import org.mxnik.forcechess.Moves.MovePacket;
 
 public interface Player {
     public MovePacket requestMove();
-    public void getMove(MovePacket packet);
+    public void makeMove(MovePacket packet) throws CloneNotSupportedException;
+    public void undoMove();
 }

@@ -258,7 +258,11 @@ public class Board {
     }
 
     public UndoMovePacket move(MovePacket packet) throws CloneNotSupportedException {
-        var undoInfo = new UndoMovePacket(packet, board[packet.to()], fiftyMove);
+        var undoInfo = new UndoMovePacket(packet, board[packet.from()].clone(),
+                board[packet.to()] = (board[packet.to()] == EmptyPiece.EMPTY_PIECE? EmptyPiece.EMPTY_PIECE : board[packet.to()].clone()),
+                enPassantPos,
+                fiftyMove
+        );
         rawMove(packet.from(), packet.to(), packet.type(), true);
         turn = !turn;
         fiftyMove++;        // add to fifty move rule counter (counts half moves)
@@ -286,7 +290,7 @@ public class Board {
         try {
             switch (packet.type()) {
                 case Generic -> {
-                    board[packet.from()] = board[packet.to()].clone();
+                    board[packet.from()] = undoPacket.movedP();
                     board[packet.to()] = undoPacket.takenP();
                 }
                 case PromotionB, PromotionN, PromotionQ, PromotionR -> {
