@@ -61,7 +61,13 @@ public final class ChessGame implements Runnable{
                     break;
                 }
                 MovePacket packet = getActivePLayer().requestMove();
-                getActivePLayer().makeMove(packet);
+                if(white == black)
+                    white.makeMove(packet);
+                else {
+                    white.makeMove(packet);
+                    black.makeMove(packet);
+                }
+
                 board.move(packet);
                 response.update();
             } catch (CloneNotSupportedException e) {

@@ -345,8 +345,6 @@ public class ChessBot implements Player {
         int rMove = bestMove(playDepth);
         var r = getEvaluator().evaluate(pos);
         System.out.println("Net rates positions: " + r.value());
-        pos.makeMove(rMove);
-        resetCore();
         return Move.toMovePacket(rMove);
     }
 
