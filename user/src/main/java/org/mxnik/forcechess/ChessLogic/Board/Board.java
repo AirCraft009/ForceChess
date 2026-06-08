@@ -282,6 +282,7 @@ public class Board {
      * undoes a move (board state is restored perfectly)
      */
     public void undoMove(UndoMovePacket undoPacket){
+        System.out.println("undoing updated");
         fiftyMove = undoPacket.fiftyMoveCounter();
         turn = !turn;
 
@@ -300,9 +301,11 @@ public class Board {
                 case EnPassant -> {
                     int dir = Math.clamp(packet.from() - packet.to(), -1, 1) * size;       // get the direction then multiply to the size of the board
                     int takeSq = packet.to() - dir;
+                    System.out.println(takeSq);
                     board[packet.from()] = undoPacket.movedP();
                     board[packet.to()] = EmptyPiece.EMPTY_PIECE;
-                    board[takeSq] = undoPacket.takenP();
+                    board[takeSq] = new Pawn(undoPacket.movedP().getColor(), true);     // has to have moved
+                    enPassantPos = undoPacket.enPassant();
                 }
                 case CastleK -> {
                     board[packet.from()] = undoPacket.movedP();
