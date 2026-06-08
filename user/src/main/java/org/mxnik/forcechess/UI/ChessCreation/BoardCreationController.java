@@ -30,11 +30,12 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
     private Stage stage;
     private Board board;
     private PieceTypes selectedPieceType;
+    private final String BASE_FEN = "8/8/8/8/8/8/8/8 w - - 0 8";
 
     public BoardCreationController(BoardCreationView view, Stage stage) {
         this.view = view;
         this.stage = stage;
-        board = new Board("8/8/8/8/8/8/8/8 - - 0 8");
+        board = new Board(BASE_FEN);
     }
 
     /**
@@ -78,8 +79,6 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
             boardPieces[square] = EmptyPiece.EMPTY_PIECE;
             board.setBoard(boardPieces);
         }
-
-        System.out.println(board.getKingWPos());
 
         view.drawPieces(board);
     }
@@ -179,12 +178,13 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
     private void changedSizeSlider(ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) {
         Piece[] boardPieces = board.getBoard();
         int size = (int) Math.round(view.sizeSlider.getValue());
-        if(size*size != boardPieces.length) {
-            Board.setSideLen(size);
-            Board.setSize(size*size);//TODO 1 Method ???
-            boardPieces = new Piece[size * size];
+        if(size*size == boardPieces.length) {
+            return;
         }
+        Board.setSideLen(size);
+        boardPieces = new Piece[size * size];
         Arrays.fill(boardPieces, EmptyPiece.EMPTY_PIECE);
+        board.setBoard(boardPieces);
         view.sizeLabel.setText(String.valueOf(size));
         view.constants = new Constants(size, stage.getScene());
         board.setKingWPos(-1);
@@ -203,8 +203,7 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         FenReader reader = new FenReader(FenProperties.getFenStr(fenName));
         view.sizeSlider.setValue(reader.readSideLen());
         view.nameField.setText(fenName);
-        Board.setSize(reader.getBoardLenght()*reader.getBoardLenght());
-        Board.setSideLen(reader.getBoardLenght());//TODO 1 Method
+        Board.setSideLen(reader.getBoardLenght());
         board.setBoard(reader.readFenBoard());
         DiversePair<Integer, Integer> kPos = reader.readKingPos();
         board.setKingWPos(kPos.first());

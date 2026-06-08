@@ -86,7 +86,7 @@ public class BvBPopup extends MenuPopup {
             String fen = FenProperties.getFenStr(board.getValue());
             int sideLen = Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
-                new ChessView(primaryStage, fen, sideLen, bot1.getValue(), bot2.getValue(), (int)playDepthS.getValue());
+                new ChessView(primaryStage, fen, bot1.getValue(), bot2.getValue(), (int)playDepthS.getValue());
             } catch (CloneNotSupportedException ex) {
                 throw new RuntimeException(ex);
             }

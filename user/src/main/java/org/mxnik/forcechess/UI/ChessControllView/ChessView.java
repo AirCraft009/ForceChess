@@ -15,15 +15,18 @@ import javafx.scene.layout.BackgroundImage;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.HBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.deeplearning4j.util.ModelSerializer;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
+import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.General.FileLocations;
 import org.mxnik.forcechess.UI.Constants;
+import org.mxnik.forcechess.UI.settings.SavedSettings;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
@@ -49,8 +52,10 @@ public class ChessView {
 
     private Image[] images;
 
-    public ChessView(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB, int playDepth) throws CloneNotSupportedException {
+    public ChessView(Stage stage, String fen, String playerStrW, String playerStrB, int playDepth) throws CloneNotSupportedException {
         this.stage = stage;
+        String[] fenP = fen.split(" ");
+        int sideLen = Integer.parseInt(fenP[fenP.length-1]);
 
         setBounds();
         basicInit(sideLen);
@@ -418,10 +423,12 @@ public class ChessView {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
-        winView = new ImageView(image);
-        winView.setFitHeight(constants.bounds.getHeight());
-        winView.setFitWidth(constants.bounds.getWidth());
-        pieceLayer.getChildren().addFirst(winView);
+        var blocker = new Rectangle(
+                stage.getScene().getWidth(),
+                stage.getScene().getHeight(),
+                new Color(0,0,0.2, 0.4)
+        );
+        menuLayer.getChildren().add(blocker);
     }
 
 

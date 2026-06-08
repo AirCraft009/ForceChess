@@ -8,6 +8,13 @@ import org.mxnik.forcechess.General.FenException;
 
 import java.util.Arrays;
 
+import static org.mxnik.forcechess.Pos.Piece.*;
+import static org.mxnik.forcechess.Pos.Piece.BISHOP;
+import static org.mxnik.forcechess.Pos.Piece.KING;
+import static org.mxnik.forcechess.Pos.Piece.KNIGHT;
+import static org.mxnik.forcechess.Pos.Piece.PAWN;
+import static org.mxnik.forcechess.Pos.Piece.QUEEN;
+import static org.mxnik.forcechess.Pos.Piece.ROOK;
 import static org.mxnik.forcechess.Pos.PositionEncoder.SIZE;
 
 
@@ -25,23 +32,15 @@ public final class FenReader {
 
     public FenReader(String fenStr){
         String [] fenParts = fenStr.split(" ");
-        if (fenParts.length < 5 || fenParts.length > 6) {
-            throw new FenException("incomplete Fenstring incorrect number of subsections, expected 5-6 got: " + fenParts.length, 0);
+        if (fenParts.length != 6) {
+            throw new FenException("incomplete Fenstring incorrect number of subsections, expected 6 got: " + fenParts.length, 0);
         }
         boardPositions = fenParts[0];
         turn = fenParts[1];
         castle = fenParts[2];
         enPassent = fenParts[3];
         moveNumber = fenParts[4];
-        if (fenParts.length == 6) {
-            try {
-                boardLenght = Integer.parseInt(fenParts[5]);
-            } catch (NumberFormatException e) {
-                throw new FenException("last FenString component wasn't a number(board-length), expected num got: " + fenParts[5], 0);
-            }
-        }else {
-            boardLenght = 8;
-        }
+        boardLenght = Integer.parseInt(fenParts[5]);
     }
 
     public DiversePair<Integer, Integer> readKingPos(){
@@ -59,10 +58,6 @@ public final class FenReader {
 
     public int readSideLen() {
         return boardLenght;
-    }
-
-    public boolean[] readCastleRights(){
-        return new boolean[4];
     }
 
     public int readEnpassent(){
@@ -97,57 +92,56 @@ public final class FenReader {
      */
     public Piece[] readFenBoard() throws FenException {
         int boardSize = boardLenght * boardLenght;
-        char[] chars = boardPositions.toCharArray();
         Piece[] board = new Piece[boardSize];
         Arrays.fill(board, EmptyPiece.EMPTY_PIECE);
 
-        int ptr = boardSize;
         int charptr = 0;
-        int fieldsinRow = 0;
-        int factor = 1;
+        int skip = 0;
 
-        for (int i = 0; i < boardLenght; i++) {
-            ptr -= boardLenght;
+        outerloop:
+        for (int i = boardLenght - 1; i >= 0; i--) {
             for (int j = 0; j < boardLenght; j++) {
-                char c = chars[charptr];
-                charptr++;
-                if (c == '/') {
-                    factor = 1;
+                int square = i * boardLenght + j;
+                char p = boardPositions.charAt(charptr);
+                charptr ++;
+                while (Character.isDigit(p)){
+                    // one will be added in the next loop
+                    skip *= 10;
+                    skip += (p - '0');
+                    if(charptr >= boardPositions.length())
+                        break outerloop;
+                    p = boardPositions.charAt(charptr);
+                    charptr++;
+                }
+                if(skip != 0){
+                    j += skip - 1;
+                    if(j > boardLenght)
+                        throw  new FenException("Gap between two pieces too big: " + j, square);
+                    skip = 0;
+                    charptr--;
+                    continue;
+                }
+
+                if (p == '/') {      // new row
                     j--;
                     continue;
                 }
 
-                if (Character.isDigit(c)) {
-                    if (factor > 10) {
-                        throw new FenException("Skip number bigger than 99", charptr);
-                    }
-                    int skip = (c - '0') * factor;
-                    if (j + skip - 1 > boardLenght)
-                        throw new FenException("Illegal fenStr, cannot skip more than one row: " + boardPositions, charptr);
-                    j += skip - 1;
-                    factor *= 10;
-                    continue;
-                }
-
-                Piece p = FenConversion.FromFen(c);
-                factor = 1;
-                if (p.getType() == PieceTypes.ILLEGAL) {
-                    throw new FenException("Illegal char found in fenStr: " + c, charptr);
-                } else if (p.getType() == PieceTypes.KING){
-                    if (p.getColor()){
-                        kingWPos = ptr + j;
+                Piece piece = FenConversion.FromFen(p);
+                if (piece.getType() == PieceTypes.ILLEGAL) {
+                    throw new FenException("Illegal char found in fenStr: " + p, charptr);
+                } else if (piece.getType() == PieceTypes.KING){
+                    if (piece.getColor()){
+                        kingWPos = square;
                     }else {
-                        kingBPos = ptr + j;
+                        kingBPos = square;
                     }
                 }
 
-                board[ptr + j] = p;
+                board[square] = piece;
             }
         }
 
-        if (ptr != 0) {
-            throw new FenException("Fen isn't complete: ", ptr);
-        }
         return board;
     }
 

@@ -83,7 +83,8 @@ public class Board {
         kingWPos = KingPositions.first();
         kingBPos = KingPositions.second();
         turn = notation.readFenTurn();
-        sideLen = notation.readSideLen();
+        setSideLen(notation.readSideLen());
+        enPassantPos = notation.readEnpassent();
         MoveOffsets.calculateOffset(sideLen);
         Piece.refreshMoveSets();
 
@@ -97,7 +98,9 @@ public class Board {
             maxDirs += p.getMaxDir();
             maxMoves += p.getMovesetLen();
         }
-        Board.size = board.length;
+        if(size != board.length){
+            throw new IllegalStateException("Can't have missmatch between boardlength in fen string and set length.");
+        }
         moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
@@ -280,7 +283,6 @@ public class Board {
      * undoes a move (board state is restored perfectly)
      */
     public void undoMove(UndoMovePacket undoPacket){
-        System.out.println("undoing updated");
         fiftyMove = undoPacket.fiftyMoveCounter();
         turn = !turn;
 
@@ -390,14 +392,11 @@ public class Board {
 
     public static void setSideLen(int sideLen) {
         Board.sideLen = sideLen;
+        Board.size = sideLen * sideLen;
     }
 
     public static int getSize() {
         return size;
-    }
-
-    public static void setSize(int size) {
-        Board.size = size;
     }
 
     public void setTurn(boolean turn) {

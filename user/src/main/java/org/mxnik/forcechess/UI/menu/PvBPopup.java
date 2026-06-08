@@ -92,9 +92,9 @@ public class PvBPopup extends MenuPopup {
 //            Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
                 if(color.isSelected())
-                    new ChessView(primaryStage, fen, sideLen, null, bot.getValue(), (int)playDepthS.getValue());
+                    new ChessView(primaryStage, fen, null, bot.getValue(), (int)playDepthS.getValue());
                 else
-                    new ChessView(primaryStage, fen, sideLen, bot.getValue(), null, (int)playDepthS.getValue());
+                    new ChessView(primaryStage, fen, bot.getValue(), null, (int)playDepthS.getValue());
             } catch (CloneNotSupportedException ex) {
                 throw new RuntimeException(ex);
             }
