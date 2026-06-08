@@ -199,8 +199,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     }
 
     public void highlightLastMove(){
-        int lastMoveFrom = board.getLastMoveFrom();
-        int lastMoveTo = board.getLastMoveTo();
+        int lastMoveFrom = game.getLastMoveFrom();
+        int lastMoveTo = game.getLastMoveTo();
         if(prevMovedFrom >= 0 && prevMovedTo >= 0) {
             ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(prevMovedFrom)).deactivateMoved();
             ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(prevMovedTo)).deactivateMoved();

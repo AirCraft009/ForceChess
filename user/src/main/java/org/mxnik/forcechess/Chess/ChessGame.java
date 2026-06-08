@@ -15,6 +15,8 @@ public final class ChessGame implements Runnable{
     private final Callback response;
     private final Thread requestThread;
 
+    private int lastMoveFrom = -1, lastMoveTo = -1;
+
     public ChessGame( Board board, Callback response){
         this.board = board;
         this.response = response;
@@ -68,11 +70,21 @@ public final class ChessGame implements Runnable{
                     black.makeMove(packet);
                 }
 
+                lastMoveFrom = packet.from();
+                lastMoveTo = packet.to();
+
                 board.move(packet);
                 response.update();
             } catch (CloneNotSupportedException e) {
                 throw new RuntimeException(e);
             }
         }
+    }
+
+    public int getLastMoveFrom(){
+        return lastMoveFrom;
+    }
+    public int getLastMoveTo(){
+        return lastMoveTo;
     }
 }

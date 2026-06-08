@@ -38,8 +38,6 @@ public class Board {
 
     int maxMoves = 0;
 
-    int lastMoveFrom = -1, lastMoveTo = -1;
-
     /**
      * initializes a Board with the normal chess starting pos.
      */
@@ -115,6 +113,9 @@ public class Board {
      * @return is the king in check
      */
     public boolean isChecked(int kingPos, boolean kingColor) {
+        if(kingPos == -1)
+            return false;
+
         int kingRow = BoardHelper.getRow(kingPos);
         int kingCol = BoardHelper.getCol(kingPos);
 
@@ -271,9 +272,6 @@ public class Board {
         if(packet.capture() | board[packet.to()].getType() == PieceTypes.PAWN){
             fiftyMove = 0;
         }
-
-        lastMoveFrom = packet.from();
-        lastMoveTo = packet.to();
 
         return undoInfo;
     }
@@ -492,14 +490,6 @@ public class Board {
 
     public void setMaxMoves(int maxMoves) {
         this.maxMoves = maxMoves;
-    }
-
-    public int getLastMoveFrom(){
-        return lastMoveFrom;
-    }
-
-    public int getLastMoveTo(){
-        return lastMoveTo;
     }
 
     public static void main(String[] args) throws CloneNotSupportedException {
