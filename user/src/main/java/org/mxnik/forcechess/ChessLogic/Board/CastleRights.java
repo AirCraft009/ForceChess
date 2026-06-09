@@ -9,7 +9,6 @@ public final class CastleRights implements Cloneable{
         public boolean WQ_Castle;
         public boolean BK_Castle;
         public boolean BQ_Castle;
-        public boolean ANY;
 
         public CastleRights(
                 boolean WK_Castle,
@@ -22,7 +21,6 @@ public final class CastleRights implements Cloneable{
                 this.WQ_Castle = WQ_Castle;
                 this.BK_Castle = BK_Castle;
                 this.BQ_Castle = BQ_Castle;
-                this.ANY = WK_Castle||WQ_Castle||BK_Castle||BQ_Castle;
         }
 
         public void disableColor(boolean color){
@@ -35,13 +33,11 @@ public final class CastleRights implements Cloneable{
         public void disableWhite(){
                 WK_Castle = false;
                 WQ_Castle = false;
-                this.ANY = BK_Castle || BQ_Castle;
         }
 
         public void disableBlack(){
                 BK_Castle = false;
                 BQ_Castle = false;
-                this.ANY = WK_Castle || WQ_Castle;
         }
 
         public void disableKingCastle(boolean color){
@@ -49,7 +45,6 @@ public final class CastleRights implements Cloneable{
                         WK_Castle = false;
                 else
                         BK_Castle = false;
-                this.ANY = WK_Castle||WQ_Castle||BK_Castle||BQ_Castle;
         }
 
         public void disableQueenCastle(boolean color){
@@ -57,7 +52,6 @@ public final class CastleRights implements Cloneable{
                         WQ_Castle = false;
                 else
                         BQ_Castle = false;
-                this.ANY = WK_Castle||WQ_Castle||BK_Castle||BQ_Castle;
         }
 
         public boolean allNegative(){
