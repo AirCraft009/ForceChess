@@ -42,6 +42,15 @@ public final class ChessGame implements Runnable{
     }
 
     public void closePlayers() throws IOException {
+        if(white == null){
+            return;
+        }
+
+        if(white == black) {
+            white.close();
+            return;
+        }
+
         white.close();
         black.close();
     }

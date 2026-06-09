@@ -207,9 +207,11 @@ public class BatchChessBot extends ChessBot{
                 }
                 case CheckMate -> {
                     // lost the game from playing persp.
-                    backProp(node, 2);
+                    System.out.println("hit mate");
+                    backProp(node, 1.2F);
                 }
                 case StaleMate, FiftyMove -> {
+                    backProp(node, -0.2F);
                 }
             }
 

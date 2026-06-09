@@ -1,5 +1,6 @@
 package org.mxnik.forcechess.network;
 
+import org.apache.commons.lang.ObjectUtils;
 import org.deeplearning4j.nn.conf.WorkspaceMode;
 import org.deeplearning4j.nn.graph.ComputationGraph;
 import org.mxnik.forcechess.Pos.Check;
@@ -86,7 +87,12 @@ public final class AlphaNet implements BatchEvaluator, Closeable {
     public Result[] evaluateBatch(float[] inputs) {
         Result[] results = new Result[batchSize];
 
-        input.data().setData(inputs);
+        try {
+            input.data().setData(inputs);
+        } catch (NullPointerException e) {
+            // ignore Nullpointer (only happens if input is closed while the process is still running)
+            // resignation
+        }
         INDArray[] out = model.output(false, input);
 
         for (int i = 0; i < batchSize; i++) {

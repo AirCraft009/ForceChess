@@ -39,10 +39,8 @@ public class BvBPopup extends MenuPopup {
         Label botsText = new Label("Bots: ");
         grid.add(botsText, 0, 1);
         ChoiceBox<String> bot1 = super.getBotsList();
-        bot1.getSelectionModel().selectFirst();
         grid.add(bot1, 1, 1);
         ChoiceBox<String> bot2 = super.getBotsList();
-        bot2.getSelectionModel().selectFirst();
         grid.add(bot2, 2, 1, 2, 1);
 
         Label playDepthText = new Label("Play Depth: " + BatchChessBot.BATCH_SIZE);
