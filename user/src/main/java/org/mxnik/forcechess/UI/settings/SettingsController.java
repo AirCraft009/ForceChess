@@ -61,16 +61,10 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
     }
 
     /**
-     * Calls {@code updateButtons} and disables the {@code fp16} button
-     * @param observableValue
-     * @param o
-     * @param t1
+     * Calls {@code updateButtons}
      */
     @Override
     public void changed(ObservableValue observableValue, Object o, Object t1) {
-        if(t1 instanceof Boolean) {
-            view.useFP16.setDisable(!(boolean)t1);
-        }
         updateButtons();
     }
 
