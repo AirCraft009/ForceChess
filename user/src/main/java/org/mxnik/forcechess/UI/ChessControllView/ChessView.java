@@ -31,8 +31,7 @@ import java.io.*;
 import java.util.stream.Collectors;
 
 import static org.datavec.api.records.reader.impl.regex.RegexSequenceRecordReader.LOG;
-import static org.nd4j.autodiff.listeners.profiler.data.Phase.e;
-import static org.nd4j.autodiff.listeners.profiler.data.Phase.n;
+import static org.nd4j.autodiff.listeners.profiler.data.Phase.*;
 
 public class ChessView {
     public final Stage stage;
@@ -59,7 +58,11 @@ public class ChessView {
     public ChessView(Stage stage, String fen, String playerStrW, String playerStrB, int playDepth) throws CloneNotSupportedException {
         if(fen == null){
             menuAler.setAlertType(Alert.AlertType.ERROR);
-            menuAler.setContentText("The selected Fen String can't be null");
+            menuAler.setContentText("The selected Fen String can't be null\nEither add new Fens or select a non empty/illegal string");
+            menuAler.show();
+            new MenuScene(stage);
+            this.stage = stage;
+            return;
         }
 
         currentGame = new ChessData(stage, fen, playerStrW, playerStrB, playDepth);
