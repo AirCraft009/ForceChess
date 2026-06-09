@@ -5,10 +5,7 @@ import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.scene.Group;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -29,14 +26,16 @@ import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
+import java.util.stream.Collectors;
+
+import static org.datavec.api.records.reader.impl.regex.RegexSequenceRecordReader.LOG;
+import static org.nd4j.autodiff.listeners.profiler.data.Phase.e;
 
 public class ChessView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = "/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
     Constants constants;
@@ -48,6 +47,7 @@ public class ChessView {
     int defaultFontSize = 13;
     Button saveB, quitB, undoB, resignB;
     ImageView winView;
+    Alert menuAler = new Alert(Alert.AlertType.NONE);
 
     Button exit, newGame;
     ChessData currentGame;
@@ -58,8 +58,14 @@ public class ChessView {
         this(gameSettings.primaryStage, gameSettings.fen, gameSettings.playerStrW, gameSettings.playerStrB, gameSettings.playDepth);
     }
     public ChessView(Stage stage, String fen, String playerStrW, String playerStrB, int playDepth) throws CloneNotSupportedException {
+        if(fen == null){
+            menuAler.setAlertType(Alert.AlertType.ERROR);
+            menuAler.setContentText("The selected Fen String can't be null");
+        }
+
         currentGame = new ChessData(stage, fen, playerStrW, playerStrB, playDepth);
         this.stage = stage;
+
         String[] fenP = fen.split(" ");
         int sideLen = Integer.parseInt(fenP[fenP.length-1]);
 
@@ -171,6 +177,7 @@ public class ChessView {
      * Generate the images beforehand - for better efficiency
      */
     private void generateImages(){
+
         String[] imagePaths = new String[]{
                 pathToImages + "white-pawn.png",
                 pathToImages + "black-pawn.png",
@@ -188,11 +195,28 @@ public class ChessView {
         images = new Image[imagePaths.length];
 
         for(int i = 0; i < imagePaths.length; i++) {
-            try {
-                images[i] = new Image(new FileInputStream(imagePaths[i]));
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
+            images[i] = getImageFromRessource(imagePaths[i]);
+        }
+    }
+
+    private Image getImageFromRessource(String filePath){
+        try (InputStream inputStream = this.getClass().getResourceAsStream(filePath)) {
+            Image result = null;
+            if (inputStream != null) {
+                result = new Image(inputStream);
             }
+            return result;
+        } catch (IOException e) {
+            LOG.error("Error reading file:", e);
+            menuAler.setAlertType(Alert.AlertType.ERROR);
+            menuAler.setContentText("Can't find piece Images. Closing application");
+            menuAler.setOnHidden(
+                    (event) -> {
+                        Platform.exit();
+                        System.exit(1);
+                    }
+            );
+            throw new IllegalStateException("Couldn't find Images should've stopped running.");
         }
     }
 
@@ -328,11 +352,7 @@ public class ChessView {
 
         undoB = new Button();
         Image i;
-        try {
-            i = new Image(new FileInputStream(sourcedir + "chess-menu/undo.png"));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        i = getImageFromRessource(sourcedir + "chess-menu/undo.png");
         undoB.setBackground(new Background(new BackgroundImage(i, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null)));
         undoB.setTooltip(new Tooltip("Undo last move"));
         undoB.setPrefSize(constants.BlockS, constants.BlockS);
@@ -341,11 +361,7 @@ public class ChessView {
         undoB.addEventHandler(Event.ANY, controller);
 
         resignB = new Button();
-        try {
-            i = new Image(new FileInputStream(sourcedir + "chess-menu/resign.png"));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
+        i = getImageFromRessource(sourcedir + "chess-menu/resign.png");
         resignB.setBackground(new Background(new BackgroundImage(i, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null)));
         resignB.setPrefSize(constants.BlockS, constants.BlockS);
         resignB.setTooltip(new Tooltip("Resign"));

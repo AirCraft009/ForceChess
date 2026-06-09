@@ -90,6 +90,7 @@ public class MenuScene {
         Button button = new Button(text);
         button.addEventHandler(Event.ANY, controller);
         button.setFont(Font.font("Verdana", 24));
+        button.setStyle("-fx-background-color: #D3D3D3");
         return button;
     }
 
