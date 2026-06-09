@@ -8,6 +8,7 @@
     </parent>
 
     <artifactId>user</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <dependency>
@@ -80,6 +81,7 @@
             <scope>compile</scope>
         </dependency>
     </dependencies>
+
 
     <build>
         <plugins>
