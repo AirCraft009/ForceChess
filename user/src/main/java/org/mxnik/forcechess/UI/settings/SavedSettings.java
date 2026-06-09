@@ -8,8 +8,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
 
-public record SavedSettings(String savePath, Color lightSquare, Color darkSquare, Color lightHighlight, Color darkHighlight, Color lightMoved, Color darkMoved, boolean gpu, boolean fp16, String defaultBot) {
-    public static final SavedSettings defaultSettings = new SavedSettings(System.getProperty("user.dir") + "/boardsNBots/", Color.WHITE, Color.DARKBLUE, Color.WHEAT, Color.LIGHTBLUE, Color.LIME, Color.GREEN, false, false, "");
+public record SavedSettings(String savePath, Color lightSquare, Color darkSquare, Color lightHighlight, Color darkHighlight, Color lightMoved, Color darkMoved, String defaultBot) {
+    public static final SavedSettings defaultSettings = new SavedSettings(System.getProperty("user.dir") + "/boardsNBots/", Color.WHITE, Color.DARKBLUE, Color.WHEAT, Color.LIGHTBLUE, Color.LIME, Color.GREEN, "");
     public static SavedSettings savedSettings;
     private static Properties properties;
 
@@ -31,7 +31,7 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
             boolean fp16 = Boolean.parseBoolean(properties.getProperty("fp16"));
             String defaultBot = properties.getProperty("default_bot");
 
-            savedSettings = new SavedSettings(savePath, lightSquare, darkSquare, lightHighlight, darkHighlight, lightMoved, darkMoved, gpu, fp16, defaultBot);
+            savedSettings = new SavedSettings(savePath, lightSquare, darkSquare, lightHighlight, darkHighlight, lightMoved, darkMoved, defaultBot);
         }catch (NullPointerException e){
             savedSettings = defaultSettings;
             writeSettings();
@@ -55,8 +55,6 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
         properties.setProperty("darkHighlight", savedSettings.darkHighlight.toString());
         properties.setProperty("lightMoved", savedSettings.lightMoved.toString());
         properties.setProperty("darkMoved", savedSettings.darkMoved.toString());
-        properties.setProperty("gpu_cpu", Boolean.toString(savedSettings.gpu));
-        properties.setProperty("fp16", Boolean.toString(savedSettings.fp16));
         properties.setProperty("default_bot", savedSettings.defaultBot);
 
         try {

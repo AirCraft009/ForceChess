@@ -25,8 +25,6 @@ public class SettingsView {
     ColorPicker colorLight, colorDark;
     ColorPicker highlightLight, highlightDark;
     ColorPicker movedLight, movedDark;
-    RadioButton useGPU, useCPU;
-    CheckBox useFP16;
     ChoiceBox<String> defaultBot;
     Button closeButton, resetButton, defaultButton;
 

@@ -102,10 +102,8 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
         Color darkHighlight = view.highlightDark.getValue();
         Color lightMoved = view.movedLight.getValue();
         Color darkMoved = view.movedDark.getValue();
-        boolean gpu = view.useGPU.isSelected();
-        boolean fp16 = view.useFP16.isSelected();
         String defaultBot = view.defaultBot.getValue();
-        return new SavedSettings(savedPath, lightSquare, darkSquare, lightHighlight, darkHighlight, lightMoved, darkMoved, gpu, fp16, defaultBot);
+        return new SavedSettings(savedPath, lightSquare, darkSquare, lightHighlight, darkHighlight, lightMoved, darkMoved, defaultBot);
     }
 
     public void resize(){
