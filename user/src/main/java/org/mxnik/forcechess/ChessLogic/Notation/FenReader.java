@@ -101,6 +101,10 @@ public final class FenReader {
     }
 
     public static String toFieldName(int field){
+        if(field == -1){
+            return "-";
+        }
+
         int row = field / SIZE;
         int col = field % SIZE;
 

@@ -234,11 +234,17 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             }
             return null;
         }
-        //condition: -> firstCLick != -1;
+
         pieceSelected = false;
         if (!BoardHelper.contains(currPieceMoves, secondClick)) {
             return null;
         }
+        if(board.getBoard()[firstClick].getType() == PieceTypes.PAWN &&
+            secondClick == board.getEnPassantPos()
+        ){
+            return new MovePacket(MoveType.EnPassant, firstClick, secondClick, true);       // enPassant is always a capture move
+        }
+
         if( board.getBoard()[firstClick].getType() == PieceTypes.KING
             && (BoardHelper.colDiff(firstClick, secondClick) >= 2)
         ){

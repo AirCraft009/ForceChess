@@ -46,7 +46,7 @@ public class Board {
      */
     public Board() {
         board = new Piece[sideLen * sideLen];
-        BuildFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
+        BuildFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 8");
     }
 
     /**
