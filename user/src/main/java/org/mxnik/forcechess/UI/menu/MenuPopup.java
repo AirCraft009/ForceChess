@@ -2,6 +2,7 @@ package org.mxnik.forcechess.UI.menu;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.stage.Modality;
@@ -15,7 +16,7 @@ import static org.mxnik.forcechess.General.FileLocations.NETWORK_LOCATIONS;
 
 public abstract class MenuPopup extends Stage {
     protected final Stage primaryStage;
-    protected static final String DIRECTORY = System.getProperty("user.dir");
+    private Alert botAlert = new Alert(Alert.AlertType.WARNING);
 
     /**
      * The base for any popup-window in the menu scene
@@ -38,7 +39,18 @@ public abstract class MenuPopup extends Stage {
         ChoiceBox<String> bots = new ChoiceBox<>();
         ObservableList<String> botsList = FXCollections.observableArrayList(TextFileHandler.getFolderContents(NETWORK_LOCATIONS));
         bots.setItems(botsList);
-        bots.getSelectionModel().select(SavedSettings.savedSettings.defaultBot());
+        if(botsList.isEmpty()){
+            botAlert.setContentText("Can't play Game against bot when none are available");
+            botAlert.show();
+            this.close();
+            return null;
+        }
+        if(!SavedSettings.savedSettings.defaultBot().isBlank()) {
+            bots.getSelectionModel().select(SavedSettings.savedSettings.defaultBot());
+        }else {
+            bots.getSelectionModel().select(0);
+        }
+
         return bots;
     }
 

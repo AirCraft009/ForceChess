@@ -81,21 +81,6 @@ public class SettingsView {
         root.add(movedDark, 3, 3);
 
 
-        ToggleGroup gpuCpuGroup = new ToggleGroup();
-        useGPU = createRadio("Use GPU", gpuCpuGroup);
-        useGPU.setSelected(SavedSettings.savedSettings.gpu());
-        useGPU.selectedProperty().addListener(controller);
-        root.add(useGPU, 0, 4, 2, 1);
-        useCPU = createRadio("Use CPU", gpuCpuGroup);
-        useCPU.setSelected(!SavedSettings.savedSettings.gpu());
-        root.add(useCPU, 2, 4, 2, 1);
-
-        useFP16 = new CheckBox("Use FP16");
-        useFP16.setDisable(!useGPU.isSelected());
-        useFP16.setSelected(SavedSettings.savedSettings.fp16());
-        useFP16.selectedProperty().addListener((_, old, newV) -> controller.updateButtons());
-        useFP16.setTooltip(new Tooltip("A tool that uses less GPU-Memory"));
-        root.add(useFP16, 0, 5, 2, 1);
 
         Label defaultBotL = createFormattedLabel("Default Bot: ");
         root.add(defaultBotL, 0, 6, 2, 1);

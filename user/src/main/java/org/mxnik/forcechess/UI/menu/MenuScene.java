@@ -10,7 +10,10 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
+import org.mxnik.forcechess.UI.ChessControllView.ChessView;
 import org.mxnik.forcechess.UI.Constants;
+
+import java.io.IOException;
 
 public class MenuScene {
     VBox root;
@@ -62,6 +65,17 @@ public class MenuScene {
         Scene scene = new Scene(root, 500, 500, Color.GREY);
         stage.setTitle("Chess");
         stage.setScene(scene);
+        try {
+            var icon = ChessView.getImageFromRessource(ChessView.sourcedir + "icon.png");
+            if(icon != null) {
+                stage.getIcons().add(icon);
+            }else {
+                System.err.println("Error when instantiating the inputStream");
+            }
+        } catch (IOException e) {
+            // Ignore unloaded icon
+            System.err.println("Icon couldn't be loaded");
+        }
         stage.show();
         constants = new Constants(-1, scene);
     }

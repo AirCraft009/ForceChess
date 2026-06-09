@@ -23,6 +23,7 @@ import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.General.FileLocations;
 import org.mxnik.forcechess.Moves.GameState;
 import org.mxnik.forcechess.UI.Constants;
+import org.mxnik.forcechess.UI.menu.MenuScene;
 import org.mxnik.forcechess.bot.BatchChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
 
@@ -31,12 +32,13 @@ import java.util.stream.Collectors;
 
 import static org.datavec.api.records.reader.impl.regex.RegexSequenceRecordReader.LOG;
 import static org.nd4j.autodiff.listeners.profiler.data.Phase.e;
+import static org.nd4j.autodiff.listeners.profiler.data.Phase.n;
 
 public class ChessView {
     public final Stage stage;
 
-    private final String sourcedir = "/org/mxnik/forcechess/";
-    private final String pathToImages = sourcedir + "pieces-basic-png/";
+    public static final String sourcedir = "/org/mxnik/forcechess/";
+    public static final String pathToImages = sourcedir + "pieces-basic-png/";
     Group root;
     Constants constants;
     private ChessController controller;
@@ -46,12 +48,9 @@ public class ChessView {
     Group menuLayer = new Group();//TODO Rename?
     int defaultFontSize = 13;
     Button saveB, quitB, undoB, resignB;
-    ImageView winView;
     Alert menuAler = new Alert(Alert.AlertType.NONE);
-
     Button exit, newGame;
     ChessData currentGame;
-
     private Image[] images;
 
     ChessView(ChessData gameSettings) throws CloneNotSupportedException {
@@ -78,12 +77,19 @@ public class ChessView {
             new Thread(() -> {
                 try {
                     initView(playerStrW, playerStrB, fen, playDepth);
-                } catch (CloneNotSupportedException e) {
-                    throw new IllegalStateException("CloneNotSupportedException was thrown while loading classes. Impossible State, try reinstalling the jar: " + e);
                 }
-                catch (IllegalStateException e){
-                    //TODO: print error message to screen and backoff
-                    System.err.println("Model unavailable");
+                catch (Exception e){
+                    Platform.runLater( () -> {
+                        menuAler.setAlertType(Alert.AlertType.WARNING);
+                        menuAler.setContentText("Model doesn't follow the specifications: " + e.getMessage());
+                        menuAler.show();
+                        menuAler.setOnCloseRequest(
+                                _ -> {
+                                    new MenuScene(stage);
+                                }
+                        );
+                        System.err.println("Model unavailable");
+                    });
                 }
             }).start();
             //this.controller = new ChessController(this, "rnbqkbnrr/ppppppppp/9/9/9/9/9/PPPPPPPPP/RNBQKBNRR w 0 0 0 9");
@@ -102,7 +108,7 @@ public class ChessView {
         );
     }
 
-    private void initView(String playerStrW, String playerStrB, String fen, int playDepth) throws CloneNotSupportedException {
+    private void initView(String playerStrW, String playerStrB, String fen, int playDepth) {
         Platform.runLater( () -> {
             ProgressIndicator indicator = new ProgressIndicator();
             indicator.setPrefSize(150, 150);
@@ -124,7 +130,7 @@ public class ChessView {
         this.controller.start();
     }
 
-    private void setPlayers(String playerStrW, String playerStrB, String fen, int playDepth) throws CloneNotSupportedException {
+    private void setPlayers(String playerStrW, String playerStrB, String fen, int playDepth) {
         try {
             if (playerStrW == null && playerStrB == null) {
                 this.controller.setPlayers(controller, controller);
@@ -193,30 +199,29 @@ public class ChessView {
                 pathToImages + "black-king.png"
         };
         images = new Image[imagePaths.length];
-
-        for(int i = 0; i < imagePaths.length; i++) {
-            images[i] = getImageFromRessource(imagePaths[i]);
+        try {
+            for (int i = 0; i < imagePaths.length; i++) {
+                images[i] = getImageFromRessource(imagePaths[i]);
+            }
+        }catch (IOException e){
+            menuAler.setAlertType(Alert.AlertType.ERROR);
+            menuAler.setContentText("Error when reading a piece File. Will close Application");
+            menuAler.setOnCloseRequest(
+                    event -> {
+                        Platform.exit();
+                        System.exit(0);
+                    }
+            );
         }
     }
 
-    private Image getImageFromRessource(String filePath){
-        try (InputStream inputStream = this.getClass().getResourceAsStream(filePath)) {
+    public static Image getImageFromRessource(String filePath) throws IOException {
+        try (InputStream inputStream = ChessView.class.getResourceAsStream(filePath)) {
             Image result = null;
             if (inputStream != null) {
                 result = new Image(inputStream);
             }
             return result;
-        } catch (IOException e) {
-            LOG.error("Error reading file:", e);
-            menuAler.setAlertType(Alert.AlertType.ERROR);
-            menuAler.setContentText("Can't find piece Images. Closing application");
-            menuAler.setOnHidden(
-                    (event) -> {
-                        Platform.exit();
-                        System.exit(1);
-                    }
-            );
-            throw new IllegalStateException("Couldn't find Images should've stopped running.");
         }
     }
 
@@ -351,8 +356,19 @@ public class ChessView {
                 (double) constants.BlockS /2);
 
         undoB = new Button();
-        Image i;
-        i = getImageFromRessource(sourcedir + "chess-menu/undo.png");
+        Image i = null;
+        try {
+            i = getImageFromRessource(sourcedir + "chess-menu/undo.png");
+        }catch (IOException e){
+            menuAler.setAlertType(Alert.AlertType.ERROR);
+            menuAler.setContentText("Error when reading the undo png File. Will close Application");
+            menuAler.setOnCloseRequest(
+                    event -> {
+                        Platform.exit();
+                        System.exit(0);
+                    }
+            );
+        }
         undoB.setBackground(new Background(new BackgroundImage(i, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null)));
         undoB.setTooltip(new Tooltip("Undo last move"));
         undoB.setPrefSize(constants.BlockS, constants.BlockS);
@@ -361,7 +377,18 @@ public class ChessView {
         undoB.addEventHandler(Event.ANY, controller);
 
         resignB = new Button();
-        i = getImageFromRessource(sourcedir + "chess-menu/resign.png");
+        try {
+            i = getImageFromRessource(sourcedir + "chess-menu/resign.png");
+        }catch (IOException e){
+        menuAler.setAlertType(Alert.AlertType.ERROR);
+        menuAler.setContentText("Error when reading the resign png File. Will close Application");
+        menuAler.setOnCloseRequest(
+                event -> {
+                    Platform.exit();
+                    System.exit(0);
+                }
+        );
+    }
         resignB.setBackground(new Background(new BackgroundImage(i, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null)));
         resignB.setPrefSize(constants.BlockS, constants.BlockS);
         resignB.setTooltip(new Tooltip("Resign"));

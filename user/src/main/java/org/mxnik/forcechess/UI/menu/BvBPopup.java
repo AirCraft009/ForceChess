@@ -38,6 +38,7 @@ public class BvBPopup extends MenuPopup {
 
         Label botsText = new Label("Bots: ");
         grid.add(botsText, 0, 1);
+
         ChoiceBox<String> bot1 = super.getBotsList();
         grid.add(bot1, 1, 1);
         ChoiceBox<String> bot2 = super.getBotsList();
@@ -82,7 +83,6 @@ public class BvBPopup extends MenuPopup {
         contButton.setOnAction(e -> {
             close();
             String fen = FenProperties.getFenStr(board.getValue());
-            int sideLen = Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
                 new ChessView(primaryStage, fen, bot1.getValue(), bot2.getValue(), (int)playDepthS.getValue());
             } catch (CloneNotSupportedException ex) {
