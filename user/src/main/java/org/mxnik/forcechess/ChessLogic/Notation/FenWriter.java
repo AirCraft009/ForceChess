@@ -59,7 +59,7 @@ public class FenWriter {
         .append((rights.WQ_Castle? "Q":""))
         .append((rights.BK_Castle? "k":""))
         .append((rights.BQ_Castle? "q":""))
-        .append((rights.ANY)?' ':'-')
+        .append((rights.ANY)?" ":"- ")
         .append((enPassant==-1)?'-':(char)enPassant).append(' ')
         .append(fiftyMove).append(' ')
         .append(sideLenStr);
