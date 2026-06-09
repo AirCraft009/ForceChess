@@ -54,6 +54,10 @@ public final class CastleRights implements Cloneable{
                         BQ_Castle = false;
         }
 
+        public boolean allNegative(){
+                return !WK_Castle && !WQ_Castle && !BK_Castle && !BQ_Castle;
+        }
+
         @Override
         public CastleRights clone() throws CloneNotSupportedException {
                 return (CastleRights) super.clone();

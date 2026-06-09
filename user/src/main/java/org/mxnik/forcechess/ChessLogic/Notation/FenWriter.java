@@ -55,11 +55,19 @@ public class FenWriter {
         fenBuilder.deleteCharAt(fenBuilder.length()-1).append(' ')
         .append(turn).append(' ');
 
-        fenBuilder.append((rights.WK_Castle? "":"K"))
-        .append((rights.WQ_Castle? "":"Q"))
-        .append((rights.BK_Castle? "":"k"))
-        .append((rights.BQ_Castle? "":"q"))
-        .append(enPassant).append(' ')
+        if(!rights.allNegative()) {
+            fenBuilder
+                    .append((!rights.WK_Castle ? "" : "K"))
+                    .append((!rights.WQ_Castle ? "" : "Q"))
+                    .append((!rights.BK_Castle ? "" : "k"))
+                    .append((!rights.BQ_Castle ? "" : "q"));
+        }
+        else {
+            fenBuilder.append("-");
+        }
+
+        fenBuilder.append(' ');
+        fenBuilder.append(FenReader.toFieldName(enPassant)).append(' ')
         .append(fiftyMove).append(' ')
         .append(sideLenStr);
 
