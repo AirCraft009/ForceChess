@@ -15,11 +15,15 @@ public class FenProperties {
     public static void load() {
         try {
             props.load(new BufferedReader(new FileReader(FEN_PROPERTIES_FILE)));
+            fenNames = props.stringPropertyNames();
+            if (fenNames.isEmpty()) {
+                FenProperties.addFenStr("default", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 8");
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        fenNames = props.stringPropertyNames();
+
     }
 
     /**

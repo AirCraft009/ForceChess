@@ -27,8 +27,6 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
             Color darkHighlight = Color.web(properties.getProperty("darkHighlight"));
             Color lightMoved = Color.web(properties.getProperty("lightMoved"));
             Color darkMoved = Color.web(properties.getProperty("darkMoved"));
-            boolean gpu = Boolean.parseBoolean(properties.getProperty("gpu_cpu"));
-            boolean fp16 = Boolean.parseBoolean(properties.getProperty("fp16"));
             String defaultBot = properties.getProperty("default_bot");
 
             savedSettings = new SavedSettings(savePath, lightSquare, darkSquare, lightHighlight, darkHighlight, lightMoved, darkMoved, defaultBot);
@@ -66,6 +64,5 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
         }
         Platform.exit();
         System.exit(0);
-        //TODO restartApplication
     }
 }
