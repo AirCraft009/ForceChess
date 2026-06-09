@@ -207,7 +207,7 @@ public class BatchChessBot extends ChessBot{
                 }
                 case CheckMate -> {
                     // lost the game from playing persp.
-                    backProp(node, -1.2F);
+                    backProp(node, 2);
                 }
                 case StaleMate, FiftyMove -> {
                 }
