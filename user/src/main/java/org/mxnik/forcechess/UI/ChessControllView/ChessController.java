@@ -155,14 +155,26 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         // all Buttons
         if (source instanceof ChessButton sourceButton){
             handleActiveChessClick(sourceButton);
-        }else if (source == chessView.saveAndQuitB){
-            FenProperties.addFenStr("current", FenWriter.WriteFen(board)); //TODO Delete when continuing to play
+        }else if (source == chessView.saveB){
+            FenProperties.addFenStr("current", FenWriter.WriteFen(board));
+        }else if (source == chessView.quitB){
+            cleanUp();
             new MenuScene(stage);
         } else if (source == chessView.undoB) {
             game.undoMove();
             update();
         } else if (source == chessView.resignB){
             //TODO Resign
+        } else if (source == chessView.exit){
+            cleanUp();
+            new MenuScene(stage);
+        } else if (source == chessView.newGame){
+            try {
+                cleanUp();
+                new ChessView(chessView.currentGame);
+            } catch (CloneNotSupportedException e) {
+                throw new IllegalStateException("Clone cannot work one time, and break the second time");
+            }
         }
     }
 
@@ -280,7 +292,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
     @Override
     public void finish(GameState g) {
-        Platform.runLater(chessView::showWinImage);
+        Platform.runLater(() -> chessView.showWinImage(g, board));
     }
 
     @Override
