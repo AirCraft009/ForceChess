@@ -63,6 +63,6 @@ public class NotationTests {
     public void testWriteFenStartingPos(){
         Board b = new Board();
         String fenStr = FenWriter.WriteFen(b);
-        assertEquals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8", fenStr);
+        assertEquals("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 8", fenStr);
     }
 }

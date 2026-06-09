@@ -12,10 +12,12 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Notation.FenReader;
 import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.*;
 import org.mxnik.forcechess.FileHandling.FenProperties;
+import org.mxnik.forcechess.General.DiversePair;
 import org.mxnik.forcechess.UI.ChessControllView.ChessBackgroundPane;
 import org.mxnik.forcechess.UI.ChessControllView.ChessButton;
 import org.mxnik.forcechess.UI.Constants;
@@ -26,23 +28,14 @@ import java.util.Arrays;
 public class BoardCreationController implements EventHandler<Event>, ChangeListener {
     private BoardCreationView view;
     private Stage stage;
-    private Piece[] board;
-    private int blackKPos = -1, whiteKPos = -1;
+    private Board board;
     private PieceTypes selectedPieceType;
+    private final String BASE_FEN = "8/8/8/8/8/8/8/8 w - - 0 8";
 
     public BoardCreationController(BoardCreationView view, Stage stage) {
         this.view = view;
         this.stage = stage;
-        board = new Piece[view.constants.sideLen * view.constants.sideLen];
-        Arrays.fill(board, EmptyPiece.EMPTY_PIECE);
-    }
-
-    public void resize(){
-        view.constants = new Constants(view.constants.sideLen, stage.getScene());
-        view.backgroundLayer.getChildren().clear();
-        view.clearInteractionLayer();
-        view.drawBoard();
-        view.drawPieces(board);
+        board = new Board(BASE_FEN);
     }
 
     /**
@@ -50,44 +43,42 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
      * @param source the ChessButton that was clicked
      */
     private void handleCButtonClick(ChessButton source) {
+        Piece[] boardPieces = board.getBoard();
+        boolean color = view.white.isSelected();
         int square = source.getField();
-        if(square == whiteKPos){
-            whiteKPos = -1;
-        }else if(square == blackKPos){
-            blackKPos = -1;
+        if(square == board.getKingWPos()){
+            board.setKingWPos(-1);
+        }else if(square == board.getKingBPos()){
+            board.setKingBPos(-1);
         }
-        board[square] = switch (selectedPieceType){
+        boardPieces[square] = switch (selectedPieceType){
             case EMPTY -> EmptyPiece.EMPTY_PIECE;
-            case PAWN -> new Pawn(view.white.isSelected(), false);
-            case KNIGHT -> new Knight(view.white.isSelected(), false);
-            case BISHOP -> new Bishop(view.white.isSelected(), false);
-            case ROOK -> new Rook(view.white.isSelected(), false);
-            case QUEEN -> new Queen(view.white.isSelected(), false);
+            case PAWN -> new Pawn(color, false);
+            case KNIGHT -> new Knight(color, false);
+            case BISHOP -> new Bishop(color, false);
+            case ROOK -> new Rook(color, false);
+            case QUEEN -> new Queen(color, false);
             case KING -> {
-                boolean color = view.white.isSelected();
-                int sideLen = view.constants.sideLen;
-                int[] illegalPos = new int[]{square+1, square-1, square+sideLen, square+sideLen+1, square+sideLen-1, square-sideLen, square-sideLen+1, square-sideLen-1};
-                boolean legal = true;
-                for(int i : illegalPos){
-                    if (i / sideLen == square / sideLen && i % sideLen == square % sideLen) {
-                        legal = false;
-                        break;
-                    }
-                }
-
-                if(((color)?whiteKPos:blackKPos)==-1 && legal){
+                if(((color)?board.getKingWPos()==-1:board.getKingBPos()==-1) && !board.isChecked(square, color)){
                     if(color){
-                        whiteKPos = square;
+                        board.setKingWPos(square);
                     }else{
-                        blackKPos = square;
+                        board.setKingBPos(square);
                     }
-                    yield new King(view.white.isSelected(), false);
+                    yield new King(color, false);
                 }else {
-                    yield EmptyPiece.EMPTY_PIECE;
+                    yield boardPieces[square];
                 }
             }
-            default -> board[square];
+            default -> boardPieces[square];
         };
+
+        board.setBoard(boardPieces);
+
+        if(board.isChecked((color)?board.getKingBPos(): board.getKingWPos(), !color)){
+            boardPieces[square] = EmptyPiece.EMPTY_PIECE;
+            board.setBoard(boardPieces);
+        }
 
         view.drawPieces(board);
     }
@@ -118,8 +109,8 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
             new MenuScene(stage);
         }else if(source == view.saveButton){
             String text = view.nameField.getText();
-            if(text != null && !text.isBlank() && !text.equals("default")){
-                FenProperties.addFenStr(text, FenWriter.WriteFen(board, true, (int) Math.round(view.sizeSlider.getValue())));
+            if(text != null && !text.isBlank() && !text.equals("default") && board.getKingWPos() >= 0 && board.getKingBPos() >= 0){
+                FenProperties.addFenStr(text, FenWriter.WriteFen(board));
                 view.updateBoardList();
             }
         }else if(source instanceof Button deleteButton){
@@ -185,12 +176,19 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
      * @param newValue
      */
     private void changedSizeSlider(ObservableValue<? extends Number> observableValue, Number oldValue, Number newValue) {
+        Piece[] boardPieces = board.getBoard();
         int size = (int) Math.round(view.sizeSlider.getValue());
-        if(size*size != board.length)
-            board = new Piece[size*size];
-        Arrays.fill(board, EmptyPiece.EMPTY_PIECE);
+        if(size*size == boardPieces.length) {
+            return;
+        }
+        Board.setSideLen(size);
+        boardPieces = new Piece[size * size];
+        Arrays.fill(boardPieces, EmptyPiece.EMPTY_PIECE);
+        board.setBoard(boardPieces);
         view.sizeLabel.setText(String.valueOf(size));
         view.constants = new Constants(size, stage.getScene());
+        board.setKingWPos(-1);
+        board.setKingBPos(-1);
         resize();
     }
 
@@ -205,7 +203,11 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         FenReader reader = new FenReader(FenProperties.getFenStr(fenName));
         view.sizeSlider.setValue(reader.readSideLen());
         view.nameField.setText(fenName);
-        board = reader.readFenBoard();
+        Board.setSideLen(reader.getBoardLenght());
+        board.setBoard(reader.readFenBoard());
+        DiversePair<Integer, Integer> kPos = reader.readKingPos();
+        board.setKingWPos(kPos.first());
+        board.setKingBPos(kPos.second());
         resize();
     }
 
@@ -218,5 +220,13 @@ public class BoardCreationController implements EventHandler<Event>, ChangeListe
         }else if(newValue instanceof HBox){
             changedBoard(observableValue, (HBox)oldValue, (HBox)newValue);
         }
+    }
+
+    public void resize(){
+        view.constants = new Constants(view.constants.sideLen, stage.getScene());
+        view.backgroundLayer.getChildren().clear();
+        view.clearInteractionLayer();
+        view.drawBoard();
+        view.drawPieces(board);
     }
 }

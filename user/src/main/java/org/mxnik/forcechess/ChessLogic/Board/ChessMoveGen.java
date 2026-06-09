@@ -71,17 +71,38 @@ public class ChessMoveGen {
                         // Castling
                     } else if (cBoard.board[i].getType() == PieceTypes.KING) {
                         int dir = Integer.compare(square, i);
+
                         int cornerPos = (dir < 0)
                                 ? i - BoardHelper.distanceLeftB(i)
                                 : i + BoardHelper.distanceRightB(i);
                         Piece corner = cBoard.board[cornerPos];
-
+                        // more than 1 square moved (castles)
                         if (BoardHelper.colDiff(i, square) > 1) {
+
+                            // check rights
+                            if(
+                                    dir < 0 &&
+                                            (cBoard.board[i].getColor())?
+                                            !cBoard.getCastleRights().WQ_Castle :
+                                            !cBoard.getCastleRights().BQ_Castle
+                            ){
+                                continue  ;
+                            }
+                            else if (
+                                    dir > 0 &&
+                                            (cBoard.board[i].getColor())?
+                                            !cBoard.getCastleRights().WK_Castle :
+                                            !cBoard.getCastleRights().BK_Castle
+                            ){
+                                continue  ;
+                            }
+
                             if (cBoard.board[i].isHasMoved()
                                     || corner.isHasMoved()
                                     || corner.getType() != PieceTypes.ROOK) {
                                 break;
                             }
+
                             for (int k = i+dir; k != cornerPos; k += dir) {
                                 if (cBoard.board[k] != EmptyPiece.EMPTY_PIECE || cBoard.isChecked(k,cBoard.board[i].getColor())) {
                                     break moveLoop;

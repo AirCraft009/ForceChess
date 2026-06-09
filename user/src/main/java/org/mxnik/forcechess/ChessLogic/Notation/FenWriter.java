@@ -1,72 +1,22 @@
 package org.mxnik.forcechess.ChessLogic.Notation;
 
 import org.mxnik.forcechess.ChessLogic.Board.Board;
+import org.mxnik.forcechess.ChessLogic.Board.CastleRights;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
 
 public class FenWriter {
 
     public static String WriteFen(Board board){
-        StringBuilder fenBuilder = new StringBuilder();
-        String sideLen =  Integer.toString(Board.sideLen);
-        char turn = (board.getTurn())? 'w' : 'b';
-        Piece[] pieceBoard = board.getBoard();
-        int skip = 0;
-        int ptr = 0;
-
-        rowloop:
-        for (int i = Board.sideLen - 1; i >= 0 ; i--) {
-            for (int j = 0; j < Board.sideLen; j++) {
-                ptr = i * Board.sideLen + j;
-
-                if(pieceBoard[ptr].getType() == PieceTypes.EMPTY){
-                    while (pieceBoard[ptr].getType() == PieceTypes.EMPTY){
-                        skip ++;
-                        j ++;
-                        ptr ++;
-                        if ((ptr) % Board.sideLen == 0){
-                            fenBuilder.append(skip);
-                            fenBuilder.append('/');
-                            skip = 0;
-                            continue rowloop;
-                        }
-                    }
-                }
-
-                Piece piece = pieceBoard[ptr];
-                if(skip != 0) {
-                    fenBuilder.append(skip);
-                    skip = 0;
-                }
-                char s = FenConversion.FromPiece(piece.getType(), piece.getColor());
-                fenBuilder.append(s);
-
-                if ((ptr + 1) % Board.sideLen == 0){
-                    fenBuilder.append('/');
-                }
-
-            }
-        }
-
-        //remove the last slash
-        fenBuilder.deleteCharAt(fenBuilder.length()-1);
-        fenBuilder.append(' ');
-        fenBuilder.append(turn);
-        fenBuilder.append(' ');
-        // temporary 0's
-        fenBuilder.append("0 0 0");//TODO swap out 0's
-        fenBuilder.append(' ');
-        fenBuilder.append(sideLen);
-
-        return fenBuilder.toString();
+        return WriteFen(board.getBoard(), board.getTurn(), board.getFiftyMove(), Board.sideLen, board.getEnPassantPos(), board.getCastleRights());
     }
-
-    public static String WriteFen(Piece[] pieceBoard, boolean whiteTurn, int sideLen){
+    //TODO: write extra attributes correctly
+    public static String WriteFen(Piece[] pieceBoard, boolean whiteTurn, int fiftyMove, int sideLen, int enPassant, CastleRights rights){
         StringBuilder fenBuilder = new StringBuilder();
         String sideLenStr =  Integer.toString(sideLen);
         char turn = whiteTurn? 'w' : 'b';
         int skip = 0;
-        int ptr = 0;
+        int ptr;
 
         rowloop:
         for (int i = sideLen - 1; i >= 0 ; i--) {
@@ -102,14 +52,24 @@ public class FenWriter {
         }
 
         //remove the last slash
-        fenBuilder.deleteCharAt(fenBuilder.length()-1);
+        fenBuilder.deleteCharAt(fenBuilder.length()-1).append(' ')
+        .append(turn).append(' ');
+
+        if(!rights.allNegative()) {
+            fenBuilder
+                    .append((!rights.WK_Castle ? "" : "K"))
+                    .append((!rights.WQ_Castle ? "" : "Q"))
+                    .append((!rights.BK_Castle ? "" : "k"))
+                    .append((!rights.BQ_Castle ? "" : "q"));
+        }
+        else {
+            fenBuilder.append("-");
+        }
+
         fenBuilder.append(' ');
-        fenBuilder.append(turn);
-        fenBuilder.append(' ');
-        // temporary 0's
-        fenBuilder.append("KQkq - 0");//TODO swap out 0's
-        fenBuilder.append(' ');
-        fenBuilder.append(sideLenStr);
+        fenBuilder.append(FenReader.toFieldName(enPassant)).append(' ')
+        .append(fiftyMove).append(' ')
+        .append(sideLenStr);
 
         return fenBuilder.toString();
     }

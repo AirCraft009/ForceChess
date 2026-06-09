@@ -39,20 +39,18 @@ public class BvBPopup extends MenuPopup {
         Label botsText = new Label("Bots: ");
         grid.add(botsText, 0, 1);
         ChoiceBox<String> bot1 = super.getBotsList();
-        bot1.getSelectionModel().selectFirst();
         grid.add(bot1, 1, 1);
         ChoiceBox<String> bot2 = super.getBotsList();
-        bot2.getSelectionModel().selectFirst();
         grid.add(bot2, 2, 1, 2, 1);
 
         Label playDepthText = new Label("Play Depth: " + BatchChessBot.BATCH_SIZE);
         grid.add(playDepthText, 0, 2);
-        Slider playDepthS = new Slider(BatchChessBot.BATCH_SIZE, BatchChessBot.BATCH_SIZE*8, BatchChessBot.BATCH_SIZE);
+        Slider playDepthS = new Slider(BatchChessBot.BATCH_SIZE, BatchChessBot.BATCH_SIZE*64, BatchChessBot.BATCH_SIZE);
         playDepthS.setShowTickMarks(true);
         playDepthS.setShowTickLabels(true);
         playDepthS.setSnapToTicks(true);
-        playDepthS.setMajorTickUnit(BatchChessBot.BATCH_SIZE);
-        playDepthS.setMinorTickCount(0);
+        playDepthS.setMajorTickUnit(BatchChessBot.BATCH_SIZE*16);
+        playDepthS.setMinorTickCount(15);
         playDepthS.valueProperty().addListener((observable, oldValue, newValue) -> {
             playDepthText.setText("Play Depth: " + Math.round(newValue.doubleValue()/64)*64);
         });
@@ -86,7 +84,7 @@ public class BvBPopup extends MenuPopup {
             String fen = FenProperties.getFenStr(board.getValue());
             int sideLen = Integer.parseInt(String.valueOf(fen.charAt(fen.length()-1)));
             try {
-                new ChessView(primaryStage, fen, sideLen, bot1.getValue(), bot2.getValue(), (int)playDepthS.getValue());
+                new ChessView(primaryStage, fen, bot1.getValue(), bot2.getValue(), (int)playDepthS.getValue());
             } catch (CloneNotSupportedException ex) {
                 throw new RuntimeException(ex);
             }

@@ -5,6 +5,7 @@ import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.input.DragEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -17,7 +18,7 @@ public class MenuScene {
     Constants constants;
     MenuController controller;
 
-    Button pvp, pvb, bvb, train, cBoard, settings;
+    Button pvp, pvb, bvb, cBoard, settings;
 
     /**
      * @param stage the primary stage used in the program
@@ -27,11 +28,11 @@ public class MenuScene {
         setBounds(stage);
         basicInit(stage);
 
-        //TODO remove listeners when not needed
         stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
         stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         this.controller = new MenuController(this);
+        root.addEventHandler(DragEvent.ANY, controller);
 
         drawMenu();
         stage.setOnCloseRequest(e ->
@@ -75,11 +76,10 @@ public class MenuScene {
         pvp = createButton("Player vs Player");
         pvb = createButton("Player vs Bot");
         bvb = createButton("Bot vs Bot");
-        train = createButton("Train Bots");
         cBoard = createButton("Create Board");
         settings = createButton("Settings");
 
-        root.getChildren().addAll(pvp, pvb, bvb, train, cBoard, settings);
+        root.getChildren().addAll(pvp, pvb, bvb, cBoard, settings);
     }
 
     /**

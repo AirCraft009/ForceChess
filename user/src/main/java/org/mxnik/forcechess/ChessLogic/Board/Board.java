@@ -12,6 +12,8 @@ import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.Moves.MoveType;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 
+import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.getCol;
+import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.getRow;
 import static org.mxnik.forcechess.ChessLogic.Notation.FenConversion.FromPiece;
 import static org.mxnik.forcechess.Moves.RayDetection.*;
 
@@ -35,15 +37,16 @@ public class Board {
     int kingBPos;
     int enPassantPos;
     int fiftyMove;
-
     int maxMoves = 0;
+    CastleRights castleRights;
+
 
     /**
      * initializes a Board with the normal chess starting pos.
      */
     public Board() {
         board = new Piece[sideLen * sideLen];
-        BuildFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
+        BuildFromFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 8");
     }
 
     /**
@@ -83,7 +86,9 @@ public class Board {
         kingWPos = KingPositions.first();
         kingBPos = KingPositions.second();
         turn = notation.readFenTurn();
-        sideLen = notation.readSideLen();
+        setSideLen(notation.readSideLen());
+        enPassantPos = notation.readEnpassent();
+        castleRights = notation.readCastleRights();
         MoveOffsets.calculateOffset(sideLen);
         Piece.refreshMoveSets();
 
@@ -97,7 +102,9 @@ public class Board {
             maxDirs += p.getMaxDir();
             maxMoves += p.getMovesetLen();
         }
-        Board.size = board.length;
+        if(size != board.length){
+            throw new IllegalStateException("Can't have missmatch between boardlength in fen string and set length.");
+        }
         moveList = new MoveList(amountPieces, maxDirs, maxMoves);
     }
 
@@ -113,8 +120,11 @@ public class Board {
      * @return is the king in check
      */
     public boolean isChecked(int kingPos, boolean kingColor) {
-        int kingRow = BoardHelper.getRow(kingPos);
-        int kingCol = BoardHelper.getCol(kingPos);
+        if(kingPos == -1)
+            return false;
+
+        int kingRow = getRow(kingPos);
+        int kingCol = getCol(kingPos);
 
         //  Rays (straight + diagonal)
         for (int d = 0; d < 8; d++) {
@@ -244,6 +254,7 @@ public class Board {
             kingBPos = to;
         }
 
+
         if (BoardHelper.colDiff(from, to) > 1) {
             int dir = Integer.compare(to, from);
             int rookPos = (dir < 0)
@@ -256,8 +267,37 @@ public class Board {
     }
 
     public UndoMovePacket move(MovePacket packet) throws CloneNotSupportedException {
-        var undoInfo = new UndoMovePacket(packet, board[packet.to()], fiftyMove);
+        var undoInfo = new UndoMovePacket(packet, board[packet.from()].clone(),
+                board[packet.to()] = (board[packet.to()] == EmptyPiece.EMPTY_PIECE? EmptyPiece.EMPTY_PIECE : board[packet.to()].clone()),
+                enPassantPos,
+                fiftyMove,
+                castleRights.clone()
+        );
         rawMove(packet.from(), packet.to(), packet.type(), true);
+
+        if(undoInfo.movedP().getType() == PieceTypes.KING) {
+            castleRights.disableColor(turn);
+        }
+
+        // handle castling rights for rook moves
+        if (undoInfo.movedP().getType() == PieceTypes.ROOK) {
+            int rookPos = undoInfo.packet().from();
+
+            int kingPos = turn
+                    ? kingWPos
+                    : kingBPos;
+
+            boolean sameRow = getRow(rookPos) == getRow(kingPos);
+            boolean onEdge = getCol(rookPos) == 0 || getCol(rookPos) == sideLen - 1;
+
+            if (sameRow && onEdge) {
+                if(getCol(rookPos) == 0)
+                    castleRights.disableQueenCastle(turn);
+                else
+                    castleRights.disableKingCastle(turn);
+            }
+        }
+
         turn = !turn;
         fiftyMove++;        // add to fifty move rule counter (counts half moves)
 
@@ -273,46 +313,49 @@ public class Board {
      * undoes a move (board state is restored perfectly)
      */
     public void undoMove(UndoMovePacket undoPacket){
+
         fiftyMove = undoPacket.fiftyMoveCounter();
         turn = !turn;
 
         MovePacket packet = undoPacket.packet();
 
-        try {
-            switch (packet.type()) {
-                case Generic -> {
-                    board[packet.from()] = board[packet.to()].clone();
-                    board[packet.to()] = undoPacket.takenP();
-                }
-                case PromotionB, PromotionN, PromotionQ, PromotionR -> {
-                    board[packet.from()] = new Pawn(turn, true);
-                    board[packet.to()] = undoPacket.takenP();
-                }
-                case EnPassant -> {
-                    int dir = Math.clamp(packet.from() - packet.to(), -1, 1) * size;       // get the direction then multiply to the size of the board
-                    int takeSq = packet.to() - dir;
-                    board[packet.from()] = board[packet.to()].clone();
-                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
-                    board[takeSq] = undoPacket.takenP();
-                }
-                case CastleK -> {
-                    board[packet.from()] = board[packet.to()].clone();
-                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
-                    int dr = BoardHelper.distanceRightB(packet.to()-1);         // rook at king prev to pos -1
-                    board[(packet.to() -1) + dr] = board[packet.to() -1].clone();    // move rook to corner
-                    board[packet.to() - 1] = EmptyPiece.EMPTY_PIECE;
-                }
-
-                case CastleQ -> {
-                    board[packet.from()] = board[packet.to()].clone();
-                    board[packet.to()] = EmptyPiece.EMPTY_PIECE;
-                    int dr = BoardHelper.distanceRightB(packet.to()+1);         // rook at king prev to pos +1
-                    board[(packet.to() +1) + dr] = board[packet.to() +1].clone();    // move rook to corner
-                    board[packet.to()  +1] = EmptyPiece.EMPTY_PIECE;
-                }
+        switch (packet.type()) {
+            case Generic -> {
+                board[packet.from()] = undoPacket.movedP();
+                board[packet.to()] = undoPacket.takenP();
+            }
+            case PromotionB, PromotionN, PromotionQ, PromotionR -> {
+                board[packet.from()] = new Pawn(turn, true);
+                board[packet.to()] = undoPacket.takenP();
+            }
+            case EnPassant -> {
+                int dir = Math.clamp(packet.from() - packet.to(), -1, 1) * -sideLen;       // get the direction then multiply to the size of the board
+                int takeSq = packet.to() - dir;
+                System.out.println(takeSq);
+                board[packet.from()] = undoPacket.movedP();
+                board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                board[takeSq] = new Pawn(!undoPacket.movedP().getColor(), true);     // has to have moved
+            }
+            case CastleK -> {
+                board[packet.from()] = undoPacket.movedP();
+                board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                int dr = BoardHelper.distanceRightB(packet.to()-1);             // rook at king prev to pos -1
+                board[(packet.to() - 1) + dr] = new Rook(turn, false);      // move rook to corner
+                board[packet.to() - 1] = EmptyPiece.EMPTY_PIECE;
             }
 
-        }catch (CloneNotSupportedException _){}
+            case CastleQ -> {
+                board[packet.from()] = undoPacket.movedP();
+                board[packet.to()] = EmptyPiece.EMPTY_PIECE;
+                int dr = BoardHelper.distanceLeftB(packet.to()+1);               // rook at king prev to pos +1
+                board[(packet.to() +1) - dr] = new Rook(turn, false);       // move rook to corner
+                board[packet.to()  +1] = EmptyPiece.EMPTY_PIECE;
+            }
+        }
+
+        castleRights = undoPacket.oldRights();
+        enPassantPos = undoPacket.enPassant();
+
     }
 
     /**
@@ -380,14 +423,11 @@ public class Board {
 
     public static void setSideLen(int sideLen) {
         Board.sideLen = sideLen;
+        Board.size = sideLen * sideLen;
     }
 
     public static int getSize() {
         return size;
-    }
-
-    public static void setSize(int size) {
-        Board.size = size;
     }
 
     public void setTurn(boolean turn) {
@@ -480,6 +520,14 @@ public class Board {
 
     public void setMaxMoves(int maxMoves) {
         this.maxMoves = maxMoves;
+    }
+
+    public CastleRights getCastleRights() {
+        return castleRights;
+    }
+
+    public void setCastleRights(CastleRights castleRights) {
+        this.castleRights = castleRights;
     }
 
     public static void main(String[] args) throws CloneNotSupportedException {

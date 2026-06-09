@@ -14,6 +14,7 @@ import org.mxnik.forcechess.Moves.GameState;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Stack;
 import java.util.function.BiConsumer;
 
 import static java.lang.Math.abs;
@@ -37,6 +38,7 @@ public class ChessBot implements Player {
     protected final Evaluator evaluator;
     protected int depth = 1;                                                      // depth = 1 da root immer existiert
     protected int playDepth;
+    private Stack<Integer> undoMoveStack = new Stack<>();
 
 
     /**
@@ -297,6 +299,8 @@ public class ChessBot implements Player {
             case StaleMate -> -0.5F;
             case CheckMate -> 1;
             case FiftyMove -> -0.8F;
+            case Material -> 0.0F;
+            case Resignation -> 0.0F;
         };
         buffer.updateZ(startPtr, z);
         return startoffset;
@@ -343,8 +347,6 @@ public class ChessBot implements Player {
         int rMove = bestMove(playDepth);
         var r = getEvaluator().evaluate(pos);
         System.out.println("Net rates positions: " + r.value());
-        pos.makeMove(rMove);
-        resetCore();
         return Move.toMovePacket(rMove);
     }
 
@@ -352,10 +354,22 @@ public class ChessBot implements Player {
      *      the other player played made move and this syncs the local board
      */
     @Override
-    public void getMove(MovePacket movePacket) {
+    public void makeMove(MovePacket movePacket) {
         int move = Move.MovePacketToMove(movePacket);
 
-        pos.makeMove(move);
+        undoMoveStack.push(
+                pos.makeMove(move)
+        );
         resetCore();
+    }
+
+    @Override
+    public void undoMove() {
+        pos.unmakeMove(undoMoveStack.pop());
+    }
+
+    @Override
+    public void close() throws IOException {
+        evaluator.close();
     }
 }

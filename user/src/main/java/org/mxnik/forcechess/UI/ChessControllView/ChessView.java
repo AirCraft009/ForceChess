@@ -6,11 +6,16 @@ import javafx.event.Event;
 import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.Tooltip;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -19,9 +24,9 @@ import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.General.FileLocations;
+import org.mxnik.forcechess.Moves.GameState;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
-import org.mxnik.forcechess.bot.ChessBot;
 import org.mxnik.forcechess.network.AlphaNet;
 
 import java.io.FileInputStream;
@@ -39,19 +44,28 @@ public class ChessView {
     Group backgroundLayer = new Group();
     private Group pieceLayer = new Group();
     private Group interactionLayer = new Group();
+    Group menuLayer = new Group();//TODO Rename?
+    int defaultFontSize = 13;
+    Button saveB, quitB, undoB, resignB;
     ImageView winView;
+
+    Button exit, newGame;
+    ChessData currentGame;
 
     private Image[] images;
 
-    public ChessView(Stage stage, String fen, int sideLen, String playerStrW, String playerStrB, int playDepth) throws CloneNotSupportedException {
+    ChessView(ChessData gameSettings) throws CloneNotSupportedException {
+        this(gameSettings.primaryStage, gameSettings.fen, gameSettings.playerStrW, gameSettings.playerStrB, gameSettings.playDepth);
+    }
+    public ChessView(Stage stage, String fen, String playerStrW, String playerStrB, int playDepth) throws CloneNotSupportedException {
+        currentGame = new ChessData(stage, fen, playerStrW, playerStrB, playDepth);
         this.stage = stage;
+        String[] fenP = fen.split(" ");
+        int sideLen = Integer.parseInt(fenP[fenP.length-1]);
 
         setBounds();
         basicInit(sideLen);
         generateImages();
-
-        stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
-        stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         try {
             this.controller = new ChessController(this, stage, fen);
@@ -94,8 +108,12 @@ public class ChessView {
         setPlayers(playerStrW, playerStrB, fen, playDepth);
         Platform.runLater( () -> {
             drawBoard();
+            drawMenuLayer();
             root.getChildren().clear();
-            root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer);
+            root.getChildren().addAll(backgroundLayer, pieceLayer, interactionLayer, menuLayer);
+
+            stage.getScene().widthProperty().addListener((_, number, t1) -> controller.resize());
+            stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
         });
         this.controller.start();
     }
@@ -207,8 +225,7 @@ public class ChessView {
                 ChessBackgroundPane square;
 
                 if ((i + j) % 2 == 0) {
-                    square = new ChessBackgroundPane(size, size, true, index); //TODO with Settings
-
+                    square = new ChessBackgroundPane(size, size, true, index);
                 } else {
                     square = new ChessBackgroundPane(size, size, false, index);
                 }
@@ -296,6 +313,49 @@ public class ChessView {
         }
     }
 
+    public void drawMenuLayer(){//TODO change buttons (PNGs / Text)
+        saveB = createMenuLayerButton("Save",
+                (double) constants.WidthStart / 4,
+                constants.MIDDLE_Y - constants.BlockS * 1.5,
+                constants.BlockS,
+                (double) constants.BlockS /2);
+
+        quitB = createMenuLayerButton("Quit",
+                (double) constants.WidthStart / 4,
+                constants.MIDDLE_Y + constants.BlockS * .5,
+                constants.BlockS,
+                (double) constants.BlockS /2);
+
+        undoB = new Button();
+        Image i;
+        try {
+            i = new Image(new FileInputStream(sourcedir + "chess-menu/undo.png"));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        undoB.setBackground(new Background(new BackgroundImage(i, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null)));
+        undoB.setTooltip(new Tooltip("Undo last move"));
+        undoB.setPrefSize(constants.BlockS, constants.BlockS);
+        undoB.setLayoutX(2 * constants.MIDDLE_X - (double) constants.MIDDLE_X / 5);
+        undoB.setLayoutY(constants.MIDDLE_Y - constants.BlockS * 1.5);
+        undoB.addEventHandler(Event.ANY, controller);
+
+        resignB = new Button();
+        try {
+            i = new Image(new FileInputStream(sourcedir + "chess-menu/resign.png"));
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        resignB.setBackground(new Background(new BackgroundImage(i, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, null, null)));
+        resignB.setPrefSize(constants.BlockS, constants.BlockS);
+        resignB.setTooltip(new Tooltip("Resign"));
+        resignB.setLayoutX(2 * constants.MIDDLE_X - (double) constants.MIDDLE_X / 5);
+        resignB.setLayoutY(constants.MIDDLE_Y + constants.BlockS * 0.5);
+        resignB.addEventHandler(Event.ANY, controller);
+
+        menuLayer.getChildren().addAll(undoB, resignB);
+    }
+
     @Nullable
     private ImageView getImageView(Board b, int i) {
         Piece p = b.getBoard()[i];
@@ -368,19 +428,61 @@ public class ChessView {
     }
 
 
-    public void showWinImage(){
-        String imageP = sourcedir + "img.png";
-        Image image;
-        try {
-            image = new Image(new FileInputStream(imageP));
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException(e);
-        }
-        winView = new ImageView(image);
-        winView.setFitHeight(constants.bounds.getHeight());
-        winView.setFitWidth(constants.bounds.getWidth());
-        pieceLayer.getChildren().addFirst(winView);
+    public void showWinImage(GameState gameState, Board board){
+        var blocker = new Rectangle(
+                stage.getScene().getWidth(),
+                stage.getScene().getHeight(),
+                new Color(0,0,0.2, 0.4)
+        );
+        menuLayer.getChildren().add(blocker);
+        var popup = new Rectangle(
+                constants.BlockS*4.2,
+                constants.BlockS*2.2,
+                new Color(0,0,0.2, 0.7)
+        );
+        popup.setLayoutX(constants.MIDDLE_X - constants.BlockS*2.1);
+        popup.setLayoutY(constants.MIDDLE_Y - constants.BlockS*1.1);
+        menuLayer.getChildren().add(popup);
+        Label reason = switch (gameState){
+            case Continue -> throw new IllegalStateException("Finish cannot be called with a running game!");
+            case StaleMate -> new Label("Tie: Stalemate");
+            case CheckMate -> new Label("Check Mate: " + ((board.getTurn())?"black":"white") + " won!");
+            case FiftyMove -> new Label("Tie: No Progress");
+            case Resignation -> new Label("Resignation: " + ((board.getTurn())?"black":"white") + " won!");
+            case Material -> new Label("Tie: Not enough Material");
+        };
+        reason.setFont(Font.font(null, FontWeight.BOLD, null, defaultFontSize*3));
+        reason.setTextFill(Color.WHITE);
+        reason.setLayoutX(constants.MIDDLE_X - constants.BlockS*2);
+        reason.setLayoutY(constants.MIDDLE_Y - constants.BlockS);
+        menuLayer.getChildren().add(reason);
+
+        exit = createMenuLayerButton("Exit to main menu",
+                constants.MIDDLE_X - constants.BlockS*2,
+                constants.MIDDLE_Y + constants.BlockS*.2,
+                constants.BlockS*1.8,
+                constants.BlockS*.7);
+
+        newGame = createMenuLayerButton("Revanche",
+                constants.MIDDLE_X + constants.BlockS*.2,
+                constants.MIDDLE_Y + constants.BlockS*.2,
+                constants.BlockS*1.8,
+                constants.BlockS*.7);
     }
 
+    private Button createMenuLayerButton(String text, double x, double y, double width, double height){
+        Button b = new Button(text);
+        b.addEventHandler(Event.ANY, controller);
+        b.setPrefSize(width, height);
+        b.setLayoutX(x);
+        b.setLayoutY(y);
+        b.setBackground(new Background(new BackgroundFill(new Color(0,0,0.2, 1), new CornerRadii(5), null)));
+        b.setFont(Font.font(null, FontWeight.BOLD, null, defaultFontSize));
+        b.setTextFill(Color.WHITE);
 
+        menuLayer.getChildren().add(b);
+        return b;
+    }
+
+    record ChessData(Stage primaryStage, String fen, String playerStrW, String playerStrB, int playDepth) {}
 }

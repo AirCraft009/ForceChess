@@ -3,6 +3,7 @@ package org.mxnik.forcechess.bot;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
+import java.io.IOException;
 import java.util.Arrays;
 
 /**
@@ -35,6 +36,11 @@ public interface BatchEvaluator extends Evaluator {
                 r[i] = evaluate();
             }
             return r;
+        }
+
+        @Override
+        public void close() throws IOException {
+
         }
     }
 }

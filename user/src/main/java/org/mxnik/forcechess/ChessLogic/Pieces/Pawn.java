@@ -79,7 +79,7 @@ public class Pawn extends Piece {
         }
 
         target = pos + UP.offset * 2 * ((color)? 1 : -1);
-        if (!hasMoved && isValidMove(pos, target)) {
+        if (!hasMoved && getRow(pos) == (color? 1: Board.sideLen-2) && isValidMove(pos, target)) {
             moveList.addMoves((byte) target);
         }
 

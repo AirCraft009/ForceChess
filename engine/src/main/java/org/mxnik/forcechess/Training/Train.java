@@ -320,8 +320,7 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("CORRECTED_BEST",  true, false,false);
-        train.rename("EXTRA_ENDGAME");
+        Train train = new Train("NEW_BEST",  true, false,false);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());
@@ -335,13 +334,13 @@ public class Train {
             train.network.getModel().setListeners(new StatsListener(statsStorage, 2));
             train.network.getModel().setLearningRate(5e-5);
 
-            StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\extra_Endgame.csv");
-            train.train(512, buffer, 7384, 1000);
+            StockfishBuffer buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\endgameTraining.csv");
+            train.train(512, buffer, 9657, 1000);
             train.saveCheckPoint();
             System.gc();
             buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\full_data.csv");
             train.train(512, buffer, 2000 , 1000);
-            buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\extra_Endgame.csv");
+            buffer = new StockfishBuffer("C:\\Users\\cocon\\Documents\\programming\\School\\POS\\ForceChess\\engine\\src\\main\\java\\org\\mxnik\\forcechess\\stockfish\\endgameTraining.csv");
             train.train(512, buffer, 3000, 1000);
             train.saveNet();
 

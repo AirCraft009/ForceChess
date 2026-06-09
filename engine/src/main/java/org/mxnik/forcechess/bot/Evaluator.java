@@ -3,13 +3,15 @@ package org.mxnik.forcechess.bot;
 import org.mxnik.forcechess.Pos.Move;
 import org.mxnik.forcechess.Pos.PositionEncoder;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Random;
 
 /**
  * evaluator interface to hide complexity and make testing easy
  */
-public interface Evaluator{
+public interface Evaluator extends Closeable {
     Result evaluate(PositionEncoder.Position pos);
 
     record Result(float[] policyV, float value) {}
@@ -25,6 +27,11 @@ public interface Evaluator{
         public Result evaluate(PositionEncoder.Position pos) {
             return new Result(policy, pos.whiteMaterial - pos.blackMaterial);    // draw estimate
         }
+
+        @Override
+        public void close() throws IOException {
+
+        }
     }
 
     final class RandomEvaluator implements Evaluator {
@@ -38,6 +45,11 @@ public interface Evaluator{
                 policy[i] = r.nextFloat(10);
             }
             return new Result(policy, pos.whiteMaterial - pos.blackMaterial);    // draw estimate
+        }
+
+        @Override
+        public void close() throws IOException {
+
         }
     }
 }

@@ -5,10 +5,14 @@ import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
 import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.UI.menu.MenuScene;
+
+import java.util.Optional;
 
 public class SettingsController implements EventHandler<Event>, ChangeListener {
     SettingsView view;
@@ -27,7 +31,14 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
         if(source == view.closeButton){
             if(changed){
                 SavedSettings.savedSettings = getCurrentSettings();
-                SavedSettings.writeSettings();
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("Save Settings");
+                alert.setHeaderText("WARNING: This will close the application!");
+                alert.setContentText("Are you sure you want to save these settings?");
+                Optional<ButtonType> result = alert.showAndWait();
+                if(result.get() == ButtonType.OK){
+                    SavedSettings.writeSettings();
+                }
             } else {
                 new MenuScene(view.stage);
             }

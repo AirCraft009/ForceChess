@@ -109,7 +109,7 @@ public class BatchChessBot extends ChessBot{
             simulate();
         }
         outputMoveDist(true);
-        return tree.move[tree.findBestChild(ROOT)];
+        return tree.move[tree.highestVisitNode(ROOT)];
     }
 
 
@@ -207,9 +207,11 @@ public class BatchChessBot extends ChessBot{
                 }
                 case CheckMate -> {
                     // lost the game from playing persp.
-                    backProp(node, -1.2F);
+                    System.out.println("hit mate");
+                    backProp(node, 1.2F);
                 }
                 case StaleMate, FiftyMove -> {
+                    backProp(node, -0.2F);
                 }
             }
 
@@ -262,6 +264,11 @@ public class BatchChessBot extends ChessBot{
             val = -val;                 // flip val because one move is done by black the other by white (alternating)
             node = tree.parentIdx[node];
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        evaluator.close();
     }
 
 

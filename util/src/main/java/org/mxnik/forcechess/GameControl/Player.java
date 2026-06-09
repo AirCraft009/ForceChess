@@ -2,7 +2,10 @@ package org.mxnik.forcechess.GameControl;
 
 import org.mxnik.forcechess.Moves.MovePacket;
 
-public interface Player {
+import java.io.Closeable;
+
+public interface Player extends Closeable {
     public MovePacket requestMove();
-    public void getMove(MovePacket packet);
+    public void makeMove(MovePacket packet) throws CloneNotSupportedException;
+    public void undoMove();
 }

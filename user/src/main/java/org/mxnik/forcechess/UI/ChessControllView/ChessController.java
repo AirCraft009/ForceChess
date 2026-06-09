@@ -9,10 +9,13 @@ import javafx.stage.Stage;
 import org.mxnik.forcechess.Chess.ChessGame;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
 import org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen;
+import org.mxnik.forcechess.ChessLogic.Moves.UndoMovePacket;
+import org.mxnik.forcechess.ChessLogic.Notation.FenWriter;
 import org.mxnik.forcechess.ChessLogic.Pieces.EmptyPiece;
 import org.mxnik.forcechess.ChessLogic.Board.BoardHelper;
 import org.mxnik.forcechess.ChessLogic.Pieces.Piece;
 import org.mxnik.forcechess.ChessLogic.Pieces.PieceTypes;
+import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.GameControl.Callback;
 import org.mxnik.forcechess.GameControl.Player;
 import org.mxnik.forcechess.General.DiversePair;
@@ -20,8 +23,10 @@ import org.mxnik.forcechess.Moves.GameState;
 import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.Moves.MoveType;
 import org.mxnik.forcechess.UI.Constants;
+import org.mxnik.forcechess.UI.menu.MenuScene;
 
 import java.io.IOException;
+import java.util.Stack;
 import java.util.concurrent.SynchronousQueue;
 
 import static org.mxnik.forcechess.ChessLogic.Board.ChessMoveGen.getMovesFromPosition;
@@ -39,6 +44,10 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     private boolean pieceSelected = false;
     private byte[] currPieceMoves;
     private final SynchronousQueue<MovePacket> moveQueue = new SynchronousQueue<>();
+    private Stack<UndoMovePacket> undoStack = new Stack<>();
+
+
+    int prevMovedFrom = -1, prevMovedTo = -1;
 
 
     public ChessController(ChessView chess, Stage stage, String startFen) throws CloneNotSupportedException, IOException {
@@ -70,6 +79,11 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      */
     public void cleanUp(){
         game.stop();
+        try {
+            game.closePlayers();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void handlePromotionPress(int i, Stage stage){
@@ -146,6 +160,35 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         // all Buttons
         if (source instanceof ChessButton sourceButton){
             handleActiveChessClick(sourceButton);
+        }else if (source == chessView.saveB){
+            FenProperties.addFenStr("current", FenWriter.WriteFen(board));
+        }else if (source == chessView.quitB){
+            cleanUp();
+            new MenuScene(stage);
+        } else if (source == chessView.undoB) {
+            game.undoMove();
+            update();
+        } else if (source == chessView.resignB){
+            if(game.getActivePLayer() == this)
+                game.resign();
+
+        } else if (source == chessView.exit){
+            cleanUp();
+            new MenuScene(stage);
+        } else if (source == chessView.newGame){
+            try {
+                cleanUp();
+                // switch the colors
+                new ChessView(new ChessView.ChessData(
+                        chessView.currentGame.primaryStage(),
+                        chessView.currentGame.fen(),
+                        chessView.currentGame.playerStrB(),
+                        chessView.currentGame.playerStrW(),
+                        chessView.currentGame.playDepth()
+                ));
+            } catch (CloneNotSupportedException e) {
+                throw new IllegalStateException("Clone cannot work one time, and break the second time");
+            }
         }
     }
 
@@ -181,6 +224,19 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }
     }
 
+    public void highlightLastMove(){
+        int lastMoveFrom = game.getLastMoveFrom();
+        int lastMoveTo = game.getLastMoveTo();
+        if(prevMovedFrom >= 0 && prevMovedTo >= 0) {
+            ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(prevMovedFrom)).deactivateMoved();
+            ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(prevMovedTo)).deactivateMoved();
+        }
+        ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(lastMoveFrom)).setMoved();
+        ((ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(lastMoveTo)).setMoved();
+        prevMovedFrom = lastMoveFrom;
+        prevMovedTo = lastMoveTo;
+    }
+
     /**
      * handles if to set the flag for moveReady
      * @param hasPiece does the square contain a piece
@@ -192,11 +248,17 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             }
             return null;
         }
-        //condition: -> firstCLick != -1;
+
         pieceSelected = false;
         if (!BoardHelper.contains(currPieceMoves, secondClick)) {
             return null;
         }
+        if(board.getBoard()[firstClick].getType() == PieceTypes.PAWN &&
+            secondClick == board.getEnPassantPos()
+        ){
+            return new MovePacket(MoveType.EnPassant, firstClick, secondClick, true);       // enPassant is always a capture move
+        }
+
         if( board.getBoard()[firstClick].getType() == PieceTypes.KING
             && (BoardHelper.colDiff(firstClick, secondClick) >= 2)
         ){
@@ -243,13 +305,14 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         System.gc();
 
         Platform.runLater(() -> {
-              chessView.drawPieces(board);
+            chessView.drawPieces(board);
+            highlightLastMove();
         });
     }
 
     @Override
     public void finish(GameState g) {
-        Platform.runLater(chessView::showWinImage);
+        Platform.runLater(() -> chessView.showWinImage(g, board));
     }
 
     @Override
@@ -265,8 +328,23 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     }
 
     @Override
-    public void getMove(MovePacket movePacket) {
+    public void makeMove(MovePacket packet) throws CloneNotSupportedException {
         //don't do anything update handles it
+        undoStack.push(
+                new UndoMovePacket(packet, board.getBoard()[packet.from()].clone(),
+                        board.getBoard()[packet.to()] = (board.getBoard()[packet.to()] == EmptyPiece.EMPTY_PIECE? EmptyPiece.EMPTY_PIECE : board.getBoard()[packet.to()].clone()),
+                        board.getEnPassantPos(),
+                        board.getFiftyMove(),
+                        board.getCastleRights().clone()
+                )
+        );
+    }
+
+    @Override
+    public void undoMove() {
+        if(undoStack.isEmpty())
+            return;
+        board.undoMove(undoStack.pop());
     }
 
     /**
@@ -275,8 +353,15 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     public void resize() {
         chessView.constants = new Constants(chessView.constants.sideLen, stage.getScene());
         chessView.backgroundLayer.getChildren().clear();
+        chessView.menuLayer.getChildren().clear();
         chessView.clearInteractionLayer();
         chessView.drawBoard();
+        chessView.drawMenuLayer();
         chessView.drawPieces(board);
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }
