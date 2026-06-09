@@ -171,7 +171,14 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         } else if (source == chessView.newGame){
             try {
                 cleanUp();
-                new ChessView(chessView.currentGame);
+                // switch the colors
+                new ChessView(new ChessView.ChessData(
+                        chessView.currentGame.primaryStage(),
+                        chessView.currentGame.fen(),
+                        chessView.currentGame.playerStrB(),
+                        chessView.currentGame.playerStrW(),
+                        chessView.currentGame.playDepth()
+                ));
             } catch (CloneNotSupportedException e) {
                 throw new IllegalStateException("Clone cannot work one time, and break the second time");
             }

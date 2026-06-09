@@ -32,11 +32,11 @@
         </dependency>
 
         <!-- ND4J CPU -->
-<!--        <dependency>-->
-<!--            <groupId>org.nd4j</groupId>-->
-<!--            <artifactId>nd4j-native-platform</artifactId>-->
-<!--            <version>${dl4j.version}</version>-->
-<!--        </dependency>-->
+        <dependency>
+            <groupId>org.nd4j</groupId>
+            <artifactId>nd4j-native-platform</artifactId>
+            <version>${dl4j.version}</version>
+        </dependency>
 
         <!-- ND4J CUDA -->
         <dependency>
