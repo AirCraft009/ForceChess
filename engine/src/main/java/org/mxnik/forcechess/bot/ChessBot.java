@@ -299,6 +299,8 @@ public class ChessBot implements Player {
             case StaleMate -> -0.5F;
             case CheckMate -> 1;
             case FiftyMove -> -0.8F;
+            case Material -> 0.0F;
+            case Resignation -> 0.0F;
         };
         buffer.updateZ(startPtr, z);
         return startoffset;
@@ -364,5 +366,10 @@ public class ChessBot implements Player {
     @Override
     public void undoMove() {
         pos.unmakeMove(undoMoveStack.pop());
+    }
+
+    @Override
+    public void close() throws IOException {
+        evaluator.close();
     }
 }

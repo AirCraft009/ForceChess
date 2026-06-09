@@ -448,6 +448,8 @@ public class ChessView {
             case StaleMate -> new Label("Tie: Stalemate");
             case CheckMate -> new Label("Check Mate: " + ((board.getTurn())?"black":"white") + " won!");
             case FiftyMove -> new Label("Tie: No Progress");
+            case Resignation -> new Label("Resignation: " + ((board.getTurn())?"black":"white") + " won!");
+            case Material -> new Label("Tie: Not enough Material");
         };
         reason.setFont(Font.font(null, FontWeight.BOLD, null, defaultFontSize*3));
         reason.setTextFill(Color.WHITE);

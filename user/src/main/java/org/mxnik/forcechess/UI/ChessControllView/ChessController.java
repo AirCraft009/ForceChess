@@ -79,6 +79,11 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      */
     public void cleanUp(){
         game.stop();
+        try {
+            game.closePlayers();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public void handlePromotionPress(int i, Stage stage){
@@ -164,7 +169,9 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             game.undoMove();
             update();
         } else if (source == chessView.resignB){
-            //TODO Resign
+            if(game.getActivePLayer() == this)
+                game.resign();
+
         } else if (source == chessView.exit){
             cleanUp();
             new MenuScene(stage);
@@ -351,5 +358,10 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         chessView.drawBoard();
         chessView.drawMenuLayer();
         chessView.drawPieces(board);
+    }
+
+    @Override
+    public void close() throws IOException {
+
     }
 }

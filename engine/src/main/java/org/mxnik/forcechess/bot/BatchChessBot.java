@@ -264,6 +264,11 @@ public class BatchChessBot extends ChessBot{
         }
     }
 
+    @Override
+    public void close() throws IOException {
+        evaluator.close();
+    }
+
 
 
     public static void main(String[] args) throws IOException {

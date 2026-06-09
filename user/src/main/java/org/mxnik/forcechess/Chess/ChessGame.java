@@ -7,6 +7,8 @@ import org.mxnik.forcechess.Moves.GameState;
 import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.GameControl.Player;
 
+import java.io.IOException;
+
 public final class ChessGame implements Runnable{
     private  Player white;
     private  Player black;
@@ -35,8 +37,18 @@ public final class ChessGame implements Runnable{
         requestThread.start();
     }
 
+    public void resign(){
+        response.finish(GameState.Resignation);
+    }
+
+    public void closePlayers() throws IOException {
+        white.close();
+        black.close();
+    }
+
     public void stop(){
         running = false;
+
     }
 
     public Player getActivePLayer(){
