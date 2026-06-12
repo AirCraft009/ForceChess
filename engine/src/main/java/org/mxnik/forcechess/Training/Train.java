@@ -61,7 +61,7 @@ public class Train {
         this.fileName = fileName;
         if (!read) {
             network = new AlphaNet(NetworkConfig.buildNet());
-            bot = !useBot? null : batch ? new BatchChessBot(network, 300) : new ChessBot(network, 300);
+            bot = !useBot? null : batch ? new BatchChessBot(network, 300, 1) : new ChessBot(network, 300);
             return;
         }
 
@@ -69,7 +69,7 @@ public class Train {
                 new File(fullPath + FILE_ENDING), true
         );
         network = new AlphaNet(loaded);
-        bot  = batch ? new BatchChessBot(network, 300) : new ChessBot(network, 300);
+        bot  = batch ? new BatchChessBot(network, 300, 1) : new ChessBot(network, 300);
     }
 
     /**
@@ -79,7 +79,7 @@ public class Train {
         fullPath = BASE_PATH + fileName;
         this.fileName = fileName;
         network = net;
-        bot = batch ? new BatchChessBot(net, 300) : new ChessBot(net, 300);
+        bot = batch ? new BatchChessBot(net, 300, 1) : new ChessBot(net, 300);
     }
 
     /**

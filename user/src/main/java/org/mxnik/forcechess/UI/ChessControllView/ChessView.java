@@ -140,18 +140,18 @@ public class ChessView {
             } else if (playerStrW == null) {
 
                 playerStrB = FileLocations.NETWORK_LOCATIONS + playerStrB;
-                this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, playDepth));
+                this.controller.setPlayers(controller, new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, playDepth, 1));
             } else if (playerStrB == null) {
                 playerStrW = FileLocations.NETWORK_LOCATIONS + playerStrW;
-                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth), controller);
+                this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth, 1), controller);
             } else {
                 playerStrW = FileLocations.NETWORK_LOCATIONS + playerStrW;
                 playerStrB = FileLocations.NETWORK_LOCATIONS + playerStrB;
                 if (playerStrW.equals(playerStrB)) {
-                    BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth);
+                    BatchChessBot bot = new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth, 1);
                     this.controller.setPlayers(bot, bot);
                 } else {
-                    this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth), new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, 64));
+                    this.controller.setPlayers(new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrW)), fen, playDepth, 1), new BatchChessBot(new AlphaNet(ModelSerializer.restoreComputationGraph(playerStrB)), fen, playDepth, 0));
                 }
             }
         }catch (IOException e){

@@ -1,5 +1,8 @@
 package org.mxnik.forcechess.MCTS;
 
+import org.mxnik.forcechess.Pos.Move;
+import org.mxnik.forcechess.Pos.PolicyIndex;
+
 import java.util.Arrays;
 
 import static org.mxnik.forcechess.MCTS.RandNoise.dirichlet;
@@ -122,6 +125,41 @@ public final class MctsTree {
             p[child] = (1 - epsilon) * p[child] + epsilon * noise[i++];
             child = nextSibling[child];
         }
+    }
+
+    /**
+     * returns the probability dist. over root children
+     */
+    public float[] moveDist(){
+        int node = firstChild[ROOT];
+        float[] moveDist = new float[Move.MOVE_POSSIBILITIES];
+
+        while (node != 0){
+            moveDist[PolicyIndex.toPolicyIndex(move[node])] = (float) n[node] / n[ROOT];
+            node = nextSibling[node];
+        }
+        return moveDist;
+    }
+
+    /**
+     * returns the probability dist. over root children
+     */
+    public float[] moveDistChild(){
+        int node = firstChild[ROOT];
+        int moveCount = 0;
+        while (node != 0){
+            moveCount++;
+            node = nextSibling[node];
+        }
+
+        float[] moveDist = new float[moveCount];
+        node = firstChild[ROOT];
+
+        while (node != 0){
+            moveDist[node] = (float) n[node] / n[ROOT];
+            node = nextSibling[node];
+        }
+        return moveDist;
     }
 
     /**

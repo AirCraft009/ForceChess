@@ -200,17 +200,7 @@ public class ChessBot implements Player {
         }
     }
 
-    /**
-     * returns the probability dist. over root children
-     */
-    public float[] moveDist(){
-        int node = tree.firstChild[0];
-        while (node != 0){
-            moveDist[PolicyIndex.toPolicyIndex(tree.move[node])] = (float) tree.n[node] / tree.globalVisits;
-            node = tree.nextSibling[node];
-        }
-        return moveDist;
-    }
+
 
     /**
      * output how good every move is being evalled by the MCTS +
@@ -289,7 +279,7 @@ public class ChessBot implements Player {
             flat = PositionEncoder.encodeFlat(pos);     // save pos before move happens
             expandRootNoise();
             move = bestMoveUCB(n);
-            buffer.addSample(flat, moveDist().clone(), z); // record the moveDist. and z value
+            buffer.addSample(flat, tree.moveDist(), z); // record the moveDist. and z value
             ConsoleBar.render((double) startoffset /end, 2);
             pos.makeMove(move);
 
@@ -334,7 +324,7 @@ public class ChessBot implements Player {
     public static void main(String[] args) throws IOException {
         BatchChessBot bot = new BatchChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
                 new File("boardsNBots/bots/networks/D300.zip"), true
-        )), 400);
+        )), 400, 1);
         bot.selfPlayGame(400);
 //        BatchChessBot b = new BatchChessBot(new BatchEvaluator.StubEvaluator());
 //        b.selfPlayGame(300);

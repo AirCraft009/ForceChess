@@ -11,6 +11,7 @@ import org.mxnik.forcechess.network.NetworkConfig;
 import org.nd4j.linalg.api.buffer.DataType;
 
 import java.io.IOException;
+import java.util.Random;
 
 import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 
@@ -27,16 +28,18 @@ public class BatchChessBot extends ChessBot{
     private final int[] virtuallyAffectedNodes = new int[BATCH_SIZE];                               // all leaf-nodes affected by virtualLoss
     private final FlatArray batchedInputs;                                                          // array to keep the inputTensors of all collected nodes
     private final BatchEvaluator evaluator;                                                         // the batchevaluator overriding the normal evaluator in ChessBot
+    private final float temp;
 
     /**
      * Initializes a BatChessBot with the starting pos
      * @param evaluator what evaluation should be used
      * @param playDepth how many MCTS iters a Bot should do
      */
-    public BatchChessBot(BatchEvaluator evaluator, int playDepth) {
+    public BatchChessBot(BatchEvaluator evaluator, int playDepth, float temp) {
         super(null, playDepth);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
+        this.temp = temp;
     }
 
     /**
@@ -45,10 +48,11 @@ public class BatchChessBot extends ChessBot{
      * @param playDepth how many MCTS iters a Bot should do
      * @param fen fen-string of the given position
      */
-    public BatchChessBot(BatchEvaluator evaluator, String fen, int playDepth) {
+    public BatchChessBot(BatchEvaluator evaluator, String fen, int playDepth, float temp) {
         super(null, fen, playDepth);
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
+        this.temp = temp;
     }
 
 
@@ -64,6 +68,7 @@ public class BatchChessBot extends ChessBot{
         System.out.println(PositionUtils.toFen(pos));
         this.evaluator = evaluator;
         batchedInputs  = new FlatArray(BATCH_SIZE, PositionEncoder.TENSOR_SIZE);
+        temp = 1;
     }
 
     @Override
@@ -109,7 +114,34 @@ public class BatchChessBot extends ChessBot{
             simulate();
         }
         outputMoveDist(true);
-        return tree.move[tree.highestVisitNode(ROOT)];
+        float[] moveDist = tree.moveDistChild();
+
+
+        return tree.move[weightedRandomIndex(moveDist, temp)];
+    }
+
+    public static int weightedRandomIndex(float[] values, float bias) {
+        Random random = new Random();
+
+        float total = 0f;
+
+        for (float value : values) {
+            total += (1f - bias) + bias * value;
+        }
+
+        float r = random.nextFloat() * total;
+
+        float cumulative = 0f;
+
+        for (int i = 0; i < values.length; i++) {
+            cumulative += (1f - bias) + bias * values[i];
+
+            if (r < cumulative) {
+                return i;
+            }
+        }
+
+        return values.length - 1;
     }
 
 
@@ -278,7 +310,7 @@ public class BatchChessBot extends ChessBot{
         var net = NetworkConfig.buildNet();
         net.getConfiguration().setInferenceWorkspaceMode(WorkspaceMode.ENABLED);
         net.convertDataType(DataType.FLOAT16);
-        BatchChessBot bc = new BatchChessBot(new AlphaNet(net), 400);
+        BatchChessBot bc = new BatchChessBot(new AlphaNet(net), 400,1);
         bc.selfPlayGame(200);
     }
 
