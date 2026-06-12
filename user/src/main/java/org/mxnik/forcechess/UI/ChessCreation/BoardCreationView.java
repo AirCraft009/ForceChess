@@ -25,15 +25,18 @@ import org.mxnik.forcechess.UI.Constants;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+import static org.mxnik.forcechess.UI.ChessControllView.ChessView.getImageFromRessource;
+
 public class BoardCreationView {
     public final Stage stage;
 
-    private final String sourcedir = System.getProperty("user.dir") + "/user/src/main/resources/org/mxnik/forcechess/";
+    private final String sourcedir = "/org/mxnik/forcechess/";
     private final String pathToImages = sourcedir + "pieces-basic-png/";
     BorderPane borderPane;
     Constants constants;
@@ -121,12 +124,19 @@ public class BoardCreationView {
         };
         images = new Image[imagePaths.length];
 
-        for(int i = 0; i < imagePaths.length; i++) {
-            try {
-                images[i] = new Image(new FileInputStream(imagePaths[i]));
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
+        try {
+            for (int i = 0; i < imagePaths.length; i++) {
+                images[i] = getImageFromRessource(imagePaths[i]);
             }
+        } catch (IOException e) {
+            Alert error = new Alert(Alert.AlertType.ERROR);
+            error.setContentText("Error when reading a piece File. Will close Application");
+            error.setOnCloseRequest(
+                    event -> {
+                        Platform.exit();
+                        System.exit(0);
+                    }
+            );
         }
     }
 

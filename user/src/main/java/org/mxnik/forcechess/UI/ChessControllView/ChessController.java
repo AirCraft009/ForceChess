@@ -46,6 +46,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     private final SynchronousQueue<MovePacket> moveQueue = new SynchronousQueue<>();
     private Stack<UndoMovePacket> undoStack = new Stack<>();
 
+    private GameState gameStateFinished = null;
+
 
     int prevMovedFrom = -1, prevMovedTo = -1;
 
@@ -312,6 +314,8 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
 
     @Override
     public void finish(GameState g) {
+        gameStateFinished = g;
+        chessView.undoB.setDisable(true);
         Platform.runLater(() -> chessView.showWinImage(g, board));
     }
 
@@ -352,12 +356,16 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      */
     public void resize() {
         chessView.constants = new Constants(chessView.constants.sideLen, stage.getScene());
+        chessView.defaultFontSize = chessView.constants.MIDDLE_X/58;
         chessView.backgroundLayer.getChildren().clear();
         chessView.menuLayer.getChildren().clear();
         chessView.clearInteractionLayer();
         chessView.drawBoard();
         chessView.drawMenuLayer();
         chessView.drawPieces(board);
+        if(gameStateFinished !=null){
+            finish(gameStateFinished);
+        }
     }
 
     @Override

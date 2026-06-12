@@ -261,7 +261,10 @@ public class ChessBot implements Player {
         tree.w[ROOT] = r.value();
         tree.n[ROOT] = 1;
         expand(ROOT, r.policyV());
+    }
 
+    public void expandRootNoise(){
+        expandRoot();
         tree.addNoiseToRootChildren();
     }
 
@@ -284,7 +287,7 @@ public class ChessBot implements Player {
         while (g == GameState.Continue && startoffset < end){       // loop until Check/stalemate or full buffer
 
             flat = PositionEncoder.encodeFlat(pos);     // save pos before move happens
-            expandRoot();
+            expandRootNoise();
             move = bestMoveUCB(n);
             buffer.addSample(flat, moveDist().clone(), z); // record the moveDist. and z value
             ConsoleBar.render((double) startoffset /end, 2);

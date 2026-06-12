@@ -180,6 +180,7 @@ public class ChessView {
         stage.setScene(scene);
         stage.show();
         constants = new Constants(sideLen, scene);
+        defaultFontSize = constants.MIDDLE_X/58;
     }
 
     /**
@@ -482,12 +483,12 @@ public class ChessView {
         );
         menuLayer.getChildren().add(blocker);
         var popup = new Rectangle(
-                constants.BlockS*4.2,
-                constants.BlockS*2.2,
+                (double) constants.MIDDLE_X /1.5,
+                (double) constants.MIDDLE_Y /2,
                 new Color(0,0,0.2, 0.7)
         );
-        popup.setLayoutX(constants.MIDDLE_X - constants.BlockS*2.1);
-        popup.setLayoutY(constants.MIDDLE_Y - constants.BlockS*1.1);
+        popup.setLayoutX(constants.MIDDLE_X - (double) constants.MIDDLE_X /3);
+        popup.setLayoutY(constants.MIDDLE_Y - (double) constants.MIDDLE_Y /4);
         menuLayer.getChildren().add(popup);
         Label reason = switch (gameState){
             case Continue -> throw new IllegalStateException("Finish cannot be called with a running game!");
@@ -499,8 +500,8 @@ public class ChessView {
         };
         reason.setFont(Font.font(null, FontWeight.BOLD, null, defaultFontSize*3));
         reason.setTextFill(Color.WHITE);
-        reason.setLayoutX(constants.MIDDLE_X - constants.BlockS*2);
-        reason.setLayoutY(constants.MIDDLE_Y - constants.BlockS);
+        reason.setLayoutX(constants.MIDDLE_X - (double) constants.MIDDLE_X /3.5);
+        reason.setLayoutY(constants.MIDDLE_Y - (double) constants.MIDDLE_Y /4);
         menuLayer.getChildren().add(reason);
 
         exit = createMenuLayerButton("Exit to main menu",
