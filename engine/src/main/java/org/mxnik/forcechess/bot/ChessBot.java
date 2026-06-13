@@ -22,7 +22,8 @@ import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
 import static org.mxnik.forcechess.Pos.PositionUtils.toFieldName;
 
 /**
- * ChessBot combines an evaluator with and MCTS tree to improve playing beyond greedy sampling.
+ * ChessBot shouldn't be used as actul Bot.
+ * BatchChessBot is better in every way
  */
 public abstract class ChessBot implements Player {
     public static final int MAX_SEARCH_DEPTH = 64;
@@ -38,7 +39,7 @@ public abstract class ChessBot implements Player {
     protected final Evaluator evaluator;
     protected int depth = 1;                                                      // depth = 1 da root immer existiert
     protected int playDepth;
-    private Stack<Integer> undoMoveStack = new Stack<>();
+    private final Stack<Integer> undoMoveStack = new Stack<>();
 
 
     /**
@@ -318,16 +319,6 @@ public abstract class ChessBot implements Player {
             g = pos.getState(pos.whiteToMove);
         }
 
-    }
-
-
-    public static void main(String[] args) throws IOException {
-        BatchChessBot bot = new BatchChessBot( new AlphaNet(ModelSerializer.restoreComputationGraph(
-                new File("boardsNBots/bots/networks/D300.zip"), true
-        )), 400, 1);
-        bot.selfPlayGame(400);
-//        BatchChessBot b = new BatchChessBot(new BatchEvaluator.StubEvaluator());
-//        b.selfPlayGame(300);
     }
 
     // methods for ChessGame
