@@ -120,7 +120,11 @@ public class BatchChessBot extends ChessBot{
         return tree.move[weightedRandomIndex(moveDist, temp)];
     }
 
-    public static int weightedRandomIndex(float[] values, float bias) {
+    public int weightedRandomIndex(float[] values, float bias) {
+        if(bias == 1){
+            return tree.highestVisitNode(ROOT);
+        }
+
         Random random = new Random();
 
         float total = 0f;

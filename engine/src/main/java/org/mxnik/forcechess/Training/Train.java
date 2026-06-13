@@ -39,29 +39,21 @@ public class Train {
     public final static String BASE_PATH = FileLocations.NETWORK_LOCATIONS;
     public final static String FILE_ENDING = ".zip";
 
-    /**
-     * Read the configured AI-model from the file specified (no file ending)
-     */
-    public Train(String fileName) throws IOException {
-        this(fileName, true, true, true);
-    }
-
 
     /**
      * Reads the model from the file specified (no extensions)
      * @param fileName file without file-extension(.zip)
-     * @param batch use Batched MCTS
      */
-    public Train(String fileName, boolean batch) throws IOException {
-        this(fileName, true, true, batch);
+    public Train(String fileName) throws IOException {
+        this(fileName, true, true);
     }
 
-    private Train(String fileName, boolean read, boolean useBot, boolean batch) throws IOException {
+    private Train(String fileName, boolean read, boolean useBot) throws IOException {
         fullPath = BASE_PATH + fileName;
         this.fileName = fileName;
         if (!read) {
             network = new AlphaNet(NetworkConfig.buildNet());
-            bot = !useBot? null : batch ? new BatchChessBot(network, 300, 1) : new ChessBot(network, 300);
+            bot = !useBot? null : new BatchChessBot(network, 300, 1);
             return;
         }
 
@@ -69,17 +61,17 @@ public class Train {
                 new File(fullPath + FILE_ENDING), true
         );
         network = new AlphaNet(loaded);
-        bot  = batch ? new BatchChessBot(network, 300, 1) : new ChessBot(network, 300);
+        bot  = new BatchChessBot(network, 300, 1);
     }
 
     /**
      * creates a Train instances with the given network that will be saved to fileName
      */
-    public Train(AlphaNet net, String fileName, boolean batch) {
+    public Train(AlphaNet net, String fileName) {
         fullPath = BASE_PATH + fileName;
         this.fileName = fileName;
         network = net;
-        bot = batch ? new BatchChessBot(net, 300, 1) : new ChessBot(net, 300);
+        bot = new BatchChessBot(net, 300, 1);
     }
 
     /**
@@ -320,7 +312,7 @@ public class Train {
     public static void main(String[] args) throws IOException {
 
 //       second stage training with model
-        Train train = new Train("NEW_BEST",  true, false,false);
+        Train train = new Train("NEW_BEST",  true, false);
         //train.diagnose();
 
         System.out.println(Nd4j.getBackend().getClass().getName());

@@ -146,7 +146,7 @@ public final class MctsTree {
      */
     public float[] moveDistChild(){
         int node = firstChild[ROOT];
-        int moveCount = 0;
+        int moveCount = 1;
         while (node != 0){
             moveCount++;
             node = nextSibling[node];

@@ -24,7 +24,7 @@ import static org.mxnik.forcechess.Pos.PositionUtils.toFieldName;
 /**
  * ChessBot combines an evaluator with and MCTS tree to improve playing beyond greedy sampling.
  */
-public class ChessBot implements Player {
+public abstract class ChessBot implements Player {
     public static final int MAX_SEARCH_DEPTH = 64;
     public static final int MAX_MOVES_IN_POS = 218;
 
