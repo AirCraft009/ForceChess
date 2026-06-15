@@ -8,7 +8,6 @@ import javafx.scene.control.Button;
 import javafx.scene.input.DragEvent;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import org.mxnik.forcechess.UI.ChessControllView.ChessView;
 import org.mxnik.forcechess.UI.Constants;
@@ -84,7 +83,7 @@ public class MenuScene {
      * Create the layout of the menu scene
      */
     public void drawMenu(){
-        root.setSpacing(20);
+        root.setSpacing(stage.getScene().getHeight() /24);
         root.setAlignment(Pos.CENTER);
 
         pvp = createButton("Player vs Player");
@@ -101,11 +100,13 @@ public class MenuScene {
      * @return the formatted button
      */
     private Button createButton(String text){
-        Button button = new Button(text);
-        button.addEventHandler(Event.ANY, controller);
-        button.setFont(Font.font("Verdana", 24));
-        button.setStyle("-fx-background-color: #D3D3D3");
-        return button;
+        double sceneW = stage.getScene().getWidth();
+        double sceneH = stage.getScene().getHeight();
+        Button b = new Button(text);
+        b.addEventHandler(Event.ANY, controller);
+        b.setPrefSize(sceneW /5, sceneH /12);
+        Constants.defaultStyleButton(b, stage.getScene(), true);
+        return b;
     }
 
     public Scene getScene(){

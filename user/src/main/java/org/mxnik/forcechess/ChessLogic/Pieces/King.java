@@ -7,7 +7,7 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class King extends Piece {
     public static final int dirCount = 10;
-    private static final byte[] moveSet = new byte[dirCount];
+    private static final int[] moveSet = new int[dirCount];
     static {
         refreshMoveSet();
     }
@@ -21,8 +21,8 @@ public class King extends Piece {
         moveSet[5] = UP_L.offset;
         moveSet[6] = DOWN_R.offset;
         moveSet[7] = DOWN_L.offset;
-        moveSet[8] = (byte) (RIGHT.offset * 2);
-        moveSet[9] = (byte) (LEFT.offset * 2);
+        moveSet[8] = RIGHT.offset * 2;
+        moveSet[9] = LEFT.offset * 2;
     }
 
     @Override
@@ -44,23 +44,24 @@ public class King extends Piece {
     }
 
     @Override
-    byte[] getMoveSet() {
+    int[] getMoveSet() {
         return moveSet;
     }
 
     @Override
     public void getMoves(int pos, MoveList moveList){
         moveList.startPiece();
-        byte[] mSet = this.getMoveSet();
+        int[] mSet = this.getMoveSet();
 
-        for (byte moveOffset : mSet) {
+        for (int moveOffset : mSet) {
             int target = pos + moveOffset * ((color)? 1 : -1);
             if (!isValidMove(pos, target)) {
                 continue;
             }
 
             moveList.startDirection();
-            moveList.addMove((byte) target);
+            moveList.addMove(
+                    target);
         }
     }
 }

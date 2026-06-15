@@ -34,16 +34,16 @@ public abstract class Piece implements Cloneable {
 
     public void getMoves(int pos, MoveList moveList){
         moveList.startPiece();
-        byte[] mSet = this.getMoveSet();
+        int[] mSet = this.getMoveSet();
 
-        for (byte moveOffset : mSet) {
+        for (int moveOffset : mSet) {
             int target = pos + moveOffset * ((color)? 1 : -1);
             if (!isValidMove(pos, target)) {
                 continue;
             }
 
             moveList.startDirection();
-            moveList.addMove((byte) target);
+            moveList.addMove(target);
         }
     }
 
@@ -55,7 +55,7 @@ public abstract class Piece implements Cloneable {
 
     abstract boolean isValidMove(int from, int to);
 
-    abstract byte[] getMoveSet();
+    abstract int[] getMoveSet();
 
     public abstract int getMaxDir();
 

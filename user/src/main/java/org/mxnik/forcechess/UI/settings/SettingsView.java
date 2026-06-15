@@ -7,8 +7,13 @@ import javafx.event.ActionEvent;
 import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.CornerRadii;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import org.mxnik.forcechess.FileHandling.TextFileHandler;
 import org.mxnik.forcechess.UI.Constants;
@@ -41,39 +46,49 @@ public class SettingsView {
         stage.getScene().heightProperty().addListener((_, number, t1) -> controller.resize());
 
         Label savePathL = createFormattedLabel("AI Path: ");
+        Constants.defaultStyleLabel(savePathL, stage.getScene());
         root.add(savePathL, 0, 0);
         savePathTF = createFormattedTF("C:\\Users\\ME\\ForceChess\\boardsNBots", "Where your AI-Models will be");
         savePathTF.setText(SavedSettings.savedSettings.savePath());
         savePathTF.textProperty().addListener(controller);
+        savePathTF.setBackground(new Background(new BackgroundFill(new Color(0, 0, .2, 1), new CornerRadii(stage.getScene().getWidth()/190), null)));
+        savePathTF.setFont(Font.font(null, FontWeight.BOLD, null, savePathTF.getFont().getSize()));
+        savePathTF.setStyle("-fx-text-fill: white;");//TODO Dark
         root.add(savePathTF, 1, 0, 3, 1);
 
 
         Label lightSquareL = new Label("Light Square Color: ");
+        Constants.defaultStyleLabel(lightSquareL, stage.getScene());
         root.add(lightSquareL, 0, 1);
         colorLight = createColorPicker(SavedSettings.savedSettings.lightSquare(), controller);
         root.add(colorLight, 1, 1);
 
         Label darkSquareL = new Label("Dark Square Color: ");
+        Constants.defaultStyleLabel(darkSquareL, stage.getScene());
         root.add(darkSquareL, 2, 1);
         colorDark = createColorPicker(SavedSettings.savedSettings.darkSquare(), controller);
         root.add(colorDark, 3, 1);
 
         Label lightHighlightL = new Label("Light Square Highlight: ");
+        Constants.defaultStyleLabel(lightHighlightL, stage.getScene());
         root.add(lightHighlightL, 0, 2);
         highlightLight = createColorPicker(SavedSettings.savedSettings.lightHighlight(), controller);
         root.add(highlightLight, 1, 2);
 
         Label darkHighlightL = new Label("Dark Square Highlight: ");
+        Constants.defaultStyleLabel(darkHighlightL, stage.getScene());
         root.add(darkHighlightL, 2, 2);
         highlightDark = createColorPicker(SavedSettings.savedSettings.darkHighlight(), controller);
         root.add(highlightDark, 3, 2);
 
         Label lightMovedL = new Label("Light Square Moved: ");
+        Constants.defaultStyleLabel(lightMovedL, stage.getScene());
         root.add(lightMovedL, 0, 3);
         movedLight = createColorPicker(SavedSettings.savedSettings.lightMoved(), controller);
         root.add(movedLight, 1, 3);
 
         Label darkMovedL = new Label("Dark Square Moved: ");
+        Constants.defaultStyleLabel(darkMovedL, stage.getScene());
         root.add(darkMovedL, 2, 3);
         movedDark = createColorPicker(SavedSettings.savedSettings.darkMoved(), controller);
         root.add(movedDark, 3, 3);
@@ -81,6 +96,7 @@ public class SettingsView {
 
 
         Label defaultBotL = createFormattedLabel("Default Bot: ");
+        Constants.defaultStyleLabel(defaultBotL, stage.getScene());
         root.add(defaultBotL, 0, 6, 2, 1);
         defaultBot = new ChoiceBox<>();
         ObservableList<String> botsList = FXCollections.observableArrayList(TextFileHandler.getFolderContents(NETWORK_LOCATIONS));
@@ -89,15 +105,19 @@ public class SettingsView {
         defaultBot.getSelectionModel().select(SavedSettings.savedSettings.defaultBot());
         defaultBot.getSelectionModel().selectedItemProperty().addListener(controller);
         root.add(defaultBot, 2, 6, 2, 1);
+        Constants.defaultStyleChoiceBox(defaultBot, stage.getScene());
 
         closeButton = new Button("Close");
         closeButton.addEventHandler(ActionEvent.ACTION, controller);
+        Constants.defaultStyleButton(closeButton, stage.getScene(), false);
         root.add(closeButton, 0, 8);
         resetButton = new Button("Reset");
         resetButton.setVisible(false);
+        Constants.defaultStyleButton(resetButton, stage.getScene(), false);
         resetButton.addEventHandler(ActionEvent.ACTION, controller);
         root.add(resetButton, 2, 8);
         defaultButton = new Button("Reset to Default");
+        Constants.defaultStyleButton(defaultButton, stage.getScene(), false);
         defaultButton.addEventHandler(ActionEvent.ACTION, controller);
         root.add(defaultButton, 3, 8);
 
@@ -159,11 +179,8 @@ public class SettingsView {
         c.setPrefSize(50, 30);
         c.setValue(value);
         c.valueProperty().addListener(controller);
+
+        c.setBackground(new Background(new BackgroundFill(new Color(0,0,0.2, 1), new CornerRadii(stage.getScene().getWidth()/190), null))); //TODO Dark
         return c;
-    }
-    private RadioButton createRadio(String text, ToggleGroup group) {
-        RadioButton rb = new RadioButton(text);
-        rb.setToggleGroup(group);
-        return rb;
     }
 }

@@ -533,7 +533,7 @@ public class Board {
     public static void main(String[] args) throws CloneNotSupportedException {
         Board board1 = new Board("rnbqkbnr/pppppppp/P7/8/8/8/PPPPPPPP/RNBQKBNR w 0 0 0 8");
         long starT = System.nanoTime();
-        byte[][] allMoves = null;
+        int[][] allMoves = null;
         for (int i = 0; i < 1000000; i++) {
             allMoves = ChessMoveGen.getMovesFromPosition(board1).first();
         }

@@ -11,7 +11,7 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 
 public class Bishop extends Piece {
     public final static int dirCount = 4;
-    private static byte[] moveSet = new byte[(Board.sideLen - 1) * 2];
+    private static int[] moveSet = new int[(Board.sideLen - 1) * 2];
     static {
         refreshMoveSet();
     }
@@ -19,7 +19,7 @@ public class Bishop extends Piece {
     static void refreshMoveSet() {
         int size = (Board.sideLen - 1) * 2;
         if (moveSet.length != size) {
-            moveSet = new byte[size];
+            moveSet = new int[size];
         }
     }
 
@@ -34,7 +34,7 @@ public class Bishop extends Piece {
     }
 
     @Override
-    byte[] getMoveSet() {
+    int[] getMoveSet() {
         return moveSet;
     }
 
@@ -53,22 +53,22 @@ public class Bishop extends Piece {
 
         moveList.startDirection();
         for (int i = 1; i <= Math.min(dLeft, dTop); i++) {
-            moveList.addMove((byte) (pos + i * UP_L.offset));
+            moveList.addMove(pos + i * UP_L.offset);
         }
 
         moveList.startDirection();
         for (int i = 1; i <= (Math.min(dRight, dTop)); i++) {
-            moveList.addMove((byte) (pos + i * UP_R.offset));
+            moveList.addMove(pos + i * UP_R.offset);
         }
 
         moveList.startDirection();
         for (int i = 1; i <= Math.min(dBott, dRight); i++) {
-            moveList.addMove((byte) (pos + i * DOWN_R.offset));
+            moveList.addMove(pos + i * DOWN_R.offset);
         }
 
         moveList.startDirection();
         for (int i = 1; i <= Math.min(dBott, dLeft); i++) {
-            moveList.addMove((byte) (pos + i * DOWN_L.offset));
+            moveList.addMove(pos + i * DOWN_L.offset);
         }
     }
 

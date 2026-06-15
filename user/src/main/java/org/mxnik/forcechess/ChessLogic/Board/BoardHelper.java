@@ -66,8 +66,8 @@ public class BoardHelper {
         return (moveOffset == Board.sideLen - 1) || (moveOffset == Board.sideLen + 1);
     }
 
-    public static boolean contains(byte[] arr, int moveField){
-        for (byte val : arr){
+    public static boolean contains(int[] arr, int moveField){
+        for (int val : arr){
             if(moveField == val){
                 return true;
             }

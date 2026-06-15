@@ -5,20 +5,20 @@ import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 
 public class Knight extends Piece {
     public final static int dirCount = 8;
-    private static final byte[] moveSet = new byte[dirCount];
+    private static final int[] moveSet = new int[dirCount];
     static {
         refreshMoveSet();
     }
 
     static void refreshMoveSet() {
-        moveSet[0] = (byte) (RIGHT.offset + UP.offset * 2);
-        moveSet[1] = (byte) (LEFT.offset + UP.offset * 2);
-        moveSet[2] = (byte) (RIGHT.offset + DOWN.offset * 2);
-        moveSet[3] = (byte) (LEFT.offset + DOWN.offset * 2);
-        moveSet[4] = (byte) (RIGHT.offset * 2 + UP.offset);
-        moveSet[5] = (byte) (LEFT.offset * 2 + UP.offset);
-        moveSet[6] = (byte) (RIGHT.offset * 2 + DOWN.offset);
-        moveSet[7] = (byte) (LEFT.offset * 2 + DOWN.offset);
+        moveSet[0] = RIGHT.offset + UP.offset * 2;
+        moveSet[1] = LEFT.offset + UP.offset * 2;
+        moveSet[2] = RIGHT.offset + DOWN.offset * 2;
+        moveSet[3] = LEFT.offset + DOWN.offset * 2;
+        moveSet[4] = RIGHT.offset * 2 + UP.offset;
+        moveSet[5] = LEFT.offset * 2 + UP.offset;
+        moveSet[6] = RIGHT.offset * 2 + DOWN.offset;
+        moveSet[7] = LEFT.offset * 2 + DOWN.offset;
     }
 
     @Override
@@ -37,7 +37,7 @@ public class Knight extends Piece {
     }
 
     @Override
-    byte[] getMoveSet() {
+    int[] getMoveSet() {
         return moveSet;
     }
 

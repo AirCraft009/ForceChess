@@ -2,7 +2,7 @@ package org.mxnik.forcechess.ChessLogic.Moves;
 
 public final class MoveList {
 
-    private final byte[] moves;
+    private final int[] moves;
 
     private final int[] directionOffsets;
     private final int[] directionLengths;
@@ -16,7 +16,7 @@ public final class MoveList {
 
     public MoveList(int maxPieces, int maxDirections, int maxMoves) {
 
-        moves = new byte[maxMoves];
+        moves = new int[maxMoves];
 
         directionOffsets = new int[maxDirections];
         directionLengths = new int[maxDirections];
@@ -45,14 +45,14 @@ public final class MoveList {
     }
 
     // Add move to current direction
-    public void addMove(byte square) {
+    public void addMove(int square) {
         moves[moveCount] = square;
         moveCount++;
         directionLengths[directionCount - 1]++;
     }
 
-    public void addMoves(byte ... squares) {
-        for (byte square: squares) {
+    public void addMoves(int ... squares) {
+        for (int square: squares) {
             moves[moveCount] = square;
             moveCount++;
             directionLengths[directionCount - 1]++;
@@ -85,7 +85,7 @@ public final class MoveList {
         return directionLengths[direction];
     }
 
-    public byte[] getMovesArray() {
+    public int[] getMovesArray() {
         return moves;
     }
 
