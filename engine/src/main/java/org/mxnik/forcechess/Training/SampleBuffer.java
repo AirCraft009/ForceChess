@@ -12,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
+import static java.lang.Math.exp;
 import static org.mxnik.forcechess.Pos.Move.MOVE_POSSIBILITIES;
 import static org.mxnik.forcechess.Pos.PositionEncoder.TENSOR_SIZE;
 
@@ -42,6 +43,30 @@ public class SampleBuffer implements TrainingsBuffer{
         }else {
             samples = new TrainingSample[length];
         }
+    }
+
+    /**
+     * turns float[] into softmaxxed version of self.
+     * modifies memory in place. No new float[] is allocated
+     */
+    public static float[] softMax(float[] targets, float temp){
+        float[] values = new float[targets.length];
+
+        float max = targets[0] * temp;
+        for (float val : targets)
+            if (val * temp > max)
+                max = val * temp;
+
+        float sum = 0F;
+        for (int i = 0; i < values.length; i++) {
+            values[i] = (float) exp(targets[i] * temp - max);          // classical SOFTMAX (projecting onto e^x)
+            sum  += values[i];
+        }
+
+        for (int i = 0; i < values.length; i++)
+            values[i] /= sum;
+
+        return values;
     }
 
     /**

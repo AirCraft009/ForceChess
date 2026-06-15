@@ -12,6 +12,7 @@ import java.util.Arrays;
 
 import static java.lang.Math.abs;
 import static org.mxnik.forcechess.Pos.PositionUtils.fromFen;
+import static org.mxnik.forcechess.Training.SampleBuffer.softMax;
 
 public class StockfishBuffer implements TrainingsBuffer {
     private final String Path;
@@ -132,7 +133,7 @@ public class StockfishBuffer implements TrainingsBuffer {
             moveBuff[PolicyIndex.toPolicyIndex(move)] = (float) cpScore;
         }
 
-        return EndgameBufferBuilder.softMax(moveBuff, 1.2F);
+        return softMax(moveBuff, 1.2F);
     }
 
 

@@ -5,7 +5,6 @@ import org.mxnik.forcechess.General.DiversePair;
 import org.mxnik.forcechess.General.FlatArray;
 import org.mxnik.forcechess.Moves.GameState;
 import org.mxnik.forcechess.Pos.*;
-import org.mxnik.forcechess.Training.EndgameBufferBuilder;
 import org.mxnik.forcechess.network.AlphaNet;
 import org.mxnik.forcechess.network.NetworkConfig;
 import org.nd4j.linalg.api.buffer.DataType;
@@ -20,7 +19,7 @@ import static org.mxnik.forcechess.MCTS.MctsTree.ROOT;
  */
 public class BatchChessBot extends ChessBot{
     public static final int BATCH_SIZE = 64;
-    public static final float VIRTUAL_LOSS = 1F;
+    public static final float VIRTUAL_LOSS = 0.3F;
 
     // there to remove virtualLoss and virtualVisitCount
     private final int[][] batchedMoves = new int[BATCH_SIZE][MAX_MOVES_IN_POS];                     // keeps next moves for each collected node in order
@@ -117,20 +116,24 @@ public class BatchChessBot extends ChessBot{
         float[] moveDist = tree.moveDistChild();
 
 
-        return tree.move[weightedRandomIndex(moveDist, temp)];
+        return tree.move[weightedRandomIndex(moveDist, temp, 2)];
     }
 
-    public int weightedRandomIndex(float[] values, float bias) {
-        if(bias == 1){
+    public int weightedRandomIndex(float[] values, float bias, float sharpness) {
+        if (bias == 1) {
             return tree.highestVisitNode(ROOT);
         }
 
         Random random = new Random();
 
+        float[] weights = new float[values.length];
         float total = 0f;
 
-        for (float value : values) {
-            total += (1f - bias) + bias * value;
+        for (int i = 0; i < values.length; i++) {
+            float w = (1f - bias) + bias * values[i];
+            w = (float) Math.pow(w, sharpness);
+            weights[i] = w;
+            total += w;
         }
 
         float r = random.nextFloat() * total;
@@ -138,7 +141,7 @@ public class BatchChessBot extends ChessBot{
         float cumulative = 0f;
 
         for (int i = 0; i < values.length; i++) {
-            cumulative += (1f - bias) + bias * values[i];
+            cumulative += weights[i];
 
             if (r < cumulative) {
                 return i;
@@ -307,15 +310,5 @@ public class BatchChessBot extends ChessBot{
         evaluator.close();
     }
 
-
-
-    public static void main(String[] args) throws IOException {
-        EndgameBufferBuilder eg = new EndgameBufferBuilder(110);
-        var net = NetworkConfig.buildNet();
-        net.getConfiguration().setInferenceWorkspaceMode(WorkspaceMode.ENABLED);
-        net.convertDataType(DataType.FLOAT16);
-        BatchChessBot bc = new BatchChessBot(new AlphaNet(net), 400,1);
-        bc.selfPlayGame(200);
-    }
 
 }
