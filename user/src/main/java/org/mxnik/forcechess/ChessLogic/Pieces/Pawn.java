@@ -11,15 +11,15 @@ import static org.mxnik.forcechess.ChessLogic.Moves.MoveOffsets.*;
 public class Pawn extends Piece {
     // can turn into a Queen so this is the max
     public final static int dirCount = 9;
-    private static final byte[] moveSet = new byte[4];
-    private static final byte[] captureMoves = new byte[2];
+    private static final int[] moveSet = new int[4];
+    private static final int[] captureMoves = new int[2];
     static {
         refreshMoveSet();
     }
 
     static void refreshMoveSet() {
         moveSet[0] = UP.offset;
-        moveSet[1] = (byte) (UP.offset * 2);
+        moveSet[1] = UP.offset * 2;
         moveSet[2] = UP_R.offset;
         moveSet[3] = UP_L.offset;
 
@@ -75,27 +75,27 @@ public class Pawn extends Piece {
         moveList.startDirection();
         int target = pos + UP.offset * ((color)? 1 : -1);
         if (isValidMove(pos, target)) {
-            moveList.addMoves((byte) target);
+            moveList.addMoves(target);
         }
 
         target = pos + UP.offset * 2 * ((color)? 1 : -1);
         if (!hasMoved && getRow(pos) == (color? 1: Board.sideLen-2) && isValidMove(pos, target)) {
-            moveList.addMoves((byte) target);
+            moveList.addMoves(target);
         }
 
-        for (byte moveOffset : captureMoves) {
+        for (int moveOffset : captureMoves) {
             target = pos + moveOffset * ((color)? 1 : -1);
             if (!isValidMove(pos, target)) {
                 continue;
             }
 
             moveList.startDirection();
-            moveList.addMove((byte) target);
+            moveList.addMove(target);
         }
     }
 
     @Override
-    byte[] getMoveSet() {
+    int[] getMoveSet() {
         return moveSet;
     }
 

@@ -8,7 +8,7 @@ import static org.mxnik.forcechess.ChessLogic.Board.BoardHelper.*;
 
 public class Rook extends Piece {
     public final static int dirCount = 4;
-    private static byte[] moveSet = new byte[(Board.sideLen - 1) * 2];
+    private static int[] moveSet = new int[(Board.sideLen - 1) * 2];
     static {
         refreshMoveSet();
     }
@@ -16,17 +16,17 @@ public class Rook extends Piece {
     static void refreshMoveSet() {
         int size = (Board.sideLen - 1) * 2;
         if (moveSet.length != size) {
-            moveSet = new byte[size];
+            moveSet = new int[size];
         }
     }
 
-    public Rook( boolean color, boolean hasMoved) {
+    public Rook(boolean color, boolean hasMoved) {
         super(PieceTypes.ROOK, color, hasMoved);
     }
 
 
     @Override
-    public byte[] getMoveSet() {
+    public int[] getMoveSet() {
         return moveSet;
     }
 
@@ -53,22 +53,22 @@ public class Rook extends Piece {
 
         moveList.startDirection();
         for (int i = 1; i <= dLeft; i++) {
-            moveList.addMove((byte) (pos + i * LEFT.offset));
+            moveList.addMove(pos + i * LEFT.offset);
         }
 
         moveList.startDirection();
         for (int i = 1; i <= (Board.sideLen - dLeft) - 1; i++) {
-            moveList.addMove((byte) (pos + i * RIGHT.offset));
+            moveList.addMove(pos + i * RIGHT.offset);
         }
 
         moveList.startDirection();
         for (int i = 1; i <= dTop; i++) {
-            moveList.addMove((byte) (pos + i * UP.offset));
+            moveList.addMove(pos + i * UP.offset);
         }
 
         moveList.startDirection();
         for (int i = 1; i <= (Board.sideLen - dTop) - 1 ; i++) {
-            moveList.addMove((byte) (pos + i * DOWN.offset));
+            moveList.addMove(pos + i * DOWN.offset);
         }
     }
 

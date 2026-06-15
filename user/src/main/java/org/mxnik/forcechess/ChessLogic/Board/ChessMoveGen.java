@@ -10,8 +10,8 @@ import org.mxnik.forcechess.Moves.MoveType;
 import java.util.Arrays;
 
 public class ChessMoveGen {
-    public static DiversePair<byte[][], GameState> getMovesFromPosition(Board board) throws CloneNotSupportedException {
-        byte[][] legalMoves = getPseudoMovesFromPosition(board);
+    public static DiversePair<int[][], GameState> getMovesFromPosition(Board board) throws CloneNotSupportedException {
+        int[][] legalMoves = getPseudoMovesFromPosition(board);
         return new DiversePair<>(legalMoves, checkChess(board, legalMoves));
     }
 
@@ -19,17 +19,17 @@ public class ChessMoveGen {
      * Generates pseudo-legal moves for all squares.
      * Does not filter for leaving own king in check — that is done in checkChess.
      */
-    private static byte[][] getPseudoMovesFromPosition(Board cBoard) {
+    private static int[][] getPseudoMovesFromPosition(Board cBoard) {
         cBoard.moveList.clear();
-        byte[] moves = cBoard.moveList.getMovesArray();
-        byte[][] legalMoves = new byte[Board.size][];
+        int[] moves = cBoard.moveList.getMovesArray();
+        int[][] legalMoves = new int[Board.size][];
 
         int pieceCount = 0;
         int prevMoveCount = cBoard.moveList.getMoveCount();
 
         for (int i = 0; i < cBoard.board.length; i++) {
             if (cBoard.board[i].getType() == PieceTypes.EMPTY) {
-                legalMoves[i] = new byte[0];
+                legalMoves[i] = new int[0];
                 continue;
             }
 
@@ -40,7 +40,7 @@ public class ChessMoveGen {
             int dirCount = cBoard.moveList.getDirectionCount(pieceCount);
 
             int ptr = 0;
-            byte[] legalMoveSection = new byte[newMoveCount - prevMoveCount];
+            int[] legalMoveSection = new int[newMoveCount - prevMoveCount];
             prevMoveCount = newMoveCount;
 
             for (int d = 0; d < dirCount; d++) {
@@ -51,7 +51,7 @@ public class ChessMoveGen {
                 int j;
                 moveLoop:
                 for (j = 0; j < moveLength; j++) {
-                    byte square = moves[moveOffset + j];
+                    int square = moves[moveOffset + j];
 
                     // check for a take or enPassant
                     if (cBoard.board[i].getType() == PieceTypes.PAWN) {
@@ -139,18 +139,18 @@ public class ChessMoveGen {
      * running incremental check detection, then restoring the cBoard.board.
      * Modifies pseudoLegalMoves in place and returns the resulting game state.
      */
-    public static GameState checkChess(Board cBoard, byte[][] pseudoLegalMoves) throws CloneNotSupportedException {
+    public static GameState checkChess(Board cBoard, int[][] pseudoLegalMoves) throws CloneNotSupportedException {
         Piece[] baseState = cBoard.board.clone();
         int kB = cBoard.kingBPos;
         int kW = cBoard.kingWPos;
         boolean hasMoves = false;
 
         for (int i = 0; i < pseudoLegalMoves.length; i++) {
-            byte[] moves = pseudoLegalMoves[i];
+            int[] moves = pseudoLegalMoves[i];
             int writePtr = 0;
 
             for (int j = 0; j < moves.length; j++) {
-                byte move = moves[j];
+                int move = moves[j];
 
                 cBoard.rawMove(i, move, MoveType.Generic, false);//TODO promotion
 

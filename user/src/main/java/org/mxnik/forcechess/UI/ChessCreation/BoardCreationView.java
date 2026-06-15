@@ -9,11 +9,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.Nullable;
 import org.mxnik.forcechess.ChessLogic.Board.Board;
@@ -23,8 +22,6 @@ import org.mxnik.forcechess.UI.ChessControllView.ChessBackgroundPane;
 import org.mxnik.forcechess.UI.ChessControllView.ChessButton;
 import org.mxnik.forcechess.UI.Constants;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -195,6 +192,9 @@ public class BoardCreationView {
         grid.add(nameLabel, 0, 0);
         nameField = new TextField();
         nameField.setPromptText("Name");
+        nameField.setBackground(new Background(new BackgroundFill(new Color(0, 0, .2, 1), new CornerRadii(stage.getScene().getWidth()/190), null)));
+        nameField.setFont(Font.font(null, FontWeight.BOLD, null, nameField.getFont().getSize()));
+        nameField.setStyle("-fx-text-fill: white;");//TODO Dark
         grid.add(nameField, 1, 0);
 
         Label sizeText = new Label("Size:");
@@ -223,9 +223,11 @@ public class BoardCreationView {
 
         closeButton = new Button("Close");
         closeButton.addEventHandler(Event.ANY, controller);
+        Constants.defaultStyleButton(closeButton, stage.getScene(), false);
         grid.add(closeButton, 0, 3);
         saveButton = new Button("Save");
         saveButton.addEventHandler(Event.ANY, controller);
+        Constants.defaultStyleButton(saveButton, stage.getScene(), false);
         grid.add(saveButton, 1, 3);
 
         borderPane.setLeft(grid);
@@ -251,6 +253,7 @@ public class BoardCreationView {
             Label name = new Label(names[i]);
             Button button = new Button("Delete");
             button.addEventHandler(Event.ANY, controller);
+            Constants.defaultStyleButton(button, stage.getScene(), false);
             deleteButtons.add(button);
             boards[i].getChildren().addAll(name, button);
         }

@@ -13,8 +13,8 @@ public final class EmptyPiece extends Piece {
     }
 
     @Override
-    byte[] getMoveSet() {
-        return new byte[0];
+    int[] getMoveSet() {
+        return new int[0];
     }
 
     @Override

@@ -38,11 +38,11 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     final private ChessView chessView;
     final private Board board;
     final private ChessGame game;
-    private DiversePair<byte[][], GameState> currentMoveState;
+    private DiversePair<int[][], GameState> currentMoveState;
     private int firstClick = -1;
     private int secondClick = -1;
     private boolean pieceSelected = false;
-    private byte[] currPieceMoves;
+    private int[] currPieceMoves;
     private final SynchronousQueue<MovePacket> moveQueue = new SynchronousQueue<>();
     private Stack<UndoMovePacket> undoStack = new Stack<>();
 
@@ -59,7 +59,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         game = new ChessGame(board, this);
         chessView.drawPieces(board);
         currentMoveState = getMovesFromPosition(board);
-        currPieceMoves = new byte[0];
+        currPieceMoves = new int[0];
     }
 
     /**
@@ -131,7 +131,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
             return;
         }
 
-        byte[] moves = currentMoveState.first()[buttonField];
+        int[] moves = currentMoveState.first()[buttonField];
 
         chessView.clearHighlights();        // clear pieces and highlights before setting them again
 
@@ -218,9 +218,9 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
      * This also sets the color to the secondary
      * @param moves arr of fields (max Board.size -1)
      */
-    public void highlightSquares(byte[] moves){
+    public void highlightSquares(int[] moves){
         //
-        for (byte move : moves) {
+        for (int move : moves) {
             ChessBackgroundPane oldRect = (ChessBackgroundPane) chessView.backgroundLayer.getChildren().get(move);
             oldRect.setActive();
         }
@@ -357,15 +357,15 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
     public void resize() {
         chessView.constants = new Constants(chessView.constants.sideLen, stage.getScene());
         chessView.defaultFontSize = chessView.constants.MIDDLE_X/58;
-        chessView.backgroundLayer.getChildren().clear();
         chessView.menuLayer.getChildren().clear();
-        chessView.clearInteractionLayer();
-        chessView.drawBoard();
         chessView.drawMenuLayer();
-        chessView.drawPieces(board);
         if(gameStateFinished !=null){
             finish(gameStateFinished);
         }
+        chessView.clearInteractionLayer();
+        chessView.backgroundLayer.getChildren().clear();
+        chessView.drawBoard();
+        chessView.drawPieces(board);
     }
 
     @Override

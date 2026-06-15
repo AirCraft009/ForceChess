@@ -14,18 +14,18 @@ public enum MoveOffsets {
     DOWN_R(-Board.sideLen+1),
     DOWN_L(-Board.sideLen-1);
 
-    public byte offset;
+    public int offset;
     MoveOffsets(int offset) {
-        this.offset = (byte) offset;
+        this.offset = offset;
     }
 
     public static void calculateOffset(int  sidelength) {
-        UP.offset = (byte) sidelength;
-        DOWN.offset = (byte) -sidelength;
-        DOWN_L.offset = (byte) (DOWN.offset - 1);
-        DOWN_R.offset = (byte) (DOWN.offset + 1);
-        UP_L.offset = (byte) (UP.offset - 1);
-        UP_R.offset = (byte) (UP.offset + 1);
+        UP.offset = sidelength;
+        DOWN.offset = -sidelength;
+        DOWN_L.offset = DOWN.offset - 1;
+        DOWN_R.offset = DOWN.offset + 1;
+        UP_L.offset = UP.offset - 1;
+        UP_R.offset = UP.offset + 1;
 
         Piece.refreshMoveSets();
         King.refreshMoveSets();
