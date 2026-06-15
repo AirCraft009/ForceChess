@@ -37,7 +37,11 @@ public class StockfishBuffer implements TrainingsBuffer {
         }
         this.Path = fileP;
         reader = new CSVReader(new BufferedReader(new FileReader(fileP)));
-        reader.readNext();      // skip first line (only shows the different attr.)
+        try {
+            reader.readNext();      // skip first line (only shows the different attr.)
+        }catch (EOFException e){
+            throw new IllegalStateException("End of file was reached on first read. EMPTY FILE: ");
+        }
     }
 
     public void skipLines(int count) throws IOException {
@@ -71,8 +75,8 @@ public class StockfishBuffer implements TrainingsBuffer {
         try {
              line = reader.readNext();
         }catch (EOFException e){
-            System.err.println("End of File was reached");
-            return null;
+            reset();
+            return getNext();       // shouldn't recurse more than once.
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -83,6 +87,15 @@ public class StockfishBuffer implements TrainingsBuffer {
         float[] dist =  getMoveDist(line[TOP_MOVES_JSON], off, zVal);
 
         return new DiversePair<>(new SampleBuffer.TrainingSample(PositionEncoder.encodeFlat(pos), dist, (float) zVal /100), pos);
+    }
+
+    public void reset() {
+        try {
+            reader.close();
+            reader = new CSVReader(new BufferedReader(new FileReader(Path)));
+        }catch (IOException e){
+            throw new RuntimeException("Error while closing old reader or opening new one: " + e);
+        }
     }
 
 
