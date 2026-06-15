@@ -101,7 +101,7 @@ def worker_fn(args):
 
     for record in load_positions(filepath=filename):
         fen = record['fen']
-        if filterEndgame and not categoriser.is_endgame(fen):
+        if filterEndgame and not categoriser.pawn_about_to_promote(fen):
             continue
 
         moves = record['moves']
@@ -142,7 +142,7 @@ def writer_fn(queue, output_path, total_files):
                 break
             writer.writerow(row)
             total_written += 1
-            if total_written % 10000 == 0:
+            if total_written % 1000 == 0:
                 csvfile.flush()
                 print(f"[Writer] {total_written} rows written...")
 

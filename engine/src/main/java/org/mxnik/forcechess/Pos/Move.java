@@ -6,12 +6,9 @@ package org.mxnik.forcechess.Pos;
 // bits 12 - 15: flags (capture, castle, en passant, promotion piece)
 // └─> bits(12-14) Type, bit 15 (is a capture)
 
-import net.chesstango.piazzolla.syzygy.Syzygy;
 import org.mxnik.forcechess.General.Bitboard;
 import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.Moves.MoveType;
-
-import java.util.function.BiConsumer;
 
 import static java.lang.Math.abs;
 import static org.mxnik.forcechess.Pos.Piece.EMPTY_PIECE;

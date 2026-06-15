@@ -36,6 +36,9 @@ public class PvBPopup extends MenuPopup {
         Label opponentText = new Label("Opponent: ");
         grid.add(opponentText, 0, 1);
         ChoiceBox<String> bots = super.getBotsList();
+        if(bots == null){
+            return;
+        }
         grid.add(bots, 1, 1);
 
         Label playerColor = new Label("Player Color: ");
