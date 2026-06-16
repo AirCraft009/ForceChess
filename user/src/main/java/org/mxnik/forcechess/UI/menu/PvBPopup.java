@@ -43,6 +43,9 @@ public class PvBPopup extends MenuPopup {
         Constants.defaultStyleLabel(opponentText, dummyScene);
         grid.add(opponentText, 0, 1);
         ChoiceBox<String> bots = super.getBotsList();
+        if(bots == null){
+            return;
+        }
         grid.add(bots, 1, 1);
         Constants.defaultStyleChoiceBox(bots, dummyScene);
 
