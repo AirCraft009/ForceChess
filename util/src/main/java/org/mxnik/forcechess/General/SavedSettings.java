@@ -1,7 +1,6 @@
 package org.mxnik.forcechess.General;
 
 import javafx.scene.paint.Color;
-import jdk.jfr.SettingControl;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -58,9 +57,9 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
 
         try {
 
-            File optFile = new File(savedSettings.savePath + FileLocations.OPTION_FILE_MOD);
-            File savePath = new File(savedSettings.savePath);
-            savePath.mkdirs();
+            File optFile = new File(FileLocations.OPTION_FILE);
+            File optPath = new File(savedSettings.savePath);
+            optPath.mkdirs();
             optFile.createNewFile();
             FileOutputStream out = new FileOutputStream(optFile);
 
