@@ -1,6 +1,7 @@
 package org.mxnik.forcechess.General;
 
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -24,12 +25,21 @@ public class FileLocations {
         loadPaths();
     }
 
+    public static void createFiles(){
+
+    }
+
 
     public static void loadPaths(){
         try {
             FILE_PROPERTIES.load(new FileInputStream(OPTION_FILE));
             FEN_PROPERTIES.load(new FileInputStream(FEN_STRING_FILE));
-        } catch (IOException e) {
+        } catch (FileNotFoundException e) {
+
+            createFiles();
+
+        }
+        catch (IOException e){
             throw new RuntimeException("Error reading PropertyFiles on Startup");
         }
 

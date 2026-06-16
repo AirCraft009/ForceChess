@@ -30,6 +30,7 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
             String defaultBot = properties.getProperty("default_bot");
 
             savedSettings = new SavedSettings(savePath, lightSquare, darkSquare, lightHighlight, darkHighlight, lightMoved, darkMoved, defaultBot);
+            FileLocations.loadPaths();
         }catch (NullPointerException e){
             savedSettings = defaultSettings;
             writeSettings();
