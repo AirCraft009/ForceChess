@@ -1,13 +1,14 @@
 package org.mxnik.forcechess.General;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Properties;
 
 public class FileLocations {
-    public static final String OPTION_FILE = "boardsNBots/option.properties";
-    public static final String FEN_STRING_FILE = "boardsNBots/FenBoards.properties";
+    public static String OPTION_FILE_MOD = "option.properties";
+    public static String FEN_STRING_FILE_MOD = "FenBoards.properties";
     public static Properties FILE_PROPERTIES = new Properties();
     public static Properties FEN_PROPERTIES = new Properties();
 
@@ -21,28 +22,39 @@ public class FileLocations {
     public static String NETWORK_LOCATIONS;
     public static String SAMPLE_LOCATIONS;
 
-    static {
-        loadPaths();
-    }
-
     public static void createFiles(){
+        File optionP = new File(SavedSettings.savedSettings.savePath() + OPTION_FILE_MOD);
+        File fenP = new File(SavedSettings.savedSettings.savePath() + FEN_STRING_FILE_MOD);
+        try {
+            //TODO: Handle result of createNewFile
+            //ignore result for now
+            fenP.createNewFile();
+            optionP.createNewFile();
 
+            // try to load again
+            FILE_PROPERTIES.load(new FileInputStream(SavedSettings.savedSettings.savePath() + OPTION_FILE_MOD));
+            FEN_PROPERTIES.load(new FileInputStream(SavedSettings.savedSettings.savePath() + FEN_STRING_FILE_MOD));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 
     public static void loadPaths(){
         try {
-            FILE_PROPERTIES.load(new FileInputStream(OPTION_FILE));
-            FEN_PROPERTIES.load(new FileInputStream(FEN_STRING_FILE));
+            FILE_PROPERTIES.load(new FileInputStream(SavedSettings.savedSettings.savePath() + OPTION_FILE_MOD));
+            FEN_PROPERTIES.load(new FileInputStream(SavedSettings.savedSettings.savePath() + FEN_STRING_FILE_MOD));
         } catch (FileNotFoundException e) {
-
             createFiles();
-
         }
         catch (IOException e){
             throw new RuntimeException("Error reading PropertyFiles on Startup");
         }
 
+        changeFileSpecifics();
+    }
+
+    public static void changeFileSpecifics(){
         BOT_FILES = FILE_PROPERTIES.getProperty(BOT_FILE_KEY);
         NETWORK_LOCATIONS = FILE_PROPERTIES.getProperty(NETWORK_LOCATION_KEY);
         SAMPLE_LOCATIONS = FILE_PROPERTIES.getProperty(SAMPLE_LOCATION_KEY);

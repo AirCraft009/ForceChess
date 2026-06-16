@@ -3,7 +3,7 @@ package org.mxnik.forcechess.UI.ChessControllView;
 import javafx.application.Application;
 import javafx.stage.Stage;
 import org.mxnik.forcechess.UI.menu.MenuScene;
-import org.mxnik.forcechess.UI.settings.SavedSettings;
+import org.mxnik.forcechess.General.SavedSettings;
 
 public class ChessApplication extends Application {
     @Override

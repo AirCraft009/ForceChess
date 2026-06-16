@@ -13,7 +13,7 @@ import javafx.stage.StageStyle;
 import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.FileHandling.TextFileHandler;
 import org.mxnik.forcechess.UI.Constants;
-import org.mxnik.forcechess.UI.settings.SavedSettings;
+import org.mxnik.forcechess.General.SavedSettings;
 
 import static org.mxnik.forcechess.General.FileLocations.NETWORK_LOCATIONS;
 

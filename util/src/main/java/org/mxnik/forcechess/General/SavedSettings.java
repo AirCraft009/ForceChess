@@ -1,9 +1,9 @@
-package org.mxnik.forcechess.UI.settings;
+package org.mxnik.forcechess.General;
 
-import javafx.application.Platform;
 import javafx.scene.paint.Color;
-import org.mxnik.forcechess.General.FileLocations;
+import jdk.jfr.SettingControl;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Properties;
@@ -57,7 +57,12 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
         properties.setProperty("default_bot", savedSettings.defaultBot);
 
         try {
-            FileOutputStream out = new FileOutputStream(FileLocations.OPTION_FILE);
+
+            File optFile = new File(savedSettings.savePath + FileLocations.OPTION_FILE_MOD);
+            File savePath = new File(savedSettings.savePath);
+            savePath.mkdirs();
+            optFile.createNewFile();
+            FileOutputStream out = new FileOutputStream(optFile);
 
             properties.store(out, "The Users Settings");
         } catch (IOException e) {

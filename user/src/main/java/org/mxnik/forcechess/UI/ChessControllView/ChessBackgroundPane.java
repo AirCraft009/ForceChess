@@ -2,7 +2,7 @@ package org.mxnik.forcechess.UI.ChessControllView;
 
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import org.mxnik.forcechess.UI.settings.SavedSettings;
+import org.mxnik.forcechess.General.SavedSettings;
 
 public class ChessBackgroundPane extends Rectangle {
     private int index;

@@ -28,8 +28,6 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
-        <!-- Replace your current JavaFX deps with these -->
-
         <!-- Cross-platform base (no natives) -->
         <dependency>
             <groupId>org.openjfx</groupId>

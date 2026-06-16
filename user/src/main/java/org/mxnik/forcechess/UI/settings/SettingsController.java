@@ -7,7 +7,6 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.Menu;
 import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
 import org.mxnik.forcechess.UI.Constants;
@@ -31,15 +30,15 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
         Object source = event.getSource();
         if(source == view.closeButton){
             if(changed){
-                SavedSettings.savedSettings = getCurrentSettings();
+                org.mxnik.forcechess.General.SavedSettings.savedSettings = getCurrentSettings();
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Save Settings");
                 alert.setHeaderText("WARNING: You can't undo this!");
                 alert.setContentText("Are you sure you want to change these settings?");
                 Optional<ButtonType> result = alert.showAndWait();
                 if(result.get() == ButtonType.OK){
-                    SavedSettings.writeSettings();
-                    SavedSettings.loadSavedSettings();
+                    org.mxnik.forcechess.General.SavedSettings.writeSettings();
+                    org.mxnik.forcechess.General.SavedSettings.loadSavedSettings();
                     new MenuScene(view.stage);
                 }
             } else {
@@ -48,10 +47,10 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
         }else if(source == view.resetButton){
             new SettingsView(view.stage, true);
         }else if(source == view.defaultButton){
-            SavedSettings tempSettings = SavedSettings.savedSettings;
-            SavedSettings.savedSettings = SavedSettings.defaultSettings;
+            org.mxnik.forcechess.General.SavedSettings tempSettings = org.mxnik.forcechess.General.SavedSettings.savedSettings;
+            org.mxnik.forcechess.General.SavedSettings.savedSettings = org.mxnik.forcechess.General.SavedSettings.defaultSettings;
             view = new SettingsView(view.stage, false);
-            SavedSettings.savedSettings = tempSettings;
+            org.mxnik.forcechess.General.SavedSettings.savedSettings = tempSettings;
             updateButtons();
         }
     }
@@ -75,7 +74,7 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
      * If any changes occurred, the view is changed so one can save them
      */
     public void updateButtons(){
-        if(!SavedSettings.savedSettings.equals(getCurrentSettings())) {
+        if(!org.mxnik.forcechess.General.SavedSettings.savedSettings.equals(getCurrentSettings())) {
             changed = true;
             view.closeButton.setTooltip(new Tooltip("Closes the application"));
             view.closeButton.setText("Apply and Close");
@@ -91,8 +90,11 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
     /**
      * @return The current Settings based on the View
      */
-    private SavedSettings getCurrentSettings() {
+    private org.mxnik.forcechess.General.SavedSettings getCurrentSettings() {
         String savedPath = view.savePathTF.getText();
+        if(!savedPath.endsWith("/") || !savedPath.endsWith("\\"))
+            savedPath += "/";
+
         Color lightSquare = view.colorLight.getValue();
         Color darkSquare = view.colorDark.getValue();
         Color lightHighlight = view.highlightLight.getValue();
@@ -100,7 +102,7 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
         Color lightMoved = view.movedLight.getValue();
         Color darkMoved = view.movedDark.getValue();
         String defaultBot = view.defaultBot.getValue();
-        return new SavedSettings(savedPath, lightSquare, darkSquare, lightHighlight, darkHighlight, lightMoved, darkMoved, defaultBot);
+        return new org.mxnik.forcechess.General.SavedSettings(savedPath, lightSquare, darkSquare, lightHighlight, darkHighlight, lightMoved, darkMoved, defaultBot);
     }
 
     public void resize(){
