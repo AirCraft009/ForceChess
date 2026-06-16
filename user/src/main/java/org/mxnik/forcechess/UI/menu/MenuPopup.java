@@ -2,6 +2,8 @@ package org.mxnik.forcechess.UI.menu;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Group;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -10,6 +12,7 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.FileHandling.TextFileHandler;
+import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.UI.settings.SavedSettings;
 
 import static org.mxnik.forcechess.General.FileLocations.NETWORK_LOCATIONS;
@@ -83,6 +86,7 @@ public abstract class MenuPopup extends Stage {
             }
         }
         board.setItems(items);
+        Constants.defaultStyleChoiceBox(board, new Scene(new Group(), 1500, 700));
         return board;
     }
 }
