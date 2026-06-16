@@ -164,7 +164,6 @@
             <classifier>mac</classifier>
         </dependency>
 
-
         <!-- UI libs -->
         <dependency>
             <groupId>org.controlsfx</groupId>

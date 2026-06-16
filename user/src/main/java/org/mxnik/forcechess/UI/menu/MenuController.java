@@ -38,7 +38,9 @@ public class MenuController implements EventHandler<Event> {
             new PvBPopup(menuScene.stage);
         }else if(source == menuScene.bvb){
             new BvBPopup(menuScene.stage);
-        }else if(source == menuScene.cBoard){
+        } else if (source == menuScene.training) {
+            new TrainPopup(menuScene.stage);
+        } else if(source == menuScene.cBoard){
             new BoardCreationView(menuScene.stage);
         }else if(source == menuScene.settings){
             new SettingsView(menuScene.stage, true);

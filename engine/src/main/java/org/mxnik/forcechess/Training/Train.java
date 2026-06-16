@@ -300,6 +300,16 @@ public class Train {
         }
     }
 
+    public void requestStop(){
+        if(bot != null) {
+            try {
+                bot.close();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     public double getLoss(){
         return network.getModel().score();
     }

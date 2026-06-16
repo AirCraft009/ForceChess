@@ -31,8 +31,8 @@ public abstract class MenuPopup extends Stage {
         initStyle(StageStyle.UNDECORATED);
         initModality(Modality.APPLICATION_MODAL);
         setResizable(false);
-        setMinWidth(400);
-        setMinHeight(700);
+        setMinWidth(450);
+        setMinHeight(800);
     }
 
     /**
