@@ -11,6 +11,7 @@ import argparse
 from dataclasses import dataclass
 from multiprocessing import Pool, Queue, Manager
 import multiprocessing as mp
+import random
 
 from dataclasses import dataclass
 
@@ -198,7 +199,7 @@ def main():
             token=api_key
         )
 
-    files = list(Path("./data").iterdir())
+    files =  random.shuffle( list(Path("./data").iterdir()))
     process_files(files, True, args.output, args.workers)
 
 

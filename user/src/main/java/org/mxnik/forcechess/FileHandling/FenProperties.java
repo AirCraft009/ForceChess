@@ -5,7 +5,7 @@ import java.util.Properties;
 import java.util.Set;
 
 public class FenProperties {
-    private static final String FEN_PROPERTIES_FILE = System.getProperty("user.dir") + "/boardsNBots/FenBoards.properties";//TODO File location with Properties
+    private static final String FEN_PROPERTIES_FILE = "boardsNBots/FenBoards.properties";//TODO File location with Properties
     private static Properties props = new Properties();
     public static Set<String> fenNames;
 

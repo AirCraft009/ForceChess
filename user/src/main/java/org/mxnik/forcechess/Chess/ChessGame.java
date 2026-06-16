@@ -8,6 +8,7 @@ import org.mxnik.forcechess.Moves.MovePacket;
 import org.mxnik.forcechess.GameControl.Player;
 
 import java.io.IOException;
+import java.util.concurrent.SynchronousQueue;
 
 public final class ChessGame implements Runnable{
     private  Player white;
@@ -16,6 +17,7 @@ public final class ChessGame implements Runnable{
     private final Board board;
     private final Callback response;
     private final Thread requestThread;
+    private final SynchronousQueue<Runnable> actionQueue;
 
     private int lastMoveFrom = -1, lastMoveTo = -1;
 
@@ -23,6 +25,7 @@ public final class ChessGame implements Runnable{
         this.board = board;
         this.response = response;
         requestThread = new Thread(ChessGame.this);
+        actionQueue = new SynchronousQueue<>(true);
     }
 
     public void setPlayers(Player white, Player black){
@@ -31,6 +34,7 @@ public final class ChessGame implements Runnable{
         System.out.println(white);
         System.out.println(black);
     }
+
 
     public void startGame(){
         running = true;
@@ -83,8 +87,9 @@ public final class ChessGame implements Runnable{
                     response.finish(state.second());
                     break;
                 }
+
                 MovePacket packet = getActivePLayer().requestMove();
-                if(white == black)
+                if (white == black)
                     white.makeMove(packet);
                 else {
                     white.makeMove(packet);
@@ -102,10 +107,23 @@ public final class ChessGame implements Runnable{
         }
     }
 
+
     public int getLastMoveFrom(){
         return lastMoveFrom;
     }
     public int getLastMoveTo(){
         return lastMoveTo;
+    }
+
+    public Player getBlack() {
+        return black;
+    }
+
+    public Player getWhite() {
+        return white;
+    }
+
+    public boolean PlayersContain(Player p){
+        return (white == p || black == p);
     }
 }

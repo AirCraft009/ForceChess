@@ -167,7 +167,7 @@ public class ChessController implements EventHandler<Event>, Callback, Player {
         }else if (source == chessView.quitB){
             cleanUp();
             new MenuScene(stage);
-        } else if (source == chessView.undoB) {
+        } else if (source == chessView.undoB && game.PlayersContain(this)) {        // can't undo moves in bot vs bot match
             game.undoMove();
             update();
         } else if (source == chessView.resignB){

@@ -7,6 +7,7 @@ import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Menu;
 import javafx.scene.control.Tooltip;
 import javafx.scene.paint.Color;
 import org.mxnik.forcechess.UI.Constants;
@@ -33,11 +34,13 @@ public class SettingsController implements EventHandler<Event>, ChangeListener {
                 SavedSettings.savedSettings = getCurrentSettings();
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("Save Settings");
-                alert.setHeaderText("WARNING: This will close the application!");
-                alert.setContentText("Are you sure you want to save these settings?");
+                alert.setHeaderText("WARNING: You can't undo this!");
+                alert.setContentText("Are you sure you want to change these settings?");
                 Optional<ButtonType> result = alert.showAndWait();
                 if(result.get() == ButtonType.OK){
                     SavedSettings.writeSettings();
+                    SavedSettings.loadSavedSettings();
+                    new MenuScene(view.stage);
                 }
             } else {
                 new MenuScene(view.stage);

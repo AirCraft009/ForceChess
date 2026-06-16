@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.Properties;
 
 public record SavedSettings(String savePath, Color lightSquare, Color darkSquare, Color lightHighlight, Color darkHighlight, Color lightMoved, Color darkMoved, String defaultBot) {
-    public static final SavedSettings defaultSettings = new SavedSettings(System.getProperty("user.dir") + "/boardsNBots/", Color.WHITE, Color.DARKBLUE, Color.WHEAT, Color.LIGHTBLUE, Color.LIME, Color.GREEN, "");
+    public static final SavedSettings defaultSettings = new SavedSettings( "boardsNBots/", Color.WHITE, Color.DARKBLUE, Color.WHEAT, Color.LIGHTBLUE, Color.LIME, Color.GREEN, "");
     public static SavedSettings savedSettings;
     private static Properties properties;
 
@@ -62,7 +62,5 @@ public record SavedSettings(String savePath, Color lightSquare, Color darkSquare
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Platform.exit();
-        System.exit(0);
     }
 }

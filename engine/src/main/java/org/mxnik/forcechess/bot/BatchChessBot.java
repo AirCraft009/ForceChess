@@ -210,7 +210,7 @@ public class BatchChessBot extends ChessBot{
                 pos.whiteToMove = !pos.whiteToMove;     // flip back for future moves
 
 
-                // reset the tree so another batch run can be started
+//                 reset the tree so another batch run can be started
                 nodeCount++;
                 unmakeAll();
 
@@ -246,7 +246,6 @@ public class BatchChessBot extends ChessBot{
                 }
                 case CheckMate -> {
                     // lost the game from playing persp.
-                    System.out.println("hit mate");
                     backProp(node, 1.2F);
                 }
                 case StaleMate, FiftyMove -> {
@@ -268,7 +267,8 @@ public class BatchChessBot extends ChessBot{
                 for (int j = 0; j < endStates[i].first(); j++) {
                     int child = tree.addNewChild(node, batchedMoves[i][j]);
                     tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
-                    //tree.p[child] = results[i].policyV()[PolicyIndex.toPolicyIndex(batchedMoves[i][j])];
+                    if(Move.baseFlag(Move.flags(batchedMoves[i][j])) >= Move.FLAG_PROMOTE_Q)
+                        tree.p[child] += 0.25F;      // hardcode a good score for promotions. they will get overlooked otherwise bc of how rare they are
                 }
             }
         }
