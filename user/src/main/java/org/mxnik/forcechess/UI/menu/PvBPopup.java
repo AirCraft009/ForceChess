@@ -2,15 +2,18 @@ package org.mxnik.forcechess.UI.menu;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.UI.ChessControllView.ChessView;
+import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
 
 public class PvBPopup extends MenuPopup {
@@ -20,6 +23,8 @@ public class PvBPopup extends MenuPopup {
      */
     protected PvBPopup(Stage primaryStage) {
         super(primaryStage);
+        Scene dummyScene = new Scene(new Group(), 1500, 700);
+
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setPadding(new Insets(20, 10, 10, 10));
@@ -28,31 +33,38 @@ public class PvBPopup extends MenuPopup {
         grid.setBackground(Background.fill(Color.LIGHTGRAY));
 
         Label boardText = new Label("Board: ");
+        Constants.defaultStyleLabel(boardText, dummyScene);
         grid.add(boardText, 0, 0);
         ChoiceBox<String> board = boardCB(8);
         board.getSelectionModel().select("default");
         grid.add(board, 1, 0);
 
         Label opponentText = new Label("Opponent: ");
+        Constants.defaultStyleLabel(opponentText, dummyScene);
         grid.add(opponentText, 0, 1);
         ChoiceBox<String> bots = super.getBotsList();
         if(bots == null){
             return;
         }
         grid.add(bots, 1, 1);
+        Constants.defaultStyleChoiceBox(bots, dummyScene);
 
         Label playerColor = new Label("Player Color: ");
+        Constants.defaultStyleLabel(playerColor, dummyScene);
         grid.add(playerColor, 0, 2);
         ToggleGroup colorGroup = new ToggleGroup();
         RadioButton white = new RadioButton("White");
         white.setSelected(true);
+        Constants.defaultStyleRadioButton(white, dummyScene, true);
         white.setToggleGroup(colorGroup);
         grid.add(white, 1, 2);
         RadioButton black = new RadioButton("Black");
         black.setToggleGroup(colorGroup);
         grid.add(black, 2, 2);
+        Constants.defaultStyleRadioButton(black, dummyScene, false);
 
         Label playDepthText = new Label("Play Depth: " + BatchChessBot.BATCH_SIZE);
+        Constants.defaultStyleLabel(playDepthText, dummyScene);
         grid.add(playDepthText, 0, 3);
         Slider playDepthS = new Slider(BatchChessBot.BATCH_SIZE, BatchChessBot.BATCH_SIZE*64, BatchChessBot.BATCH_SIZE);
         playDepthS.setShowTickMarks(true);
@@ -64,17 +76,20 @@ public class PvBPopup extends MenuPopup {
             playDepthText.setText("Play Depth: " + Math.round(newValue.doubleValue()/64)*64);
         });
         grid.add(playDepthS, 1, 3);
+        Constants.defaultStyleSlider(playDepthS, dummyScene);
 
         Button cancel = getButton("Cancel");
         cancel.setOnAction(e -> close());
+        Constants.defaultStyleButton(cancel, dummyScene, false);
         grid.add(cancel, 0, 4);
 
         Button contButton = getContButton(primaryStage, board, bots, white, playDepthS);
+        Constants.defaultStyleButton(contButton, dummyScene, false);
         grid.add(contButton, 1, 4);
 
         Scene scene = new Scene(grid);
         setScene(scene);
-        setTitle("PvP");
+        setTitle("PvB");
         show();
     }
 

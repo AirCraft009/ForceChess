@@ -210,7 +210,9 @@ public class BoardCreationView {
         sizeSlider.setMinorTickCount(4);
         sizeSlider.valueProperty().addListener(controller);
         grid.add(sizeSlider, 1, 1);
+        Constants.defaultStyleSlider(sizeSlider, stage.getScene());
         sizeLabel = new Label("8");
+        Constants.defaultStyleLabel(sizeLabel, stage.getScene());
         grid.add(sizeLabel, 2, 1);
 
         FenProperties.load();
@@ -251,9 +253,11 @@ public class BoardCreationView {
         for (int i = 0; i < boards.length; i++) {
             boards[i] = new HBox();
             Label name = new Label(names[i]);
+            Constants.defaultStyleLabel(name, stage.getScene());
             Button button = new Button("Delete");
             button.addEventHandler(Event.ANY, controller);
             Constants.defaultStyleButton(button, stage.getScene(), false);
+            button.setStyle("-fx-background-color: red");
             deleteButtons.add(button);
             boards[i].getChildren().addAll(name, button);
         }

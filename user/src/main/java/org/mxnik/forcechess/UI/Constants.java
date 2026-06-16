@@ -1,15 +1,14 @@
 package org.mxnik.forcechess.UI;
 
 import javafx.application.Platform;
+import javafx.geometry.Insets;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.Labeled;
+import javafx.scene.control.*;
 import javafx.scene.layout.Background;
 import javafx.scene.layout.BackgroundFill;
 import javafx.scene.layout.CornerRadii;
+import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Screen;
@@ -54,6 +53,36 @@ public class Constants {
             if(text != null){
                 text.setFont(Font.font(null, FontWeight.BOLD, null, scene.getWidth()/150));
                 text.setTextFill(Color.WHITE);
+            }
+        });
+    }
+    public static void defaultStyleSlider(Slider node, Scene scene){
+        node.setStyle("-fx-base: #000033");
+        Platform.runLater(()->{
+            Label text = (Label) node.lookup(".label");
+            if(text != null){
+                text.setFont(Font.font(null, FontWeight.BOLD, null, scene.getWidth()/150));
+                text.setTextFill(new Color(0, 0, 0.2, 1));
+            }
+        });
+    }
+    public static void defaultStyleRadioButton(RadioButton node, Scene scene, boolean selected){
+        node.setTextFill(new Color(0,0,0.2, 1));
+        if(selected){
+            Region dot = (Region) node.lookup(".dot");
+            if (dot != null) {
+                dot.setBackground(new Background(new BackgroundFill(new Color(0, 0, 0.2, 1), new CornerRadii(100), Insets.EMPTY)));
+            }
+        }
+        Platform.runLater(() -> {
+            Region dot = (Region) node.lookup(".dot");
+            if (dot != null) {
+                node.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                    if (newValue)
+                        dot.setBackground(new Background(new BackgroundFill(new Color(0, 0, 0.2, 1), new CornerRadii(100), Insets.EMPTY)));
+                    else
+                        dot.setBackground(null);
+                });
             }
         });
     }

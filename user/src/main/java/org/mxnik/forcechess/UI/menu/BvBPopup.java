@@ -2,6 +2,7 @@ package org.mxnik.forcechess.UI.menu;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
@@ -14,6 +15,7 @@ import javafx.stage.Stage;
 import org.jetbrains.annotations.NotNull;
 import org.mxnik.forcechess.FileHandling.FenProperties;
 import org.mxnik.forcechess.UI.ChessControllView.ChessView;
+import org.mxnik.forcechess.UI.Constants;
 import org.mxnik.forcechess.bot.BatchChessBot;
 
 public class BvBPopup extends MenuPopup {
@@ -23,6 +25,8 @@ public class BvBPopup extends MenuPopup {
      */
     protected BvBPopup(Stage primaryStage) {
         super(primaryStage);
+        Scene dummyScene = new Scene(new Group(), 1500, 700);
+
         GridPane grid = new GridPane();
         grid.setAlignment(Pos.CENTER);
         grid.setPadding(new Insets(20, 10, 10, 10));
@@ -31,20 +35,25 @@ public class BvBPopup extends MenuPopup {
         grid.setBackground(Background.fill(Color.LIGHTGRAY));
 
         Label boardText = new Label("Board: ");
+        Constants.defaultStyleLabel(boardText, dummyScene);
         grid.add(boardText, 0, 0);
         ChoiceBox<String> board = boardCB(8);
         board.getSelectionModel().select("default");
         grid.add(board, 1, 0);
 
         Label botsText = new Label("Bots: ");
+        Constants.defaultStyleLabel(botsText, dummyScene);
         grid.add(botsText, 0, 1);
 
         ChoiceBox<String> bot1 = super.getBotsList();
+        Constants.defaultStyleChoiceBox(bot1, new Scene(new Group(), 1500, 700));
         grid.add(bot1, 1, 1);
         ChoiceBox<String> bot2 = super.getBotsList();
+        Constants.defaultStyleChoiceBox(bot2, new Scene(new Group(), 1500, 700));
         grid.add(bot2, 2, 1, 2, 1);
 
         Label playDepthText = new Label("Play Depth: " + BatchChessBot.BATCH_SIZE);
+        Constants.defaultStyleLabel(playDepthText, dummyScene);
         grid.add(playDepthText, 0, 2);
         Slider playDepthS = new Slider(BatchChessBot.BATCH_SIZE, BatchChessBot.BATCH_SIZE*64, BatchChessBot.BATCH_SIZE);
         playDepthS.setShowTickMarks(true);
@@ -56,17 +65,20 @@ public class BvBPopup extends MenuPopup {
             playDepthText.setText("Play Depth: " + Math.round(newValue.doubleValue()/64)*64);
         });
         grid.add(playDepthS, 1, 2);
+        Constants.defaultStyleSlider(playDepthS, dummyScene);
 
         Button cancel = getButton("Cancel");
         cancel.setOnAction(e -> close());
+        Constants.defaultStyleButton(cancel, dummyScene, false);
         grid.add(cancel, 0, 3);
 
         Button contButton = getContButton(primaryStage, board, bot1, bot2, playDepthS);
+        Constants.defaultStyleButton(contButton, dummyScene, false);
         grid.add(contButton, 1, 3);
 
         Scene scene = new Scene(grid);
         setScene(scene);
-        setTitle("PvP");
+        setTitle("BvB");
         show();
     }
 
